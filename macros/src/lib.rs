@@ -8,13 +8,13 @@ use syn::{
     parse::{Parse, ParseStream, Result as ParseResult},
     parse_macro_input,
     punctuated::Punctuated,
-    Ident, ItemStruct, Lit, Path, Token,
+    Expr, Ident, ItemStruct, Lit, Token,
 };
 
 struct KeyValue {
     key: Ident,
     _eq: Token![=],
-    value: Lit,
+    value: Expr,
 }
 
 impl Parse for KeyValue {
@@ -27,7 +27,7 @@ impl Parse for KeyValue {
     }
 }
 
-struct LintMeta(HashMap<Ident, Lit>);
+struct LintMeta(HashMap<Ident, Expr>);
 
 impl Parse for LintMeta {
     fn parse(input: ParseStream) -> ParseResult<Self> {
@@ -54,11 +54,13 @@ fn generate_meta_impl(struct_name: &Ident, meta: &LintMeta) -> TokenStream2 {
     let name_fn = generate_name_fn(meta);
     let note_fn = generate_note_fn(meta);
     let match_with_fn = generate_match_with_fn(meta);
+    let match_kind = generate_match_kind(meta);
     quote! {
         impl Metadata for #struct_name {
             #name_fn
             #note_fn
             #match_with_fn
+            #match_kind
         }
     }
 }
@@ -68,11 +70,16 @@ fn generate_name_fn(meta: &LintMeta) -> TokenStream2 {
         .0
         .get(&format_ident!("name"))
         .unwrap_or_else(|| panic!("`name` not present"));
-    quote! {
-        fn name(&self) -> &str {
-            #name
+    if let syn::Expr::Lit(name_lit) = name {
+        if let Lit::Str(name_str) = &name_lit.lit {
+            return quote! {
+                fn name(&self) -> &str {
+                    #name_str
+                }
+            };
         }
     }
+    panic!("Invalid value for `name`");
 }
 
 fn generate_note_fn(meta: &LintMeta) -> TokenStream2 {
@@ -80,11 +87,16 @@ fn generate_note_fn(meta: &LintMeta) -> TokenStream2 {
         .0
         .get(&format_ident!("note"))
         .unwrap_or_else(|| panic!("`note` not present"));
-    quote! {
-        fn note(&self) -> &str {
-            #note
+    if let syn::Expr::Lit(note_lit) = note {
+        if let Lit::Str(note_str) = &note_lit.lit {
+            return quote! {
+                fn note(&self) -> &str {
+                    #note_str
+                }
+            };
         }
     }
+    panic!("Invalid value for `note`");
 }
 
 fn generate_match_with_fn(meta: &LintMeta) -> TokenStream2 {
@@ -92,18 +104,30 @@ fn generate_match_with_fn(meta: &LintMeta) -> TokenStream2 {
         .0
         .get(&format_ident!("match_with"))
         .unwrap_or_else(|| panic!("`match_with` not present"));
-    if let Lit::Str(match_with) = match_with_lit {
-        let path: Path = match_with
-            .parse()
-            .ok()
-            .unwrap_or_else(|| panic!("`match_with` does not contain valid path"));
+    if let syn::Expr::Path(match_path) = match_with_lit {
         quote! {
             fn match_with(&self, with: &SyntaxKind) -> bool {
-                *with == #path
+                #match_path == *with
             }
         }
     } else {
-        panic!("`match_with` has non-literal value")
+        panic!("`match_with` has non-path value")
+    }
+}
+
+fn generate_match_kind(meta: &LintMeta) -> TokenStream2 {
+    let match_with_lit = meta
+        .0
+        .get(&format_ident!("match_with"))
+        .unwrap_or_else(|| panic!("`match_with` not present"));
+    if let syn::Expr::Path(match_path) = match_with_lit {
+        quote! {
+            fn match_kind(&self) -> SyntaxKind {
+                #match_path
+            }
+        }
+    } else {
+        panic!("`match_with` has non-path value")
     }
 }
 

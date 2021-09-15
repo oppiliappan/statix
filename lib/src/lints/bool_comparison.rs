@@ -1,4 +1,4 @@
-use crate::{Diagnostic, Lint, Metadata, Rule};
+use crate::{Lint, Metadata, Report, Rule};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -10,12 +10,12 @@ use rnix::{
 #[lint(
     name = "bool_comparison",
     note = "Unnecessary comparison with boolean",
-    match_with = "SyntaxKind::NODE_BIN_OP"
+    match_with = SyntaxKind::NODE_BIN_OP
 )]
 struct BoolComparison;
 
 impl Rule for BoolComparison {
-    fn validate(&self, node: &SyntaxElement) -> Option<Diagnostic> {
+    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         if_chain! {
             if let NodeOrToken::Node(bin_op_node) = node;
             if let Some(bin_expr) = BinOp::cast(bin_op_node.clone());
@@ -37,7 +37,7 @@ impl Rule for BoolComparison {
                     non_bool_side,
                     bool_side
                 );
-                dbg!(Some(Diagnostic::new(at, message)))
+                Some(Report::new().diagnostic(at, message))
             } else {
                 None
             }

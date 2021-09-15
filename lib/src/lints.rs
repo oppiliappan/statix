@@ -1,2 +1,5 @@
-pub mod bool_comparison;
-pub mod with_list;
+use crate::lint_map;
+
+lint_map! {
+    bool_comparison,
+}
