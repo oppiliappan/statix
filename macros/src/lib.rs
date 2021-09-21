@@ -53,12 +53,16 @@ fn generate_self_impl(struct_name: &Ident) -> TokenStream2 {
 fn generate_meta_impl(struct_name: &Ident, meta: &LintMeta) -> TokenStream2 {
     let name_fn = generate_name_fn(meta);
     let note_fn = generate_note_fn(meta);
+    let code_fn = generate_code_fn(meta);
+    let report_fn = generate_report_fn();
     let match_with_fn = generate_match_with_fn(meta);
     let match_kind = generate_match_kind(meta);
     quote! {
         impl Metadata for #struct_name {
             #name_fn
             #note_fn
+            #code_fn
+            #report_fn
             #match_with_fn
             #match_kind
         }
@@ -97,6 +101,31 @@ fn generate_note_fn(meta: &LintMeta) -> TokenStream2 {
         }
     }
     panic!("Invalid value for `note`");
+}
+
+fn generate_code_fn(meta: &LintMeta) -> TokenStream2 {
+    let code = meta
+        .0
+        .get(&format_ident!("code"))
+        .unwrap_or_else(|| panic!("`code` not present"));
+    if let syn::Expr::Lit(code_lit) = code {
+        if let Lit::Int(code_int) = &code_lit.lit {
+            return quote! {
+                fn code() -> u32 {
+                    #code_int
+                }
+            };
+        }
+    }
+    panic!("Invalid value for `note`");
+}
+
+fn generate_report_fn() -> TokenStream2 {
+    quote! {
+        fn report() -> Report {
+            Report::new(Self::note(), Self::code())
+        }
+    }
 }
 
 fn generate_match_with_fn(meta: &LintMeta) -> TokenStream2 {

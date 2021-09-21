@@ -10,6 +10,7 @@ use rnix::{
 #[lint(
     name = "bool_comparison",
     note = "Unnecessary comparison with boolean",
+    code = 1,
     match_with = SyntaxKind::NODE_BIN_OP
 )]
 struct BoolComparison;
@@ -70,10 +71,7 @@ impl Rule for BoolComparison {
                     non_bool_side,
                     bool_side
                 );
-                Some(
-                    Report::new(Self::note())
-                      .suggest(at, message, Suggestion::new(at, replacement))
-                )
+                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }
