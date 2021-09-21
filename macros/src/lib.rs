@@ -73,7 +73,7 @@ fn generate_name_fn(meta: &LintMeta) -> TokenStream2 {
     if let syn::Expr::Lit(name_lit) = name {
         if let Lit::Str(name_str) = &name_lit.lit {
             return quote! {
-                fn name(&self) -> &str {
+                fn name() -> &'static str {
                     #name_str
                 }
             };
@@ -90,7 +90,7 @@ fn generate_note_fn(meta: &LintMeta) -> TokenStream2 {
     if let syn::Expr::Lit(note_lit) = note {
         if let Lit::Str(note_str) = &note_lit.lit {
             return quote! {
-                fn note(&self) -> &str {
+                fn note() -> &'static str {
                     #note_str
                 }
             };
