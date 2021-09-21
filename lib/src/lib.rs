@@ -1,8 +1,10 @@
 mod lints;
+mod make;
+
 pub use lints::LINTS;
 
 use rnix::{SyntaxElement, SyntaxKind, TextRange};
-use std::default::Default;
+use std::{default::Default, convert::Into};
 
 pub trait Rule {
     fn validate(&self, node: &SyntaxElement) -> Option<Report>;
@@ -12,32 +14,60 @@ pub trait Rule {
 pub struct Diagnostic {
     pub at: TextRange,
     pub message: String,
+    pub suggestion: Option<Suggestion>,
 }
 
 impl Diagnostic {
     pub fn new(at: TextRange, message: String) -> Self {
-        Self { at, message }
+        Self { at, message, suggestion: None }
+    }
+    pub fn suggest(at: TextRange, message: String, suggestion: Suggestion) -> Self {
+        Self { at, message, suggestion: Some(suggestion) }
+    }
+}
+
+#[derive(Debug)]
+pub struct Suggestion {
+    pub at: TextRange,
+    pub fix: SyntaxElement,
+}
+
+impl Suggestion {
+    pub fn new<E: Into<SyntaxElement>>(at: TextRange, fix: E) -> Self {
+        Self {
+            at,
+            fix: fix.into()
+        }
     }
 }
 
 #[derive(Debug, Default)]
 pub struct Report {
     pub diagnostics: Vec<Diagnostic>,
+    pub note: &'static str
 }
 
 impl Report {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(note: &'static str) -> Self {
+        Self {
+            note,
+            ..Default::default()
+        }
     }
     pub fn diagnostic(mut self, at: TextRange, message: String) -> Self {
         self.diagnostics.push(Diagnostic::new(at, message));
         self
     }
+    pub fn suggest(mut self, at: TextRange, message: String, suggestion: Suggestion) -> Self {
+        self.diagnostics.push(Diagnostic::suggest(at, message, suggestion));
+        self
+    }
+
 }
 
 pub trait Metadata {
-    fn name(&self) -> &str;
-    fn note(&self) -> &str;
+    fn name() -> &'static str where Self: Sized;
+    fn note() -> &'static str where Self: Sized;
     fn match_with(&self, with: &SyntaxKind) -> bool;
     fn match_kind(&self) -> SyntaxKind;
 }

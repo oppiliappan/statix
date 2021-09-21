@@ -1,4 +1,4 @@
-use crate::{Lint, Metadata, Report, Rule};
+use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -22,22 +22,58 @@ impl Rule for BoolComparison {
             if let Some(lhs) = bin_expr.lhs();
             if let Some(rhs) = bin_expr.rhs();
 
-            if let BinOpKind::Equal | BinOpKind::NotEqual = bin_expr.operator();
-            let (non_bool_side, bool_side) = if is_boolean_ident(&lhs) {
+            if let op@(BinOpKind::Equal | BinOpKind::NotEqual) = bin_expr.operator();
+            let (non_bool_side, bool_side) = if boolean_ident(&lhs).is_some() {
                 (rhs, lhs)
-            } else if is_boolean_ident(&rhs) {
+            } else if boolean_ident(&rhs).is_some() {
                 (lhs, rhs)
             } else {
                 return None
             };
             then {
                 let at = node.text_range();
+                let replacement = {
+                    match (boolean_ident(&bool_side).unwrap(), op == BinOpKind::Equal) {
+                        (NixBoolean::True, true) | (NixBoolean::False, false) => {
+                            // `a == true`, `a != false` replace with just `a`
+                            non_bool_side.clone()
+                        },
+                        (NixBoolean::True, false) | (NixBoolean::False, true) => {
+                            // `a != true`, `a == false` replace with `!a`
+                            match non_bool_side.kind() {
+                                SyntaxKind::NODE_APPLY
+                                    | SyntaxKind::NODE_PAREN
+                                    | SyntaxKind::NODE_IDENT => {
+                                    // do not parenthsize the replacement
+                                    make::unary_not(&non_bool_side).node().clone()
+                                },
+                                SyntaxKind::NODE_BIN_OP => {
+                                    let inner = BinOp::cast(non_bool_side.clone()).unwrap();
+                                    // `!a ? b`, no paren required
+                                    if inner.operator() == BinOpKind::IsSet {
+                                        make::unary_not(&non_bool_side).node().clone()
+                                    } else {
+                                        let parens = make::parenthesize(&non_bool_side);
+                                        make::unary_not(parens.node()).node().clone()
+                                    }
+                                },
+                                _ => {
+                                    let parens = make::parenthesize(&non_bool_side);
+                                    make::unary_not(parens.node()).node().clone()
+                                }
+                            }
+                        },
+                    }
+                };
                 let message = format!(
                     "Comparing `{}` with boolean literal `{}`",
                     non_bool_side,
                     bool_side
                 );
-                Some(Report::new().diagnostic(at, message))
+                Some(
+                    Report::new(Self::note())
+                      .suggest(at, message, Suggestion::new(at, replacement))
+                )
             } else {
                 None
             }
@@ -45,34 +81,18 @@ impl Rule for BoolComparison {
     }
 }
 
-// not entirely accurate, underhanded nix programmers might write `true = false`
-fn is_boolean_ident(node: &SyntaxNode) -> bool {
-    if let Some(ident_expr) = Ident::cast(node.clone()) {
-        ident_expr.as_str() == "true" || ident_expr.as_str() == "false"
-    } else {
-        false
-    }
+enum NixBoolean {
+    True,
+    False,
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use rnix::{parser, WalkEvent};
-//
-//     #[test]
-//     fn trivial() {
-//         let src = r#"
-//         a == true
-//         "#;
-//         let parsed = rnix::parse(src).as_result().ok().unwrap();
-//         let _ = parsed
-//             .node()
-//             .preorder_with_tokens()
-//             .filter_map(|event| match event {
-//                 WalkEvent::Enter(t) => Some(t),
-//                 _ => None,
-//             })
-//             .map(|node| BoolComparison.validate(&node))
-//             .collect::<Vec<_>>();
-//     }
-// }
+// not entirely accurate, underhanded nix programmers might write `true = false`
+fn boolean_ident(node: &SyntaxNode) -> Option<NixBoolean> {
+    Ident::cast(node.clone())
+        .map(|ident_expr| match ident_expr.as_str() {
+            "true" => Some(NixBoolean::True),
+            "false" => Some(NixBoolean::False),
+            _ => None,
+        })
+        .flatten()
+}
