@@ -29,3 +29,12 @@ pub fn inherit_stmt<'a>(nodes: impl IntoIterator<Item = &'a types::Ident>) -> ty
         .join(" ");
     ast_from_text(&format!("{{ inherit {}; }}", inherited_idents))
 }
+
+pub fn inherit_from_stmt<'a>(from: SyntaxNode, nodes: impl IntoIterator<Item = &'a types::Ident>) -> types::Inherit {
+    let inherited_idents = nodes
+        .into_iter()
+        .map(|i| i.as_str().to_owned())
+        .collect::<Vec<_>>()
+        .join(" ");
+    ast_from_text(&format!("{{ inherit ({}) {}; }}", from, inherited_idents))
+}

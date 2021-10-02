@@ -4,4 +4,5 @@ lint_map! {
     bool_comparison,
     empty_let_in,
     manual_inherit,
+    manual_inherit_from,
 }

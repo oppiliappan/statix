@@ -3,14 +3,14 @@ use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{KeyValue, Ident, TypedNode, TokenWrapper},
+    types::{KeyValue, Ident, Select, TypedNode, TokenWrapper},
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
 #[lint(
-    name = "manual inherit",
-    note = "Assignment instead of inherit",
-    code = 3,
+    name = "manual inherit from",
+    note = "Assignment instead of inherit from",
+    code = 4,
     match_with = SyntaxKind::NODE_KEY_VALUE
 )]
 struct ManualInherit;
@@ -25,13 +25,18 @@ impl Rule for ManualInherit {
             if let Some(key) = Ident::cast(key_node);
 
             if let Some(value_node) = key_value_stmt.value();
-            if let Some(value) = Ident::cast(value_node);
+            if let Some(value) = Select::cast(value_node);
+            if let Some(index_node) = value.index();
+            if let Some(index) = Ident::cast(index_node);
 
-            if key.as_str() == value.as_str();
+            if key.as_str() == index.as_str();
 
             then {
                 let at = node.text_range();
-                let replacement = make::inherit_stmt(&[key]).node().clone();
+                let replacement = {
+                    let set = value.set()?;
+                    make::inherit_from_stmt(set, &[key]).node().clone() 
+                };
                 let message = format!("The assignment `{}` is better written with `inherit`", node);
                 Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
@@ -40,4 +45,5 @@ impl Rule for ManualInherit {
         }
     }
 }
+
 
