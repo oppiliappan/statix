@@ -32,7 +32,7 @@ impl Report {
         self
     }
     /// Add a diagnostic with a fix to this report
-    pub fn suggest(mut self, at: TextRange, message: String, suggestion: Suggestion) -> Self {
+    pub fn suggest<S: AsRef<str>>(mut self, at: TextRange, message: S, suggestion: Suggestion) -> Self {
         self.diagnostics.push(Diagnostic::suggest(at, message, suggestion));
         self
     }
@@ -54,8 +54,8 @@ impl Diagnostic {
         Self { at, message, suggestion: None }
     }
     /// Construct a diagnostic with a fix.
-    pub fn suggest(at: TextRange, message: String, suggestion: Suggestion) -> Self {
-        Self { at, message, suggestion: Some(suggestion) }
+    pub fn suggest<S: AsRef<str>>(at: TextRange, message: S, suggestion: Suggestion) -> Self {
+        Self { at, message: message.as_ref().into(), suggestion: Some(suggestion) }
     }
 }
 
