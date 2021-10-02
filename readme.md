@@ -1,15 +1,15 @@
-## nix-analyzer
+## statix
 
-`nix-analyzer` intends to be a static analysis tool for the
+`statix` intends to be a static analysis tool for the
 Nix programming language.
 
-For the time-being, `nix-analyzer` works only with ASTs
+For the time-being, `statix` works only with ASTs
 produced by the `rnix-parser` crate and does not evaluate
-any nix code. 
+any nix code (imports, attr sets etc.). 
 
 ## Architecture
 
-`nix-analyzer` has the following components:
+`statix` has the following components:
 
 - `bin`: the CLI/entrypoint
 - `lib`: library of lints and utilities to define these
@@ -18,7 +18,7 @@ any nix code.
 
 ### `bin`
 
-This is the main point of interaction between `nix-analyzer`
+This is the main point of interaction between `statix`
 and the end user. It's output is human-readable and should
 also support JSON/errorfmt outputs for external tools to
 use.
