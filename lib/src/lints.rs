@@ -5,4 +5,5 @@ lint_map! {
     empty_let_in,
     manual_inherit,
     manual_inherit_from,
+    legacy_let_syntax,
 }
