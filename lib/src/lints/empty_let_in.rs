@@ -3,8 +3,7 @@ use crate::{Lint, Metadata, Report, Rule, Suggestion};
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{LetIn, TypedNode, 
-        EntryHolder},
+    types::{LetIn, TypedNode, EntryHolder},
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
