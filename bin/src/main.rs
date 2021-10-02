@@ -6,13 +6,13 @@ use std::{
 use anyhow::{Context, Result};
 use ariadne::{
     CharSet, Color, Config as CliConfig, Label, Report as CliReport,
-    ReportKind as CliReportKind, Source,
+    ReportKind as CliReportKind, Source, LabelAttach
 };
 use lib::{Report, LINTS};
 use rnix::{TextRange, WalkEvent};
 
-fn analyze(file: &str) -> Result<Vec<Report>> {
-    let parsed = rnix::parse(file).as_result()?;
+fn analyze(source: &str) -> Result<Vec<Report>> {
+    let parsed = rnix::parse(source).as_result()?;
 
     Ok(parsed
         .node()
@@ -47,9 +47,12 @@ fn print_report(report: Report, file_src: &str, file_path: &Path) -> Result<()> 
             .with_config(
                 CliConfig::default()
                     .with_cross_gap(true)
-                    .with_char_set(CharSet::ExtendedAscii),
+                    .with_multiline_arrows(false)
+                    .with_label_attach(LabelAttach::Middle)
+                    .with_char_set(CharSet::Unicode),
             )
-            .with_message(report.note),
+            .with_message(report.note)
+            .with_code(report.code),
             |cli_report, diagnostic| {
                 let cli_report = cli_report.with_label(
                     Label::new((src_id, range(diagnostic.at)))
@@ -74,8 +77,10 @@ fn print_report(report: Report, file_src: &str, file_path: &Path) -> Result<()> 
 }
 
 fn _main() -> Result<()> {
+    // TODO: accept cli args, construct a CLI config with a list of files to analyze
     let args = env::args();
     for (file_src, file_path, reports) in args
+        .skip(1)
         .map(|s| PathBuf::from(&s))
         .filter(|p| p.is_file())
         .filter_map(|path| {
