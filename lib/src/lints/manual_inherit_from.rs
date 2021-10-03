@@ -18,8 +18,8 @@ struct ManualInherit;
 impl Rule for ManualInherit {
     fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         if_chain! {
-            if let NodeOrToken::Node(key_value_node) = node;
-            if let Some(key_value_stmt) = KeyValue::cast(key_value_node.clone());
+            if let NodeOrToken::Node(node) = node;
+            if let Some(key_value_stmt) = KeyValue::cast(node.clone());
             if let Some(key_path) = key_value_stmt.key();
             if let Some(key_node) = key_path.path().next();
             if let Some(key) = Ident::cast(key_node);

@@ -18,8 +18,8 @@ struct EmptyLetIn;
 impl Rule for EmptyLetIn {
     fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         if_chain! {
-            if let NodeOrToken::Node(let_in_node) = node;
-            if let Some(let_in_expr) = LetIn::cast(let_in_node.clone());
+            if let NodeOrToken::Node(node) = node;
+            if let Some(let_in_expr) = LetIn::cast(node.clone());
             let entries = let_in_expr.entries();
             let inherits = let_in_expr.inherits();
 

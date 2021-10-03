@@ -18,8 +18,8 @@ struct BoolComparison;
 impl Rule for BoolComparison {
     fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         if_chain! {
-            if let NodeOrToken::Node(bin_op_node) = node;
-            if let Some(bin_expr) = BinOp::cast(bin_op_node.clone());
+            if let NodeOrToken::Node(node) = node;
+            if let Some(bin_expr) = BinOp::cast(node.clone());
             if let Some(lhs) = bin_expr.lhs();
             if let Some(rhs) = bin_expr.rhs();
 
