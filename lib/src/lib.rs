@@ -18,7 +18,7 @@ pub struct Report {
 }
 
 impl Report {
-    /// Construct a report. Do not invoke manually, see `lint` macro
+    /// Construct a report. Do not invoke `Report::new` manually, see `lint` macro
     pub fn new(note: &'static str, code: u32) -> Self {
         Self {
             note,
@@ -27,7 +27,7 @@ impl Report {
         }
     }
     /// Add a diagnostic to this report
-    pub fn diagnostic(mut self, at: TextRange, message: String) -> Self {
+    pub fn diagnostic<S: AsRef<str>>(mut self, at: TextRange, message: S) -> Self {
         self.diagnostics.push(Diagnostic::new(at, message));
         self
     }
@@ -55,10 +55,10 @@ pub struct Diagnostic {
 
 impl Diagnostic {
     /// Construct a diagnostic.
-    pub fn new(at: TextRange, message: String) -> Self {
+    pub fn new<S: AsRef<str>>(at: TextRange, message: S) -> Self {
         Self {
             at,
-            message,
+            message: message.as_ref().into(),
             suggestion: None,
         }
     }

@@ -75,3 +75,7 @@ pub fn select(set: &SyntaxNode, index: &SyntaxNode) -> types::Select {
 pub fn ident(text: &str) -> types::Ident {
     ast_from_text(text)
 }
+
+pub fn empty() -> types::Root {
+    ast_from_text("")
+}

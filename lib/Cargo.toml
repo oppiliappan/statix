@@ -10,3 +10,4 @@ rnix = "0.9.0"
 if_chain = "1.0"
 macros = { path = "../macros" }
 lazy_static = "1.0"
+rowan = "0.12.5"

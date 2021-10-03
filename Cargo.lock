@@ -64,6 +64,7 @@ dependencies = [
  "lazy_static",
  "macros",
  "rnix",
+ "rowan",
 ]
 
 [[package]]
