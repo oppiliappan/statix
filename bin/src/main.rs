@@ -5,8 +5,8 @@ use std::{
 
 use anyhow::{Context, Result};
 use ariadne::{
-    CharSet, Color, Config as CliConfig, Label, Report as CliReport,
-    ReportKind as CliReportKind, Source, LabelAttach
+    CharSet, Color, Config as CliConfig, Label, LabelAttach, Report as CliReport,
+    ReportKind as CliReportKind, Source,
 };
 use lib::{Report, LINTS};
 use rnix::{TextRange, WalkEvent};
@@ -44,31 +44,21 @@ fn print_report(report: Report, file_src: &str, file_path: &Path) -> Result<()> 
         .iter()
         .fold(
             CliReport::build(CliReportKind::Warning, src_id, offset)
-            .with_config(
-                CliConfig::default()
-                    .with_cross_gap(true)
-                    .with_multiline_arrows(false)
-                    .with_label_attach(LabelAttach::Middle)
-                    .with_char_set(CharSet::Unicode),
-            )
-            .with_message(report.note)
-            .with_code(report.code),
+                .with_config(
+                    CliConfig::default()
+                        .with_cross_gap(true)
+                        .with_multiline_arrows(false)
+                        .with_label_attach(LabelAttach::Middle)
+                        .with_char_set(CharSet::Unicode),
+                )
+                .with_message(report.note)
+                .with_code(report.code),
             |cli_report, diagnostic| {
-                let cli_report = cli_report.with_label(
+                cli_report.with_label(
                     Label::new((src_id, range(diagnostic.at)))
                         .with_message(&diagnostic.message)
                         .with_color(Color::Magenta),
-                );
-                if let Some(s) = &diagnostic.suggestion {
-                    let replacement_msg = format!("Try: `{}`", s.fix);
-                    cli_report.with_label(
-                        Label::new((src_id, range(s.at)))
-                            .with_message(replacement_msg)
-                            .with_color(Color::Yellow),
-                    )
-                } else {
-                    cli_report
-                }
+                )
             },
         )
         .finish()
@@ -96,6 +86,7 @@ fn _main() -> Result<()> {
     }
     Ok(())
 }
+
 fn main() {
     match _main() {
         Err(e) => eprintln!("{}", e),
