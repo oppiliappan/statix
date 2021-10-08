@@ -7,4 +7,5 @@ lint_map! {
     manual_inherit_from,
     legacy_let_syntax,
     collapsible_let_in,
+    eta_reduction,
 }
