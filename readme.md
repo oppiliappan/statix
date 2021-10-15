@@ -33,3 +33,9 @@ without being familiar with the rest of the codebase.
 
 This crate intends to be a helper layer to declare lints and
 their metadata.
+
+## TODO
+
+- Offline documentation for each lint
+- Automatically fix all lints from suggestions generated
+- Test suite for lints and suggestions
