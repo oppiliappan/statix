@@ -139,6 +139,12 @@ fn generate_match_with_fn(meta: &LintMeta) -> TokenStream2 {
                 #match_path == *with
             }
         }
+    } else if let syn::Expr::Array(array_expr) = match_with_lit {
+        quote! {
+            fn match_with(&self, with: &SyntaxKind) -> bool {
+                #array_expr.contains(with)
+            }
+        }
     } else {
         panic!("`match_with` has non-path value")
     }
@@ -151,8 +157,14 @@ fn generate_match_kind(meta: &LintMeta) -> TokenStream2 {
         .unwrap_or_else(|| panic!("`match_with` not present"));
     if let syn::Expr::Path(match_path) = match_with_lit {
         quote! {
-            fn match_kind(&self) -> SyntaxKind {
-                #match_path
+            fn match_kind(&self) -> Vec<SyntaxKind> {
+                vec![#match_path]
+            }
+        }
+    } else if let syn::Expr::Array(array_expr) = match_with_lit {
+        quote! {
+            fn match_kind(&self) -> Vec<SyntaxKind> {
+                #array_expr.to_vec()
             }
         }
     } else {

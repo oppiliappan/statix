@@ -112,7 +112,7 @@ pub trait Metadata {
     where
         Self: Sized;
     fn match_with(&self, with: &SyntaxKind) -> bool;
-    fn match_kind(&self) -> SyntaxKind;
+    fn match_kind(&self) -> Vec<SyntaxKind>;
 }
 
 /// Combines Rule and Metadata, do not implement manually, this is derived by
@@ -140,10 +140,12 @@ macro_rules! lint_map {
                 $(
                     {
                         let temp_lint = &*$s::LINT;
-                        let temp_match = temp_lint.match_kind();
-                        map.entry(temp_match)
-                           .and_modify(|v: &mut Vec<_>| v.push(temp_lint))
-                           .or_insert_with(|| vec![temp_lint]);
+                        let temp_matches = temp_lint.match_kind();
+                        for temp_match in temp_matches {
+                            map.entry(temp_match)
+                               .and_modify(|v: &mut Vec<_>| v.push(temp_lint))
+                               .or_insert_with(|| vec![temp_lint]);
+                        }
                     }
                 )*
                 map
