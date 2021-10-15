@@ -8,4 +8,5 @@ lint_map! {
     legacy_let_syntax,
     collapsible_let_in,
     eta_reduction,
+    useless_parens,
 }

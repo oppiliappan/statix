@@ -58,10 +58,10 @@ pub fn attrset(
 
     writeln!(buffer, "{}{{", if recursive { "rec " } else { "" }).unwrap();
     for inherit in inherits.into_iter() {
-        writeln!(buffer, "    {}", inherit.node().text()).unwrap();
+        writeln!(buffer, "  {}", inherit.node().text()).unwrap();
     }
     for entry in entries.into_iter() {
-        writeln!(buffer, "    {}", entry.node().text()).unwrap();
+        writeln!(buffer, "  {}", entry.node().text()).unwrap();
     }
     write!(buffer, "}}").unwrap();
 
