@@ -21,14 +21,14 @@ fn _main() -> Result<(), StatixErr> {
             let vfs = lint_config.vfs()?;
             let (reports, errors): (Vec<_>, Vec<_>) =
                 vfs.iter().map(lint::lint).partition(Result::is_ok);
-            let lint_results: Vec<_> = reports.into_iter().map(Result::unwrap).collect();
-            let errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
+            let lint_results = reports.into_iter().map(Result::unwrap);
+            let errors = errors.into_iter().map(Result::unwrap_err);
 
             let mut stderr = io::stderr();
-            lint_results.into_iter().for_each(|r| {
+            lint_results.for_each(|r| {
                 stderr.write(&r, &vfs).unwrap();
             });
-            errors.into_iter().for_each(|e| {
+            errors.for_each(|e| {
                 eprintln!("{}", e);
             });
         }

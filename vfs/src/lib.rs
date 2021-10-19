@@ -58,7 +58,7 @@ impl ReadOnlyVfs {
         let file_id = self.alloc_file_id(path);
         self.data.insert(file_id, contents.to_owned());
     }
-    pub fn iter<'ρ>(&'ρ self) -> impl Iterator<Item = VfsEntry<'ρ>> {
+    pub fn iter(&self) -> impl Iterator<Item = VfsEntry> {
         self.data.iter().map(move |(file_id, _)| VfsEntry {
             file_id: *file_id,
             file_path: self.file_path(*file_id),

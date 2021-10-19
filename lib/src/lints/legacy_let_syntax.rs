@@ -23,15 +23,14 @@ impl Rule for ManualInherit {
 
             if legacy_let
                 .entries()
-                .find(|kv| matches!(kv.key(), Some(k) if key_is_ident(&k, "body")))
-                .is_some();
+                .any(|kv| matches!(kv.key(), Some(k) if key_is_ident(&k, "body")));
 
             then {
                 let inherits = legacy_let.inherits();
                 let entries = legacy_let.entries();
                 let attrset = make::attrset(inherits, entries, true);
-                let parenthesized = make::parenthesize(&attrset.node());
-                let selected = make::select(parenthesized.node(), &make::ident("body").node());
+                let parenthesized = make::parenthesize(attrset.node());
+                let selected = make::select(parenthesized.node(), make::ident("body").node());
 
                 let at = node.text_range();
                 let message = "Prefer `rec` over undocumented `let` syntax";
