@@ -8,11 +8,6 @@
       flake = false;
     };
 
-    flake-compat = {
-      url = "github:edolstra/flake-compat";
-      flake = false;
-    };
-
     import-cargo.url = github:edolstra/import-cargo;
 
   };
