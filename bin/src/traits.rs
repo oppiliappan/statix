@@ -3,19 +3,14 @@ use std::{
     str,
 };
 
-use ariadne::{
-    CharSet, Color, Config as CliConfig, Label, LabelAttach, Report as CliReport,
-    ReportKind as CliReportKind, Source, Fmt
-};
-use lib::Report;
-use rnix::TextRange;
-use vfs::{FileId, ReadOnlyVfs};
+use crate::lint::LintResult;
 
-#[derive(Debug)]
-pub struct LintResult {
-    pub file_id: FileId,
-    pub reports: Vec<Report>,
-}
+use ariadne::{
+    CharSet, Color, Config as CliConfig, Fmt, Label, LabelAttach, Report as CliReport,
+    ReportKind as CliReportKind, Source,
+};
+use rnix::TextRange;
+use vfs::ReadOnlyVfs;
 
 pub trait WriteDiagnostic {
     fn write(&mut self, report: &LintResult, vfs: &ReadOnlyVfs) -> io::Result<()>;
@@ -69,7 +64,8 @@ where
 
 // everything within backticks is colorized, backticks are removed
 fn colorize(message: &str) -> String {
-    message.split('`')
+    message
+        .split('`')
         .enumerate()
         .map(|(idx, part)| {
             if idx % 2 == 1 {
