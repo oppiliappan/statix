@@ -8,6 +8,7 @@ Interface
 - load files to be read as VFS
 - path interner
 - traits to go from Report to text/errfmt
+- offline documentation/explaination for lints
 
 Fix
 ---
