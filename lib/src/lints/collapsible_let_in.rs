@@ -26,10 +26,10 @@ impl Rule for CollapsibleLetIn {
             if LetIn::cast(body.clone()).is_some();
             then {
                 let first_annotation = node.text_range();
-                let first_message = "This let-in expression contains a nested let-in expression";
+                let first_message = "This `let in` expression contains a nested `let in` expression";
 
                 let second_annotation = body.text_range();
-                let second_message = "This let-in expression is nested";
+                let second_message = "This `let in` expression is nested";
 
                 let replacement_at = {
                     let start = body

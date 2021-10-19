@@ -42,6 +42,13 @@ impl Report {
             .push(Diagnostic::suggest(at, message, suggestion));
         self
     }
+    /// A range that encompasses all the suggestions provided in this report
+    pub fn total_suggestion_range(&self) -> Option<TextRange> {
+        self.diagnostics
+            .iter()
+            .flat_map(|d| Some(d.suggestion.as_ref()?.at))
+            .reduce(|acc, next| acc.cover(next))
+    }
 }
 
 /// Mapping from a bytespan to an error message.
