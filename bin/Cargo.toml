@@ -8,5 +8,8 @@ edition = "2018"
 [dependencies]
 lib = { path = "../lib" }
 ariadne = "0.1.3"
-anyhow = "1.0"
 rnix = "0.9.0"
+clap = "3.0.0-beta.4"
+globset = "0.4.8"
+thiserror = "1.0.30"
+vfs = { path = "../vfs" }
