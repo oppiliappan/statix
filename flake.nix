@@ -76,6 +76,12 @@
       defaultPackage =
         forAllSystems (system: self.packages."${system}".statix);
 
+      defaultApp = forAllSystems (system:
+        {
+          type = "app";
+          program = "${self.packages."${system}".statix}/bin/statix";
+        });
+
       devShell = forAllSystems (system:
         let
           pkgs = nixpkgsFor.${system};
