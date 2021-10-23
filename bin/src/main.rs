@@ -49,7 +49,7 @@ fn _main() -> Result<(), StatixErr> {
 
             let mut stderr = io::stderr();
             lint_results.for_each(|r| {
-                stderr.write(&r, &vfs).unwrap();
+                stderr.write(&r, &vfs, lint_config.format).unwrap();
             });
             errors.for_each(|e| {
                 eprintln!("{}", e);
