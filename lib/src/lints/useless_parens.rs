@@ -84,6 +84,7 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
                 | ParsedType::Str(_)
                 | ParsedType::AttrSet(_)
                 | ParsedType::Select(_)
+                | ParsedType::Ident(_)
             );
             then {
                 let at = paren_expr_range;
