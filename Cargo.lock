@@ -330,6 +330,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
+name = "similar"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e24979f63a11545f5f2c60141afe249d4f19f84581ea2138065e400941d83d3"
+
+[[package]]
 name = "smol_str"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -344,6 +350,7 @@ dependencies = [
  "globset",
  "lib",
  "rnix",
+ "similar",
  "thiserror",
  "vfs",
 ]

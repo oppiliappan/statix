@@ -20,9 +20,17 @@ pub enum LintErr {
 }
 
 #[derive(Error, Debug)]
+pub enum FixErr {
+    #[error("[{0}] syntax error: {1}")]
+    Parse(PathBuf, ParseError),
+}
+
+#[derive(Error, Debug)]
 pub enum StatixErr {
     #[error("linter error: {0}")]
     Lint(#[from] LintErr),
+    #[error("fixer error: {0}")]
+    Fix(#[from] FixErr),
     #[error("config error: {0}")]
     Config(#[from] ConfigErr),
 }

@@ -1,7 +1,12 @@
-use std::{default::Default, fs, path::PathBuf, str::FromStr};
+use std::{
+    default::Default,
+    fs, io,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 use clap::Clap;
-use globset::{GlobBuilder, GlobSetBuilder};
+use globset::{Error as GlobError, GlobBuilder, GlobSet, GlobSetBuilder};
 use vfs::ReadOnlyVfs;
 
 use crate::err::ConfigErr;
@@ -77,29 +82,52 @@ pub struct LintConfig {
 
 impl LintConfig {
     pub fn from_opts(opts: Opts) -> Result<Self, ConfigErr> {
-        let ignores = {
-            let mut set = GlobSetBuilder::new();
-            for pattern in opts.ignore {
-                let glob = GlobBuilder::new(&pattern).build().map_err(|err| {
-                    ConfigErr::InvalidGlob(err.glob().map(|i| i.to_owned()), err.kind().clone())
-                })?;
-                set.add(glob);
-            }
-            set.build().map_err(|err| {
-                ConfigErr::InvalidGlob(err.glob().map(|i| i.to_owned()), err.kind().clone())
-            })
-        }?;
+        let ignores = build_ignore_set(&opts.ignore).map_err(|err| {
+            ConfigErr::InvalidGlob(err.glob().map(|i| i.to_owned()), err.kind().clone())
+        })?;
 
-        let walker = dirs::Walker::new(opts.target).map_err(ConfigErr::InvalidPath)?;
-
-        let files = walker
-            .filter(|path| matches!(path.extension(), Some(e) if e == "nix"))
+        let files = walk_nix_files(&opts.target)?
             .filter(|path| !ignores.is_match(path))
             .collect();
+
         Ok(Self {
             files,
             format: opts.format.unwrap_or_default(),
         })
+    }
+
+    pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
+        let mut vfs = ReadOnlyVfs::default();
+        for file in self.files.iter() {
+            let _id = vfs.alloc_file_id(&file);
+            let data = fs::read_to_string(&file).map_err(ConfigErr::InvalidPath)?;
+            vfs.set_file_contents(&file, data.as_bytes());
+        }
+        Ok(vfs)
+    }
+}
+
+pub struct FixConfig {
+    pub files: Vec<PathBuf>,
+    pub diff_only: bool,
+}
+
+impl FixConfig {
+    pub fn from_opts(opts: Opts) -> Result<Self, ConfigErr> {
+        let ignores = build_ignore_set(&opts.ignore).map_err(|err| {
+            ConfigErr::InvalidGlob(err.glob().map(|i| i.to_owned()), err.kind().clone())
+        })?;
+
+        let files = walk_nix_files(&opts.target)?
+            .filter(|path| !ignores.is_match(path))
+            .collect();
+
+        let diff_only = match opts.subcmd {
+            Some(SubCommand::Fix(f)) => f.diff_only,
+            _ => false,
+        };
+
+        Ok(Self { files, diff_only })
     }
 
     pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
@@ -167,4 +195,18 @@ mod dirs {
             self.files.pop()
         }
     }
+}
+
+fn build_ignore_set(ignores: &Vec<String>) -> Result<GlobSet, GlobError> {
+    let mut set = GlobSetBuilder::new();
+    for pattern in ignores {
+        let glob = GlobBuilder::new(&pattern).build()?;
+        set.add(glob);
+    }
+    set.build()
+}
+
+fn walk_nix_files<P: AsRef<Path>>(target: P) -> Result<impl Iterator<Item = PathBuf>, io::Error> {
+    let walker = dirs::Walker::new(target)?;
+    Ok(walker.filter(|path: &PathBuf| matches!(path.extension(), Some(e) if e == "nix")))
 }

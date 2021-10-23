@@ -1,8 +1,8 @@
 use crate::err::LintErr;
 
-use lib::{LINTS, Report};
+use lib::{Report, LINTS};
 use rnix::WalkEvent;
-use vfs::{VfsEntry, FileId};
+use vfs::{FileId, VfsEntry};
 
 #[derive(Debug)]
 pub struct LintResult {
