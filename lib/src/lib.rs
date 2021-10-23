@@ -49,6 +49,16 @@ impl Report {
             .flat_map(|d| Some(d.suggestion.as_ref()?.at))
             .reduce(|acc, next| acc.cover(next))
     }
+    /// Unsafe but handy replacement for above
+    pub fn range(&self) -> TextRange {
+        self.total_suggestion_range().unwrap()
+    }
+    /// Apply all diagnostics. Assumption: diagnostics do not overlap
+    pub fn apply(&self, src: &mut String) {
+        for d in self.diagnostics.iter() {
+            d.apply(src);
+        }
+    }
 }
 
 /// Mapping from a bytespan to an error message.
@@ -77,6 +87,12 @@ impl Diagnostic {
             suggestion: Some(suggestion),
         }
     }
+    /// Apply a diagnostic to a source file
+    pub fn apply(&self, src: &mut String) {
+        if let Some(s) = &self.suggestion {
+            s.apply(src);
+        }
+    }
 }
 
 /// Suggested fix for a diagnostic, the fix is provided as a syntax element.
@@ -94,6 +110,12 @@ impl Suggestion {
             at,
             fix: fix.into(),
         }
+    }
+    /// Apply a suggestion to a source file
+    pub fn apply(&self, src: &mut String) {
+        let start = usize::from(self.at.start());
+        let end = usize::from(self.at.end());
+        src.replace_range(start..end, &self.fix.to_string())
     }
 }
 
