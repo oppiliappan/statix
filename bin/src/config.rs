@@ -11,7 +11,7 @@ use vfs::ReadOnlyVfs;
 
 use crate::err::ConfigErr;
 
-/// Static analysis and linting for the nix programming language
+/// Lints and suggestions for the Nix programming language
 #[derive(Clap, Debug)]
 #[clap(version = "0.1.0", author = "Akshay <nerdy@peppe.rs>")]
 pub struct Opts {

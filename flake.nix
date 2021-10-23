@@ -21,6 +21,7 @@
     }:
     let
       inherit (import-cargo.builders) importCargo;
+
       supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       nixpkgsFor = forAllSystems (system:
@@ -28,26 +29,31 @@
           inherit system;
           overlays = [ self.overlay ];
         });
+
       mozilla = p: p.callPackage (mozillapkgs + "/package-set.nix") { };
       chanspec = {
         date = "2021-09-30";
         channel = "nightly";
         sha256 = "Elqn7GDBDE/QT1XTDyj0EvivbC//uwjWX8d+J3Pi0dY="; # set zeros after modifying channel or date
       };
+      rustChannel = p: (mozilla p).rustChannelOf chanspec;
+
     in
     {
 
       overlay = final: prev:
         let
-          rustChannel = (mozilla final.pkgs).rustChannelOf chanspec;
-          inherit (rustChannel) rust rustc rust-src;
+          inherit (rustChannel final.pkgs) rust rust-src;
         in
         {
 
           statix = with final; pkgs.stdenv.mkDerivation {
             pname = "statix";
             version = "v0.1.0";
-            src = ./.;
+            src = builtins.path {
+              path = ./.;
+              name = "statix";
+            };
             nativeBuildInputs = [
               (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
               rust
@@ -73,21 +79,20 @@
       devShell = forAllSystems (system:
         let
           pkgs = nixpkgsFor.${system};
-          rustChannel = (mozilla pkgs).rustChannelOf chanspec;
+          inherit (rustChannel pkgs) rust rust-src;
         in
         with pkgs;
         mkShell rec {
           buildInputs =
-            (with pkgs; [
+            [
               rust-analyzer
               rustfmt
               cargo
               cargo-watch
-            ]) ++ (with rustChannel; [
               rust
               rust-src
-            ]);
-          RUST_SRC_PATH = "${rustChannel.rust-src}/lib/rustlib/src/rust/library";
+            ];
+          RUST_SRC_PATH = "${rust-src}/lib/rustlib/src/rust/library";
           RUST_LOG = "info";
           RUST_BACKTRACE = 1;
         });
