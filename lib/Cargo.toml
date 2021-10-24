@@ -11,3 +11,13 @@ if_chain = "1.0"
 macros = { path = "../macros" }
 lazy_static = "1.0"
 rowan = "0.12.5"
+serde_json = { version = "1.0.68", optional = true }
+
+[dependencies.serde]
+version = "1.0.130"
+features = [ "derive" ]
+optional = true
+
+[features]
+default = []
+json-out = [ "serde", "serde_json" ]

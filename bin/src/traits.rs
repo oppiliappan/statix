@@ -32,9 +32,10 @@ where
         format: OutFormat,
     ) -> io::Result<()> {
         match format {
+            #[cfg(feature = "json")]
+            OutFormat::Json => json::write_json(self, lint_result, vfs),
             OutFormat::StdErr => write_stderr(self, lint_result, vfs),
             OutFormat::Errfmt => write_errfmt(self, lint_result, vfs),
-            _ => Ok(()),
         }
     }
 }
@@ -84,7 +85,11 @@ fn write_stderr<T: Write>(
     Ok(())
 }
 
-fn write_errfmt<T: Write>(writer: &mut T, lint_result: &LintResult, vfs: &ReadOnlyVfs) -> io::Result<()> {
+fn write_errfmt<T: Write>(
+    writer: &mut T,
+    lint_result: &LintResult,
+    vfs: &ReadOnlyVfs,
+) -> io::Result<()> {
     let file_id = lint_result.file_id;
     let src = str::from_utf8(vfs.get(file_id)).unwrap();
     let path = vfs.file_path(file_id);
@@ -105,6 +110,42 @@ fn write_errfmt<T: Write>(writer: &mut T, lint_result: &LintResult, vfs: &ReadOn
         }
     }
     Ok(())
+}
+
+#[cfg(feature = "json")]
+mod json {
+    use crate::lint::LintResult;
+    use std::io::{self, Write};
+    use vfs::ReadOnlyVfs;
+
+    use lib::Report;
+    use serde::Serialize;
+    use serde_json;
+
+    #[derive(Serialize)]
+    struct JsonReport<'μ> {
+        file: &'μ std::path::Path,
+        report: Vec<&'μ Report>,
+    }
+
+    pub fn write_json<T: Write>(
+        writer: &mut T,
+        lint_result: &LintResult,
+        vfs: &ReadOnlyVfs,
+    ) -> io::Result<()> {
+        let file_id = lint_result.file_id;
+        let path = vfs.file_path(file_id);
+        writeln!(
+            writer,
+            "{}",
+            serde_json::to_string_pretty(&JsonReport {
+                file: path,
+                report: lint_result.reports.iter().collect::<Vec<_>>()
+            })
+            .unwrap()
+        )?;
+        Ok(())
+    }
 }
 
 fn line(at: TextRange, src: &str) -> usize {

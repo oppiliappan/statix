@@ -14,3 +14,15 @@ thiserror = "1.0.30"
 similar = "2.1.0"
 vfs = { path = "../vfs" }
 lib = { path = "../lib" }
+
+[dependencies.serde_json]
+version = "1.0.68"
+optional = true
+
+[dependencies.serde]
+version = "1.0.68"
+features = [ "derive" ]
+optional = true
+
+[features]
+json = [ "lib/json-out", "serde_json", "serde" ]
