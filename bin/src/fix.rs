@@ -65,48 +65,40 @@ pub struct Fixed {
 
 impl<'a> FixResult<'a> {
     fn empty(src: Source<'a>) -> Self {
-        Self { src, fixed: vec![] }
+        Self { src, fixed: Vec::new() }
     }
 }
 
-fn next(mut src: Source) -> Result<FixResult, RnixParseErr> {
-    let all_reports = collect_fixes(&src)?;
-
-    if all_reports.is_empty() {
-        return Ok(FixResult::empty(src));
-    }
-
-    let reordered = reorder(all_reports);
-
-    let fixed = reordered
-        .iter()
-        .map(|r| Fixed {
-            at: r.range(),
-            code: r.code,
-        })
-        .collect::<Vec<_>>();
-    for report in reordered {
-        report.apply(src.to_mut());
-    }
-
-    Ok(FixResult {
-        src,
-        fixed
-    })
-}
-
-pub fn fix(src: &str) -> Result<FixResult, RnixParseErr> {
-    let src = Cow::from(src);
-    let _ = rnix::parse(&src).as_result()?;
-    let mut initial = FixResult::empty(src);
-
-    while let Ok(next_result) = next(initial.src)  {
-        if next_result.fixed.is_empty() {
-            return Ok(next_result);
-        } else {
-            initial = FixResult::empty(next_result.src);
+impl<'a> Iterator for FixResult<'a> {
+    type Item = FixResult<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        let all_reports = collect_fixes(&self.src).ok()?;
+        if all_reports.is_empty() {
+            return None;
         }
-    }
 
-    unreachable!("a fix caused a syntax error, please report a bug");
+        let reordered = reorder(all_reports);
+        let fixed = reordered
+            .iter()
+            .map(|r| Fixed {
+                at: r.range(),
+                code: r.code,
+            })
+            .collect::<Vec<_>>();
+        for report in reordered {
+            report.apply(self.src.to_mut());
+        }
+
+        Some(FixResult {
+            src: self.src.clone(),
+            fixed
+        })
+    }
+}
+
+pub fn fix(src: &str) -> Option<FixResult> {
+    let src = Cow::from(src);
+    let _ = rnix::parse(&src).as_result().ok()?;
+    let initial = FixResult::empty(src);
+    initial.into_iter().last()
 }

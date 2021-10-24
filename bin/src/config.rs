@@ -17,39 +17,30 @@ use crate::err::ConfigErr;
 pub struct Opts {
     /// File or directory to run statix on
     #[clap(default_value = ".")]
-    target: String,
+    pub target: String,
 
-    // /// Path to statix config
-    // #[clap(short, long, default_value = ".statix.toml")]
-    // config: String,
-    /// Regex of file patterns to not lint
+    /// Globs of file patterns to skip
     #[clap(short, long)]
-    ignore: Vec<String>,
+    pub ignore: Vec<String>,
 
-    /// Output format. Supported values: json, errfmt
+    /// Output format.
+    /// Supported values: errfmt, json (on feature flag only)
     #[clap(short = 'o', long)]
     format: Option<OutFormat>,
 
-    #[clap(subcommand)]
-    pub subcmd: Option<SubCommand>,
-}
-
-#[derive(Clap, Debug)]
-#[clap(version = "0.1.0", author = "Akshay <nerdy@peppe.rs>")]
-pub enum SubCommand {
     /// Find and fix issues raised by statix
-    Fix(Fix),
-}
+    #[clap(short = 'f', long)]
+    pub fix: bool,
 
-#[derive(Clap, Debug)]
-pub struct Fix {
-    /// Do not write to files, display a diff instead
+    /// Do not fix files in place, display a diff instead
     #[clap(short = 'd', long = "dry-run")]
     diff_only: bool,
 }
 
+
 #[derive(Debug, Copy, Clone)]
 pub enum OutFormat {
+    #[cfg(feature = "json")]
     Json,
     Errfmt,
     StdErr,
@@ -66,9 +57,10 @@ impl FromStr for OutFormat {
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value.to_ascii_lowercase().as_str() {
-            "json" => Ok(Self::Json),
+            #[cfg(feature = "json")] "json" => Ok(Self::Json),
             "errfmt" => Ok(Self::Errfmt),
             "stderr" => Ok(Self::StdErr),
+            "json" => Err("statix was not compiled with the `json` feature flag"),
             _ => Err("unknown output format, try: json, errfmt"),
         }
     }
@@ -122,11 +114,7 @@ impl FixConfig {
             .filter(|path| !ignores.is_match(path))
             .collect();
 
-        let diff_only = match opts.subcmd {
-            Some(SubCommand::Fix(f)) => f.diff_only,
-            _ => false,
-        };
-
+        let diff_only = opts.diff_only;
         Ok(Self { files, diff_only })
     }
 

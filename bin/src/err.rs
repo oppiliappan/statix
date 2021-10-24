@@ -23,6 +23,8 @@ pub enum LintErr {
 pub enum FixErr {
     #[error("[{0}] syntax error: {1}")]
     Parse(PathBuf, ParseError),
+    #[error("path error: {0}")]
+    InvalidPath(#[from] io::Error),
 }
 
 #[derive(Error, Debug)]
