@@ -2,50 +2,82 @@
 
 > Lints and suggestions for the Nix programming language.
 
-`statix` highlights antipatterns in Nix code. `statix fix`
+`statix` highlights antipatterns in Nix code. `statix --fix`
 can fix several such occurrences.
 
 For the time-being, `statix` works only with ASTs
 produced by the `rnix-parser` crate and does not evaluate
 any nix code (imports, attr sets etc.). 
 
+## Examples
+
+```shell
+$ statix tests/c.nix
+[W04] Warning: Assignment instead of inherit from
+   ╭─[tests/c.nix:2:3]
+   │
+ 2 │   mtl = pkgs.haskellPackages.mtl;
+   ·   ───────────────┬───────────────
+   ·                  ╰───────────────── This assignment is better written with inherit
+───╯
+
+$ statix --fix --dry-run tests/c.nix
+--- tests/c.nix
++++ tests/c.nix [fixed]
+@@ -1,6 +1,6 @@
+ let
+-  mtl = pkgs.haskellPackages.mtl;
++  inherit (pkgs.haskellPackages) mtl;
+ in
+ null
+```
+
 ## Installation
 
 `statix` is available via a nix flake:
 
-```
-nix run git+https://git.peppe.rs/languages/statix
-
-# or
-
+```shell
+# build from source
 nix build git+https://git.peppe.rs/languages/statix
 ./result/bin/statix --help
+
+# statix also provides a flake app
+nix run git+https://git.peppe.rs/languages/statix -- --help
+
+# save time on builds using cachix
+cachix use statix
 ```
 
 ## Usage
 
+Basic usage is as simple as:
+
+```shell
+# recursively finds nix files and raises lints
+statix /path/to/dir
+
+# ignore generated files, such as Cargo.nix
+statix /path/to/dir -i '*Cargo.nix'
+
+# see `statix -h` for a full list of options
 ```
-statix 0.1.0
 
-Akshay <nerdy@peppe.rs>
+Certain lints have suggestions. Apply suggestions back to
+the source with:
 
-Lints and suggestions for the Nix programming language
+```shell
+statix --fix /path/to/file
 
-USAGE:
-    statix [FLAGS] [OPTIONS] [--] [TARGET]
+# show diff, do not write to file
+statix --fix --dry-run /path/to/file
+```
 
-ARGS:
-    <TARGET>    File or directory to run statix on [default: .]
+`statix` supports a variety of output formats; standard,
+json and errfmt:
 
-FLAGS:
-    -d, --dry-run    Do not fix files in place, display a diff instead
-    -f, --fix        Find and fix issues raised by statix
-    -h, --help       Print help information
-    -V, --version    Print version information
-
-OPTIONS:
-    -i, --ignore <IGNORE>...    Globs of file patterns to skip
-    -o, --format <FORMAT>       Output format. Supported values: errfmt, json (on feature flag only)
+```shell
+statix /path/to/dir -o json
+statix /path/to/dir -o errfmt # singleline, easy to integrate with vim
 ```
 
 ## Architecture
@@ -55,6 +87,7 @@ OPTIONS:
 - `bin`: the CLI/entrypoint
 - `lib`: library of lints and utilities to define these
   lints
+- `vfs`: virtual filesystem
 - `macros`: procedural macros to help define a lint
 
 ### `bin`
@@ -70,6 +103,11 @@ A library of AST-based lints and utilities to help write
 those lints. It should be easy for newcomers to write lints
 without being familiar with the rest of the codebase.
 
+### `vfs`
+
+VFS is an in-memory filesystem. It provides cheap-to-copy
+handles (`FileId`s) to access paths and file contents.
+
 ### `macros`
 
 This crate intends to be a helper layer to declare lints and
@@ -79,4 +117,6 @@ their metadata.
 
 - Offline documentation for each lint
 - Test suite for lints and suggestions
-- Output singleline/errfmt + vim plugin
+- Vim plugin (qf list population, apply suggestions)
+- Resolve imports and scopes for better lints
+- Add silent flag that exits with status

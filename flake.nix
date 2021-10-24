@@ -60,8 +60,10 @@
               cargo
             ];
             buildPhase = ''
-              cargo build -p statix --release --offline
+              cargo build -p statix --all-features --release --offline
             '';
+            # statix does not have any tests currently
+            doCheck = false;
             installPhase = ''
               install -Dm775 ./target/release/statix $out/bin/statix
             '';
@@ -85,19 +87,17 @@
       devShell = forAllSystems (system:
         let
           pkgs = nixpkgsFor.${system};
-          inherit (rustChannel pkgs) rust rust-src;
+          inherit (rustChannel pkgs) rust rust-src rust-analysis;
         in
         with pkgs;
         mkShell rec {
-          buildInputs =
-            [
-              rust-analyzer
-              rustfmt
-              cargo
-              cargo-watch
-              rust
-              rust-src
-            ];
+          buildInputs = [
+            rustfmt
+            cargo
+            cargo-watch
+            rust
+            rust-src
+          ];
           RUST_SRC_PATH = "${rust-src}/lib/rustlib/src/rust/library";
           RUST_LOG = "info";
           RUST_BACKTRACE = 1;

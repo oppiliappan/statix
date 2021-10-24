@@ -37,6 +37,9 @@ Lint ideas
 - invalid or potentially risky string interpolations
 - useless parens in infix exprs
 - unused function params
+- manual map over list
+- merge inherit
+- merge inherit-from
 
 Extensions
 ----------
