@@ -15,118 +15,74 @@ use crate::err::ConfigErr;
 #[derive(Clap, Debug)]
 #[clap(version = "0.1.0", author = "Akshay <nerdy@peppe.rs>")]
 pub struct Opts {
-    /// File or directory to run statix on
-    #[clap(default_value = ".")]
-    pub target: String,
+    #[clap(subcommand)]
+    pub cmd: SubCommand,
+}
+
+#[derive(Clap, Debug)]
+pub enum SubCommand {
+    /// Lints and suggestions for the nix programming language
+    Check(Check),
+    /// Find and fix issues raised by statix-check
+    Fix(Fix),
+    /// Fix exactly one issue at provided position
+    Single(Single),
+}
+
+#[derive(Clap, Debug)]
+pub struct Check {
+    /// File or directory to run check on
+    #[clap(default_value = ".", parse(from_os_str))]
+    target: PathBuf,
 
     /// Globs of file patterns to skip
     #[clap(short, long)]
-    pub ignore: Vec<String>,
+    ignore: Vec<String>,
 
     /// Output format.
     /// Supported values: errfmt, json (on feature flag only)
-    #[clap(short = 'o', long)]
-    format: Option<OutFormat>,
-
-    /// Find and fix issues raised by statix
-    #[clap(short = 'f', long)]
-    pub fix: bool,
-
-    /// Do not fix files in place, display a diff instead
-    #[clap(short = 'd', long = "dry-run")]
-    diff_only: bool,
-}
-
-
-#[derive(Debug, Copy, Clone)]
-pub enum OutFormat {
-    #[cfg(feature = "json")]
-    Json,
-    Errfmt,
-    StdErr,
-}
-
-impl Default for OutFormat {
-    fn default() -> Self {
-        OutFormat::StdErr
-    }
-}
-
-impl FromStr for OutFormat {
-    type Err = &'static str;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        match value.to_ascii_lowercase().as_str() {
-            #[cfg(feature = "json")] "json" => Ok(Self::Json),
-            "errfmt" => Ok(Self::Errfmt),
-            "stderr" => Ok(Self::StdErr),
-            "json" => Err("statix was not compiled with the `json` feature flag"),
-            _ => Err("unknown output format, try: json, errfmt"),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct LintConfig {
-    pub files: Vec<PathBuf>,
+    #[clap(short = 'o', long, default_value = "OutFormat::StdErr")]
     pub format: OutFormat,
 }
 
-impl LintConfig {
-    pub fn from_opts(opts: Opts) -> Result<Self, ConfigErr> {
-        let ignores = build_ignore_set(&opts.ignore).map_err(|err| {
-            ConfigErr::InvalidGlob(err.glob().map(|i| i.to_owned()), err.kind().clone())
-        })?;
-
-        let files = walk_nix_files(&opts.target)?
-            .filter(|path| !ignores.is_match(path))
-            .collect();
-
-        Ok(Self {
-            files,
-            format: opts.format.unwrap_or_default(),
-        })
-    }
-
+impl Check {
     pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
-        let mut vfs = ReadOnlyVfs::default();
-        for file in self.files.iter() {
-            let _id = vfs.alloc_file_id(&file);
-            let data = fs::read_to_string(&file).map_err(ConfigErr::InvalidPath)?;
-            vfs.set_file_contents(&file, data.as_bytes());
-        }
-        Ok(vfs)
+        let files = walk_with_ignores(&self.ignore, &self.target)?;
+        vfs(files)
     }
 }
 
-pub struct FixConfig {
-    pub files: Vec<PathBuf>,
+#[derive(Clap, Debug)]
+pub struct Fix {
+    /// File or directory to run fix on
+    #[clap(default_value = ".", parse(from_os_str))]
+    target: PathBuf,
+
+    /// Globs of file patterns to skip
+    #[clap(short, long)]
+    ignore: Vec<String>,
+
+    /// Do not fix files in place, display a diff instead
+    #[clap(short, long = "dry-run")]
     pub diff_only: bool,
 }
 
-impl FixConfig {
-    pub fn from_opts(opts: Opts) -> Result<Self, ConfigErr> {
-        let ignores = build_ignore_set(&opts.ignore).map_err(|err| {
-            ConfigErr::InvalidGlob(err.glob().map(|i| i.to_owned()), err.kind().clone())
-        })?;
-
-        let files = walk_nix_files(&opts.target)?
-            .filter(|path| !ignores.is_match(path))
-            .collect();
-
-        let diff_only = opts.diff_only;
-        Ok(Self { files, diff_only })
-    }
-
+impl Fix {
     pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
-        let mut vfs = ReadOnlyVfs::default();
-        for file in self.files.iter() {
-            let _id = vfs.alloc_file_id(&file);
-            let data = fs::read_to_string(&file).map_err(ConfigErr::InvalidPath)?;
-            vfs.set_file_contents(&file, data.as_bytes());
-        }
-        Ok(vfs)
+        let files = walk_with_ignores(&self.ignore, &self.target)?;
+        vfs(files)
     }
+}
+
+#[derive(Clap, Debug)]
+pub struct Single {
+    /// File to run single-fix on
+    #[clap(default_value = ".", parse(from_os_str))]
+    pub target: PathBuf,
+
+    /// Position to attempt a fix at
+    #[clap(short, long, parse(try_from_str = parse_line_col))]
+    pub position: (usize, usize),
 }
 
 mod dirs {
@@ -185,7 +141,23 @@ mod dirs {
     }
 }
 
-fn build_ignore_set(ignores: &Vec<String>) -> Result<GlobSet, GlobError> {
+fn parse_line_col(src: &str) -> Result<(usize, usize), ConfigErr> {
+    let parts = src.split(",");
+    match parts.collect::<Vec<_>>().as_slice() {
+        [line, col] => {
+            let l = line
+                .parse::<usize>()
+                .map_err(|_| ConfigErr::InvalidPosition(src.to_owned()))?;
+            let c = col
+                .parse::<usize>()
+                .map_err(|_| ConfigErr::InvalidPosition(src.to_owned()))?;
+            Ok((l, c))
+        }
+        _ => Err(ConfigErr::InvalidPosition(src.to_owned())),
+    }
+}
+
+fn build_ignore_set(ignores: &[String]) -> Result<GlobSet, GlobError> {
     let mut set = GlobSetBuilder::new();
     for pattern in ignores {
         let glob = GlobBuilder::new(&pattern).build()?;
@@ -197,4 +169,57 @@ fn build_ignore_set(ignores: &Vec<String>) -> Result<GlobSet, GlobError> {
 fn walk_nix_files<P: AsRef<Path>>(target: P) -> Result<impl Iterator<Item = PathBuf>, io::Error> {
     let walker = dirs::Walker::new(target)?;
     Ok(walker.filter(|path: &PathBuf| matches!(path.extension(), Some(e) if e == "nix")))
+}
+
+fn walk_with_ignores<P: AsRef<Path>>(
+    ignores: &[String],
+    target: P,
+) -> Result<Vec<PathBuf>, ConfigErr> {
+    let ignores = build_ignore_set(ignores).map_err(|err| {
+        ConfigErr::InvalidGlob(err.glob().map(|i| i.to_owned()), err.kind().clone())
+    })?;
+
+    Ok(walk_nix_files(&target)?
+        .filter(|path| !ignores.is_match(path))
+        .collect())
+}
+
+fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
+    let mut vfs = ReadOnlyVfs::default();
+    for file in files.iter() {
+        let _id = vfs.alloc_file_id(&file);
+        let data = fs::read_to_string(&file).map_err(ConfigErr::InvalidPath)?;
+        vfs.set_file_contents(&file, data.as_bytes());
+    }
+    Ok(vfs)
+
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum OutFormat {
+    #[cfg(feature = "json")]
+    Json,
+    Errfmt,
+    StdErr,
+}
+
+impl Default for OutFormat {
+    fn default() -> Self {
+        OutFormat::StdErr
+    }
+}
+
+impl FromStr for OutFormat {
+    type Err = &'static str;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.to_ascii_lowercase().as_str() {
+            #[cfg(feature = "json")]
+            "json" => Ok(Self::Json),
+            "errfmt" => Ok(Self::Errfmt),
+            "stderr" => Ok(Self::StdErr),
+            "json" => Err("statix was not compiled with the `json` feature flag"),
+            _ => Err("unknown output format, try: json, errfmt"),
+        }
+    }
 }
