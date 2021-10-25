@@ -1,6 +1,6 @@
 use std::{
     default::Default,
-    fs, io,
+    fmt, fs, io,
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -40,8 +40,8 @@ pub struct Check {
     ignore: Vec<String>,
 
     /// Output format.
-    /// Supported values: errfmt, json (on feature flag only)
-    #[clap(short = 'o', long, default_value = "OutFormat::StdErr")]
+    /// Supported values: stderr, errfmt, json (on feature flag only)
+    #[clap(short = 'o', long, default_value_t, parse(try_from_str))]
     pub format: OutFormat,
 }
 
@@ -192,7 +192,6 @@ fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
         vfs.set_file_contents(&file, data.as_bytes());
     }
     Ok(vfs)
-
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -206,6 +205,21 @@ pub enum OutFormat {
 impl Default for OutFormat {
     fn default() -> Self {
         OutFormat::StdErr
+    }
+}
+
+impl fmt::Display for OutFormat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                #[cfg(feature = "json")]
+                Self::Json => "json",
+                Self::Errfmt => "errfmt",
+                Self::StdErr => "stderr",
+            }
+        )
     }
 }
 
