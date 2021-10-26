@@ -1,7 +1,7 @@
 use std::{borrow::Cow, convert::TryFrom};
 
 use lib::{Report, LINTS};
-use rnix::{TextRange, TextSize};
+use rnix::{TextSize, WalkEvent};
 
 use crate::err::SingleFixErr;
 use crate::fix::Source;
@@ -12,7 +12,7 @@ pub struct SingleFixResult<'δ> {
 
 fn pos_to_byte(line: usize, col: usize, src: &str) -> Result<TextSize, SingleFixErr> {
     let mut byte: TextSize = TextSize::of("");
-    for (_, l) in src.lines().enumerate().take_while(|(i, _)| i <= &line) {
+    for (l, _) in src.split_inclusive('\n').zip(1..).take_while(|(_, i)| i < &line) {
         byte += TextSize::of(l);
     }
     byte += TextSize::try_from(col).map_err(|_| SingleFixErr::Conversion(col))?;
@@ -25,24 +25,31 @@ fn pos_to_byte(line: usize, col: usize, src: &str) -> Result<TextSize, SingleFix
 }
 
 fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
+    let offset = offset - TextSize::from(1u32);
     // we don't really need the source to form a completely parsed tree
     let parsed = rnix::parse(src);
 
-    let elem_at = parsed
+    parsed
         .node()
-        .child_or_token_at_range(TextRange::empty(offset))
-        .ok_or(SingleFixErr::NoOp)?;
-
-    LINTS
-        .get(&elem_at.kind())
-        .map(|rules| {
-            rules
-                .iter()
-                .filter_map(|rule| rule.validate(&elem_at))
-                .filter(|report| report.total_suggestion_range().is_some())
-                .next()
+        .preorder_with_tokens()
+        .filter_map(|event| match event {
+            WalkEvent::Enter(child) => {
+                if child.text_range().start() == offset {
+                    LINTS.get(&child.kind()).map(|rules| {
+                        rules
+                            .iter()
+                            .filter_map(|rule| rule.validate(&child))
+                            .filter(|report| report.total_suggestion_range().is_some())
+                            .next()
+                    })
+                } else {
+                    None
+                }
+            },
+            _ => None
         })
         .flatten()
+        .next()
         .ok_or(SingleFixErr::NoOp)
 }
 

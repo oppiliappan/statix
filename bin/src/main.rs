@@ -55,8 +55,21 @@ fn _main() -> Result<(), StatixErr> {
             let path = single_config.target;
             let src = std::fs::read_to_string(&path).map_err(SingleFixErr::InvalidPath)?;
             let (line, col) = single_config.position;
-            let single_result = fix::single(line, col, &src)?;
-            std::fs::write(&path, &*single_result.src).map_err(SingleFixErr::InvalidPath)?;
+            let single_fix_result = fix::single(line, col, &src)?;
+            if single_config.diff_only {
+                let text_diff = TextDiff::from_lines(src.as_str(), &single_fix_result.src);
+                let old_file = format!("{}", path.display());
+                let new_file = format!("{} [fixed]", path.display());
+                println!(
+                    "{}",
+                    text_diff
+                    .unified_diff()
+                    .context_radius(4)
+                    .header(&old_file, &new_file)
+                    );
+            } else {
+                std::fs::write(&path, &*single_fix_result.src).map_err(SingleFixErr::InvalidPath)?;
+            }
         }
     }
     Ok(())

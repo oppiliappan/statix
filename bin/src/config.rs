@@ -83,6 +83,10 @@ pub struct Single {
     /// Position to attempt a fix at
     #[clap(short, long, parse(try_from_str = parse_line_col))]
     pub position: (usize, usize),
+
+    /// Do not fix files in place, display a diff instead
+    #[clap(short, long = "dry-run")]
+    pub diff_only: bool,
 }
 
 mod dirs {
