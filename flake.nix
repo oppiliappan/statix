@@ -69,10 +69,17 @@
             '';
           };
 
+          statix-vim =
+            with final; pkgs.vimUtils.buildVimPlugin {
+              pname = "statix-vim";
+              version = "0.1.0";
+              src = ./vim-plugin;
+            };
+
         };
 
       packages = forAllSystems (system: {
-        inherit (nixpkgsFor."${system}") statix;
+        inherit (nixpkgsFor."${system}") statix statix-vim;
       });
 
       defaultPackage =

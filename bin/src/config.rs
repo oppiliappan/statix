@@ -77,8 +77,8 @@ impl Fix {
 #[derive(Clap, Debug)]
 pub struct Single {
     /// File to run single-fix on
-    #[clap(default_value = ".", parse(from_os_str))]
-    pub target: PathBuf,
+    #[clap(parse(from_os_str))]
+    pub target: Option<PathBuf>,
 
     /// Position to attempt a fix at
     #[clap(short, long, parse(try_from_str = parse_line_col))]

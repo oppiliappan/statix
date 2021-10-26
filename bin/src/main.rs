@@ -4,7 +4,7 @@ mod fix;
 mod lint;
 mod traits;
 
-use std::io;
+use std::io::{self, BufRead};
 
 use crate::{
     err::{FixErr, SingleFixErr, StatixErr},
@@ -55,15 +55,26 @@ fn _main() -> Result<(), StatixErr> {
                 }
             }
         }
+        // FIXME: this block nasty, configure in/out streams in `impl Single` maybe
         SubCommand::Single(single_config) => {
-            let path = single_config.target;
-            let src = std::fs::read_to_string(&path).map_err(SingleFixErr::InvalidPath)?;
+            let src = if let Some(path) = &single_config.target {
+                std::fs::read_to_string(&path).map_err(SingleFixErr::InvalidPath)?
+            } else {
+                io::stdin().lock().lines().map(|l| l.unwrap()).collect::<Vec<String>>().join("\n")
+            };
+
+            let path_id = if let Some(path) = &single_config.target {
+                path.display().to_string()
+            } else {
+                "<unknown>".to_owned()
+            };
+
             let (line, col) = single_config.position;
             let single_fix_result = fix::single(line, col, &src)?;
             if single_config.diff_only {
                 let text_diff = TextDiff::from_lines(src.as_str(), &single_fix_result.src);
-                let old_file = format!("{}", path.display());
-                let new_file = format!("{} [fixed]", path.display());
+                let old_file = format!("{}", path_id);
+                let new_file = format!("{} [fixed]", path_id);
                 println!(
                     "{}",
                     text_diff
@@ -71,9 +82,11 @@ fn _main() -> Result<(), StatixErr> {
                         .context_radius(4)
                         .header(&old_file, &new_file)
                 );
-            } else {
+            } else if let Some(path) = single_config.target {
                 std::fs::write(&path, &*single_fix_result.src)
                     .map_err(SingleFixErr::InvalidPath)?;
+            } else {
+                print!("{}", &*single_fix_result.src)
             }
         }
     }

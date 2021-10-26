@@ -56,6 +56,13 @@ impl Report {
             .flat_map(|d| Some(d.suggestion.as_ref()?.at))
             .reduce(|acc, next| acc.cover(next))
     }
+    /// A range that encompasses all the diagnostics provided in this report
+    pub fn total_diagnostic_range(&self) -> Option<TextRange> {
+        self.diagnostics
+            .iter()
+            .flat_map(|d| Some(d.at))
+            .reduce(|acc, next| acc.cover(next))
+    }
     /// Unsafe but handy replacement for above
     pub fn range(&self) -> TextRange {
         self.total_suggestion_range().unwrap()
