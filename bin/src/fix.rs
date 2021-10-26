@@ -24,6 +24,9 @@ pub struct Fixed {
 
 impl<'a> FixResult<'a> {
     fn empty(src: Source<'a>) -> Self {
-        Self { src, fixed: Vec::new() }
+        Self {
+            src,
+            fixed: Vec::new(),
+        }
     }
 }

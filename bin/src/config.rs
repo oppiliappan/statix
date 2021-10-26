@@ -234,9 +234,10 @@ impl FromStr for OutFormat {
         match value.to_ascii_lowercase().as_str() {
             #[cfg(feature = "json")]
             "json" => Ok(Self::Json),
+            #[cfg(not(feature = "json"))]
+            "json" => Err("statix was not compiled with the `json` feature flag"),
             "errfmt" => Ok(Self::Errfmt),
             "stderr" => Ok(Self::StdErr),
-            "json" => Err("statix was not compiled with the `json` feature flag"),
             _ => Err("unknown output format, try: json, errfmt"),
         }
     }

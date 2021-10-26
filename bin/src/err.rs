@@ -11,7 +11,7 @@ pub enum ConfigErr {
     #[error("path error: {0}")]
     InvalidPath(#[from] io::Error),
     #[error("unable to parse `{0}` as line and column")]
-    InvalidPosition(String)
+    InvalidPosition(String),
 }
 
 #[derive(Error, Debug)]

@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use lib::{Report, LINTS};
 use rnix::{parser::ParseError as RnixParseErr, WalkEvent};
 
-use crate::fix::{Fixed, FixResult};
+use crate::fix::{FixResult, Fixed};
 
 fn collect_fixes(source: &str) -> Result<Vec<Report>, RnixParseErr> {
     let parsed = rnix::parse(source).as_result()?;
@@ -73,7 +73,7 @@ impl<'a> Iterator for FixResult<'a> {
 
         Some(FixResult {
             src: self.src.clone(),
-            fixed
+            fixed,
         })
     }
 }

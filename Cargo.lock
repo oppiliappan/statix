@@ -183,7 +183,7 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "lib"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "if_chain",
  "lazy_static",
@@ -211,7 +211,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -388,7 +388,7 @@ checksum = "b203e79e90905594272c1c97c7af701533d42adaab0beb3859018e477d54a3b0"
 
 [[package]]
 name = "statix"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "ariadne",
  "clap",
@@ -495,7 +495,7 @@ checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
 
 [[package]]
 name = "vfs"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "indexmap",
 ]

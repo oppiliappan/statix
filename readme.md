@@ -2,8 +2,8 @@
 
 > Lints and suggestions for the Nix programming language.
 
-`statix` highlights antipatterns in Nix code. `statix --fix`
-can fix several such occurrences.
+`statix check` highlights antipatterns in Nix code. `statix
+fix` can fix several such occurrences.
 
 For the time-being, `statix` works only with ASTs
 produced by the `rnix-parser` crate and does not evaluate
@@ -12,7 +12,7 @@ any nix code (imports, attr sets etc.).
 ## Examples
 
 ```shell
-$ statix tests/c.nix
+$ statix check tests/c.nix
 [W04] Warning: Assignment instead of inherit from
    ╭─[tests/c.nix:2:3]
    │
@@ -21,7 +21,7 @@ $ statix tests/c.nix
    ·                  ╰───────────────── This assignment is better written with inherit
 ───╯
 
-$ statix --fix --dry-run tests/c.nix
+$ statix fix --dry-run tests/c.nix
 --- tests/c.nix
 +++ tests/c.nix [fixed]
 @@ -1,6 +1,6 @@
@@ -54,10 +54,10 @@ Basic usage is as simple as:
 
 ```shell
 # recursively finds nix files and raises lints
-statix /path/to/dir
+statix check /path/to/dir
 
 # ignore generated files, such as Cargo.nix
-statix /path/to/dir -i '*Cargo.nix'
+statix check /path/to/dir -i '*Cargo.nix'
 
 # see `statix -h` for a full list of options
 ```
@@ -66,18 +66,18 @@ Certain lints have suggestions. Apply suggestions back to
 the source with:
 
 ```shell
-statix --fix /path/to/file
+statix fix /path/to/file
 
 # show diff, do not write to file
-statix --fix --dry-run /path/to/file
+statix fix --dry-run /path/to/file
 ```
 
 `statix` supports a variety of output formats; standard,
 json and errfmt:
 
 ```shell
-statix /path/to/dir -o json
-statix /path/to/dir -o errfmt # singleline, easy to integrate with vim
+statix check /path/to/dir -o json   # only when compiled with --all-features
+statix check /path/to/dir -o errfmt # singleline, easy to integrate with vim
 ```
 
 ## Architecture

@@ -12,7 +12,11 @@ pub struct SingleFixResult<'δ> {
 
 fn pos_to_byte(line: usize, col: usize, src: &str) -> Result<TextSize, SingleFixErr> {
     let mut byte: TextSize = TextSize::of("");
-    for (l, _) in src.split_inclusive('\n').zip(1..).take_while(|(_, i)| i < &line) {
+    for (l, _) in src
+        .split_inclusive('\n')
+        .zip(1..)
+        .take_while(|(_, i)| i < &line)
+    {
         byte += TextSize::of(l);
     }
     byte += TextSize::try_from(col).map_err(|_| SingleFixErr::Conversion(col))?;
@@ -45,8 +49,8 @@ fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
                 } else {
                     None
                 }
-            },
-            _ => None
+            }
+            _ => None,
         })
         .flatten()
         .next()
@@ -60,7 +64,5 @@ pub fn single(line: usize, col: usize, src: &str) -> Result<SingleFixResult, Sin
 
     report.apply(src.to_mut());
 
-    Ok(SingleFixResult {
-        src
-    })
+    Ok(SingleFixResult { src })
 }

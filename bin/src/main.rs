@@ -6,7 +6,10 @@ mod traits;
 
 use std::io;
 
-use crate::{err::{StatixErr, FixErr, SingleFixErr}, traits::WriteDiagnostic};
+use crate::{
+    err::{FixErr, SingleFixErr, StatixErr},
+    traits::WriteDiagnostic,
+};
 
 use clap::Clap;
 use config::{Opts, SubCommand};
@@ -17,7 +20,8 @@ fn _main() -> Result<(), StatixErr> {
     match opts.cmd {
         SubCommand::Check(check_config) => {
             let vfs = check_config.vfs()?;
-            let (lints, errors): (Vec<_>, Vec<_>) = vfs.iter().map(lint::lint).partition(Result::is_ok);
+            let (lints, errors): (Vec<_>, Vec<_>) =
+                vfs.iter().map(lint::lint).partition(Result::is_ok);
             let lint_results = lints.into_iter().map(Result::unwrap);
             let errors = errors.into_iter().map(Result::unwrap_err);
 
@@ -28,7 +32,7 @@ fn _main() -> Result<(), StatixErr> {
             errors.for_each(|e| {
                 eprintln!("{}", e);
             });
-        },
+        }
         SubCommand::Fix(fix_config) => {
             let vfs = fix_config.vfs()?;
             for entry in vfs.iter() {
@@ -40,17 +44,17 @@ fn _main() -> Result<(), StatixErr> {
                         println!(
                             "{}",
                             text_diff
-                            .unified_diff()
-                            .context_radius(4)
-                            .header(&old_file, &new_file)
-                            );
+                                .unified_diff()
+                                .context_radius(4)
+                                .header(&old_file, &new_file)
+                        );
                     } else {
                         let path = entry.file_path;
                         std::fs::write(path, &*fix_result.src).map_err(FixErr::InvalidPath)?;
                     }
                 }
             }
-        },
+        }
         SubCommand::Single(single_config) => {
             let path = single_config.target;
             let src = std::fs::read_to_string(&path).map_err(SingleFixErr::InvalidPath)?;
@@ -63,12 +67,13 @@ fn _main() -> Result<(), StatixErr> {
                 println!(
                     "{}",
                     text_diff
-                    .unified_diff()
-                    .context_radius(4)
-                    .header(&old_file, &new_file)
-                    );
+                        .unified_diff()
+                        .context_radius(4)
+                        .header(&old_file, &new_file)
+                );
             } else {
-                std::fs::write(&path, &*single_fix_result.src).map_err(SingleFixErr::InvalidPath)?;
+                std::fs::write(&path, &*single_fix_result.src)
+                    .map_err(SingleFixErr::InvalidPath)?;
             }
         }
     }
