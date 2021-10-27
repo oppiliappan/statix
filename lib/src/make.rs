@@ -24,6 +24,10 @@ pub fn parenthesize(node: &SyntaxNode) -> types::Paren {
     ast_from_text(&format!("({})", node))
 }
 
+pub fn quote(node: &SyntaxNode) -> types::Str {
+    ast_from_text(&format!("\"{}\"", node))
+}
+
 pub fn unary_not(node: &SyntaxNode) -> types::UnaryOp {
     ast_from_text(&format!("!{}", node))
 }

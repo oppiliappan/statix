@@ -49,7 +49,7 @@
 
           statix = with final; pkgs.stdenv.mkDerivation {
             pname = "statix";
-            version = "v0.2.2";
+            version = "v0.2.3";
             src = builtins.path {
               path = ./.;
               name = "statix";

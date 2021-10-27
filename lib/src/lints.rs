@@ -9,4 +9,7 @@ lint_map! {
     collapsible_let_in,
     eta_reduction,
     useless_parens,
+    unquoted_splice,
+    empty_pattern,
+    redundant_pattern_bind,
 }

@@ -40,6 +40,13 @@ Lint ideas
 - manual map over list
 - merge inherit
 - merge inherit-from
+- empty inherit
+- useless antiquote/splice (where is antiquote truly
+  required?)
+- useless variadic (things like `{...} : expr`, replace with
+  `_: expr`)
+- redundant pattern `{...} @ inputs : expr`, replace with
+  `inputs: expr`
 
 Extensions
 ----------
