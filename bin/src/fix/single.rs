@@ -15,7 +15,7 @@ fn pos_to_byte(line: usize, col: usize, src: &str) -> Result<TextSize, SingleFix
     for (l, _) in src
         .split_inclusive('\n')
         .zip(1..)
-        .take_while(|(_, i)| i < &line)
+        .take_while(|(_, i)| *i < line)
     {
         byte += TextSize::of(l);
     }
@@ -29,7 +29,6 @@ fn pos_to_byte(line: usize, col: usize, src: &str) -> Result<TextSize, SingleFix
 }
 
 fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
-    let offset = offset - TextSize::from(1u32);
     // we don't really need the source to form a completely parsed tree
     let parsed = rnix::parse(src);
 
@@ -38,22 +37,18 @@ fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
         .preorder_with_tokens()
         .filter_map(|event| match event {
             WalkEvent::Enter(child) => {
-                if child.text_range().start() == offset {
-                    LINTS.get(&child.kind()).map(|rules| {
-                        rules
-                            .iter()
-                            .filter_map(|rule| rule.validate(&child))
-                            .filter(|report| report.total_suggestion_range().is_some())
-                            .next()
-                    })
-                } else {
-                    None
-                }
+                LINTS.get(&child.kind()).map(|rules| {
+                    rules
+                        .iter()
+                        .filter_map(|rule| rule.validate(&child))
+                        .filter(|report| report.total_suggestion_range().is_some())
+                        .next()
+                })
             }
             _ => None,
         })
         .flatten()
-        .next()
+        .find(|report| report.total_diagnostic_range().unwrap().contains(offset))
         .ok_or(SingleFixErr::NoOp)
 }
 

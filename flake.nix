@@ -49,7 +49,7 @@
 
           statix = with final; pkgs.stdenv.mkDerivation {
             pname = "statix";
-            version = "v0.2.0";
+            version = "v0.2.2";
             src = builtins.path {
               path = ./.;
               name = "statix";
@@ -75,10 +75,17 @@
             };
           };
 
+          statix-vim =
+            with final; pkgs.vimUtils.buildVimPlugin {
+              pname = "statix-vim";
+              version = "0.1.0";
+              src = ./vim-plugin;
+            };
+
         };
 
       packages = forAllSystems (system: {
-        inherit (nixpkgsFor."${system}") statix;
+        inherit (nixpkgsFor."${system}") statix statix-vim;
       });
 
       defaultPackage =
