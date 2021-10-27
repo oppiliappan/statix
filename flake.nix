@@ -67,6 +67,12 @@
             installPhase = ''
               install -Dm775 ./target/release/statix $out/bin/statix
             '';
+
+            meta = with pkgs.lib; {
+              description = "Lints and suggestions for the Nix programming language";
+              homepage = "https://git.peppe.rs/languages/statix/about";
+              license = licenses.mit;
+            };
           };
 
         };
