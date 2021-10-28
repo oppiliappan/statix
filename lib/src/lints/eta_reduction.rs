@@ -4,8 +4,16 @@ use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     types::{Lambda, Ident, Apply, TypedNode, TokenWrapper},
-    NodeOrToken, SyntaxElement, SyntaxKind,
+    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
+
+fn mentions_ident(ident: &Ident, node: &SyntaxNode) -> bool {
+    if let Some(node_ident) = Ident::cast(node.clone()) {
+        node_ident.as_str() == ident.as_str()
+    } else {
+        node.children().any(|child| mentions_ident(&ident, &child))
+    }
+}
 
 #[lint(
     name = "eta reduction",
@@ -31,6 +39,9 @@ impl Rule for EtaReduction {
             if let Some(value) = Ident::cast(value_node);
 
             if arg.as_str() == value.as_str() ;
+
+            if let Some(lambda_node) = body.lambda();
+            if !mentions_ident(&arg, &lambda_node);
 
             then {
                 let at = node.text_range();
