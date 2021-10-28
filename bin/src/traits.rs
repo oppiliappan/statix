@@ -9,7 +9,7 @@ use ariadne::{
     CharSet, Color, Config as CliConfig, Fmt, Label, LabelAttach, Report as CliReport,
     ReportKind as CliReportKind, Source,
 };
-use rnix::TextRange;
+use rnix::{TextRange, TextSize};
 use vfs::ReadOnlyVfs;
 
 pub trait WriteDiagnostic {
@@ -95,8 +95,8 @@ fn write_errfmt<T: Write>(
     let path = vfs.file_path(file_id);
     for report in lint_result.reports.iter() {
         for diagnostic in report.diagnostics.iter() {
-            let line = line(diagnostic.at, &src);
-            let col = column(diagnostic.at, &src);
+            let line = line(diagnostic.at.start(), &src);
+            let col = column(diagnostic.at.start(), &src);
             writeln!(
                 writer,
                 "{filename}>{linenumber}:{columnnumber}:{errortype}:{errornumber}:{errormessage}",
@@ -115,17 +115,62 @@ fn write_errfmt<T: Write>(
 #[cfg(feature = "json")]
 mod json {
     use crate::lint::LintResult;
-    use std::io::{self, Write};
-    use vfs::ReadOnlyVfs;
 
-    use lib::Report;
+    use std::io::{self, Write};
+
+    use lib::Suggestion;
+    use rnix::TextRange;
     use serde::Serialize;
     use serde_json;
+    use vfs::ReadOnlyVfs;
+
+    #[derive(Serialize)]
+    struct Out<'μ> {
+        #[serde(rename = "file")]
+        path: &'μ std::path::Path,
+        report: Vec<JsonReport<'μ>>,
+    }
 
     #[derive(Serialize)]
     struct JsonReport<'μ> {
-        file: &'μ std::path::Path,
-        report: Vec<&'μ Report>,
+        note: &'static str,
+        code: u32,
+        diagnostics: Vec<JsonDiagnostic<'μ>>,
+    }
+
+    #[derive(Serialize)]
+    struct JsonDiagnostic<'μ> {
+        at: JsonSpan,
+        message: &'μ String,
+        suggestion: &'μ Option<Suggestion>,
+    }
+
+    #[derive(Serialize)]
+    struct JsonSpan {
+        from: Position,
+        to: Position,
+    }
+
+    #[derive(Serialize)]
+    struct Position {
+        line: usize,
+        column: usize,
+    }
+
+    impl JsonSpan {
+        fn from_textrange(at: TextRange, src: &str) -> Self {
+            let start = at.start();
+            let end = at.end();
+            let from = Position {
+                line: super::line(start, src),
+                column: super::column(start, src),
+            };
+            let to = Position {
+                line: super::line(end, src),
+                column: super::column(end, src),
+            };
+            Self { from, to }
+        }
     }
 
     pub fn write_json<T: Write>(
@@ -135,26 +180,45 @@ mod json {
     ) -> io::Result<()> {
         let file_id = lint_result.file_id;
         let path = vfs.file_path(file_id);
+        let src = vfs.get_str(file_id);
+        let report = lint_result
+            .reports
+            .iter()
+            .map(|r| {
+                let note = r.note;
+                let code = r.code;
+                let diagnostics = r
+                    .diagnostics
+                    .iter()
+                    .map(|d| JsonDiagnostic {
+                        at: JsonSpan::from_textrange(d.at, src),
+                        message: &d.message,
+                        suggestion: &d.suggestion,
+                    })
+                    .collect::<Vec<_>>();
+                JsonReport {
+                    note,
+                    code,
+                    diagnostics,
+                }
+            })
+            .collect();
         writeln!(
             writer,
             "{}",
-            serde_json::to_string_pretty(&JsonReport {
-                file: path,
-                report: lint_result.reports.iter().collect::<Vec<_>>()
-            })
-            .unwrap()
+            serde_json::to_string_pretty(&Out { path, report }).unwrap()
         )?;
         Ok(())
     }
 }
 
-fn line(at: TextRange, src: &str) -> usize {
-    let at = at.start().into();
+fn line(at: TextSize, src: &str) -> usize {
+    let at = at.into();
     src[..at].chars().filter(|&c| c == '\n').count() + 1
 }
 
-fn column(at: TextRange, src: &str) -> usize {
-    let at = at.start().into();
+fn column(at: TextSize, src: &str) -> usize {
+    let at = at.into();
     src[..at].rfind('\n').map(|c| at - c).unwrap_or(at + 1)
 }
 

@@ -22,6 +22,7 @@ impl Rule for ManualInherit {
             if let Some(key_value_stmt) = KeyValue::cast(node.clone());
             if let mut key_path = key_value_stmt.key()?.path();
             if let Some(key_node) = key_path.next();
+            // ensure that path has exactly one component
             if key_path.next().is_none();
             if let Some(key) = Ident::cast(key_node);
 
