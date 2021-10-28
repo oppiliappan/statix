@@ -3,8 +3,8 @@ use crate::{Lint, Metadata, Report, Rule, Suggestion};
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Lambda, Ident, Apply, TypedNode, TokenWrapper},
-    NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{Apply, Ident, Lambda, TokenWrapper, TypedNode},
+    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
 #[lint(
@@ -32,10 +32,13 @@ impl Rule for EtaReduction {
 
             if arg.as_str() == value.as_str() ;
 
+            if let Some(lambda_node) = body.lambda();
+            if !mentions_ident(&arg, &lambda_node);
+
             then {
                 let at = node.text_range();
                 let replacement = body.lambda()?;
-                let message = 
+                let message =
                     format!(
                         "Found eta-reduction: `{}`",
                         replacement.text().to_string()
@@ -48,4 +51,10 @@ impl Rule for EtaReduction {
     }
 }
 
-
+fn mentions_ident(ident: &Ident, node: &SyntaxNode) -> bool {
+    if let Some(node_ident) = Ident::cast(node.clone()) {
+        node_ident.as_str() == ident.as_str()
+    } else {
+        node.children().any(|child| mentions_ident(&ident, &child))
+    }
+}
