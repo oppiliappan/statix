@@ -36,15 +36,13 @@ fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
         .node()
         .preorder_with_tokens()
         .filter_map(|event| match event {
-            WalkEvent::Enter(child) => {
-                LINTS.get(&child.kind()).map(|rules| {
-                    rules
-                        .iter()
-                        .filter_map(|rule| rule.validate(&child))
-                        .filter(|report| report.total_suggestion_range().is_some())
-                        .next()
-                })
-            }
+            WalkEvent::Enter(child) => LINTS.get(&child.kind()).map(|rules| {
+                rules
+                    .iter()
+                    .filter_map(|rule| rule.validate(&child))
+                    .filter(|report| report.total_suggestion_range().is_some())
+                    .next()
+            }),
             _ => None,
         })
         .flatten()

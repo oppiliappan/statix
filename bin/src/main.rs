@@ -60,7 +60,12 @@ fn _main() -> Result<(), StatixErr> {
             let src = if let Some(path) = &single_config.target {
                 std::fs::read_to_string(&path).map_err(SingleFixErr::InvalidPath)?
             } else {
-                io::stdin().lock().lines().map(|l| l.unwrap()).collect::<Vec<String>>().join("\n")
+                io::stdin()
+                    .lock()
+                    .lines()
+                    .map(|l| l.unwrap())
+                    .collect::<Vec<String>>()
+                    .join("\n")
             };
 
             let path_id = if let Some(path) = &single_config.target {

@@ -3,7 +3,7 @@ use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{KeyValue, Ident, Select, TypedNode, TokenWrapper},
+    types::{Ident, KeyValue, Select, TokenWrapper, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
@@ -20,8 +20,9 @@ impl Rule for ManualInherit {
         if_chain! {
             if let NodeOrToken::Node(node) = node;
             if let Some(key_value_stmt) = KeyValue::cast(node.clone());
-            if let Some(key_path) = key_value_stmt.key();
-            if let Some(key_node) = key_path.path().next();
+            if let mut key_path = key_value_stmt.key()?.path();
+            if let Some(key_node) = key_path.next();
+            if key_path.next().is_none();
             if let Some(key) = Ident::cast(key_node);
 
             if let Some(value_node) = key_value_stmt.value();
@@ -35,7 +36,7 @@ impl Rule for ManualInherit {
                 let at = node.text_range();
                 let replacement = {
                     let set = value.set()?;
-                    make::inherit_from_stmt(set, &[key]).node().clone() 
+                    make::inherit_from_stmt(set, &[key]).node().clone()
                 };
                 let message = "This assignment is better written with `inherit`";
                 Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
@@ -45,5 +46,3 @@ impl Rule for ManualInherit {
         }
     }
 }
-
-
