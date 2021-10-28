@@ -118,7 +118,6 @@ mod json {
 
     use std::io::{self, Write};
 
-    use lib::Suggestion;
     use rnix::TextRange;
     use serde::Serialize;
     use serde_json;
@@ -142,7 +141,13 @@ mod json {
     struct JsonDiagnostic<'μ> {
         at: JsonSpan,
         message: &'μ String,
-        suggestion: &'μ Option<Suggestion>,
+        suggestion: Option<JsonSuggestion>,
+    }
+
+    #[derive(Serialize)]
+    struct JsonSuggestion {
+        at: JsonSpan,
+        fix: String,
     }
 
     #[derive(Serialize)]
@@ -193,7 +198,10 @@ mod json {
                     .map(|d| JsonDiagnostic {
                         at: JsonSpan::from_textrange(d.at, src),
                         message: &d.message,
-                        suggestion: &d.suggestion,
+                        suggestion: d.suggestion.as_ref().map(|s| JsonSuggestion {
+                            at: JsonSpan::from_textrange(s.at, src),
+                            fix: s.fix.to_string(),
+                        }),
                     })
                     .collect::<Vec<_>>();
                 JsonReport {
