@@ -49,7 +49,7 @@
 
           statix = with final; pkgs.stdenv.mkDerivation {
             pname = "statix";
-            version = "v0.2.3";
+            version = "v0.2.4";
             src = builtins.path {
               path = ./.;
               name = "statix";
@@ -99,7 +99,7 @@
 
       devShell = forAllSystems (system:
         let
-          pkgs = nixpkgsFor.${system};
+          pkgs = nixpkgsFor."${system}";
           inherit (rustChannel pkgs) rust rust-src rust-analysis;
         in
         with pkgs;
