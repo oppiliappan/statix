@@ -22,7 +22,7 @@
     let
       inherit (import-cargo.builders) importCargo;
 
-      supportedSystems = [ "x86_64-linux" ];
+      supportedSystems = [ "x86_64-linux" "x86_64-darwin" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       nixpkgsFor = forAllSystems (system:
         import nixpkgs {
@@ -58,6 +58,7 @@
               (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
               rust
               cargo
+              libiconv
             ];
             buildPhase = ''
               cargo build -p statix --all-features --release --offline
