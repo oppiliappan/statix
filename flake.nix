@@ -58,8 +58,7 @@
               (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
               rust
               cargo
-              libiconv
-            ];
+            ] ++ lib.optionals stdenv.isDarwin [ libiconv ];
             buildPhase = ''
               cargo build -p statix --all-features --release --offline
             '';
