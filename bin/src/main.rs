@@ -20,17 +20,9 @@ fn _main() -> Result<(), StatixErr> {
     match opts.cmd {
         SubCommand::Check(check_config) => {
             let vfs = check_config.vfs()?;
-            let (lints, errors): (Vec<_>, Vec<_>) =
-                vfs.iter().map(lint::lint).partition(Result::is_ok);
-            let lint_results = lints.into_iter().map(Result::unwrap);
-            let errors = errors.into_iter().map(Result::unwrap_err);
-
-            let mut stdout = io::stdout();
-            lint_results.for_each(|r| {
-                stdout.write(&r, &vfs, check_config.format).unwrap();
-            });
-            errors.for_each(|e| {
-                eprintln!("{}", e);
+            let mut stderr = io::stderr();
+            vfs.iter().map(lint::lint).for_each(|r| {
+                stderr.write(&r, &vfs, check_config.format).unwrap();
             });
         }
         SubCommand::Fix(fix_config) => {

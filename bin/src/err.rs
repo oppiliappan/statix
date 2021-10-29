@@ -1,7 +1,7 @@
-use std::{io, path::PathBuf};
+use std::io;
 
 use globset::ErrorKind;
-use rnix::parser::ParseError;
+// use rnix::parser::ParseError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -14,16 +14,16 @@ pub enum ConfigErr {
     InvalidPosition(String),
 }
 
-#[derive(Error, Debug)]
-pub enum LintErr {
-    #[error("[{0}] syntax error: {1}")]
-    Parse(PathBuf, ParseError),
-}
+// #[derive(Error, Debug)]
+// pub enum LintErr {
+//     #[error("[{0}] syntax error: {1}")]
+//     Parse(PathBuf, ParseError),
+// }
 
 #[derive(Error, Debug)]
 pub enum FixErr {
-    #[error("[{0}] syntax error: {1}")]
-    Parse(PathBuf, ParseError),
+    // #[error("[{0}] syntax error: {1}")]
+    // Parse(PathBuf, ParseError),
     #[error("path error: {0}")]
     InvalidPath(#[from] io::Error),
 }
@@ -42,8 +42,8 @@ pub enum SingleFixErr {
 
 #[derive(Error, Debug)]
 pub enum StatixErr {
-    #[error("linter error: {0}")]
-    Lint(#[from] LintErr),
+    // #[error("linter error: {0}")]
+    // Lint(#[from] LintErr),
     #[error("fixer error: {0}")]
     Fix(#[from] FixErr),
     #[error("single fix error: {0}")]

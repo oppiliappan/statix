@@ -9,6 +9,7 @@ use ariadne::{
     CharSet, Color, Config as CliConfig, Fmt, Label, LabelAttach, Report as CliReport,
     ReportKind as CliReportKind, Source,
 };
+use lib::Severity;
 use rnix::{TextRange, TextSize};
 use vfs::ReadOnlyVfs;
 
@@ -57,11 +58,16 @@ fn write_stderr<T: Write>(
             .map(|d| d.at.start().into())
             .min()
             .unwrap_or(0usize);
+        let report_kind = match report.severity {
+            Severity::Warn => CliReportKind::Warning,
+            Severity::Error => CliReportKind::Error,
+            Severity::Hint => CliReportKind::Advice,
+        };
         report
             .diagnostics
             .iter()
             .fold(
-                CliReport::build(CliReportKind::Warning, src_id, offset)
+                CliReport::build(report_kind, src_id, offset)
                     .with_config(
                         CliConfig::default()
                             .with_cross_gap(true)
@@ -103,7 +109,11 @@ fn write_errfmt<T: Write>(
                 filename = path.to_str().unwrap_or("<unknown>"),
                 linenumber = line,
                 columnnumber = col,
-                errortype = "W",
+                errortype = match report.severity {
+                    Severity::Warn => "W",
+                    Severity::Error => "E",
+                    Severity::Hint => "I", /* "info" message */
+                },
                 errornumber = report.code,
                 errormessage = diagnostic.message
             )?;
@@ -118,6 +128,7 @@ mod json {
 
     use std::io::{self, Write};
 
+    use lib::Severity;
     use rnix::TextRange;
     use serde::Serialize;
     use serde_json;
@@ -134,6 +145,7 @@ mod json {
     struct JsonReport<'μ> {
         note: &'static str,
         code: u32,
+        severity: &'μ Severity,
         diagnostics: Vec<JsonDiagnostic<'μ>>,
     }
 
@@ -192,6 +204,7 @@ mod json {
             .map(|r| {
                 let note = r.note;
                 let code = r.code;
+                let severity = &r.severity;
                 let diagnostics = r
                     .diagnostics
                     .iter()
@@ -207,6 +220,7 @@ mod json {
                 JsonReport {
                     note,
                     code,
+                    severity,
                     diagnostics,
                 }
             })

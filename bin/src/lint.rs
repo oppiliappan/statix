@@ -1,5 +1,3 @@
-use crate::err::LintErr;
-
 use lib::{Report, LINTS};
 use rnix::WalkEvent;
 use vfs::{FileId, VfsEntry};
@@ -10,11 +8,16 @@ pub struct LintResult {
     pub reports: Vec<Report>,
 }
 
-pub fn lint(vfs_entry: VfsEntry) -> Result<LintResult, LintErr> {
+pub fn lint(vfs_entry: VfsEntry) -> LintResult {
+    let file_id = vfs_entry.file_id;
     let source = vfs_entry.contents;
-    let parsed = rnix::parse(source)
-        .as_result()
-        .map_err(|e| LintErr::Parse(vfs_entry.file_path.to_path_buf(), e))?;
+    let parsed = rnix::parse(source);
+
+    let error_reports = parsed
+        .errors()
+        .into_iter()
+        .map(|e| Report::from_parse_err(e));
+
     let reports = parsed
         .node()
         .preorder_with_tokens()
@@ -28,9 +31,8 @@ pub fn lint(vfs_entry: VfsEntry) -> Result<LintResult, LintErr> {
             _ => None,
         })
         .flatten()
+        .chain(error_reports)
         .collect();
-    Ok(LintResult {
-        file_id: vfs_entry.file_id,
-        reports,
-    })
+
+    LintResult { file_id, reports }
 }

@@ -190,9 +190,12 @@ fn walk_with_ignores<P: AsRef<Path>>(
 fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
     let mut vfs = ReadOnlyVfs::default();
     for file in files.iter() {
-        let _id = vfs.alloc_file_id(&file);
-        let data = fs::read_to_string(&file).map_err(ConfigErr::InvalidPath)?;
-        vfs.set_file_contents(&file, data.as_bytes());
+        if let Ok(data) = fs::read_to_string(&file) {
+            let _id = vfs.alloc_file_id(&file);
+            vfs.set_file_contents(&file, data.as_bytes());
+        } else {
+            println!("{} contains non-utf8 content", file.display());
+        };
     }
     Ok(vfs)
 }
