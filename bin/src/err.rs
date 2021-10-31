@@ -12,6 +12,8 @@ pub enum ConfigErr {
     InvalidPath(#[from] io::Error),
     #[error("unable to parse `{0}` as line and column")]
     InvalidPosition(String),
+    #[error("unable to parse `{0}` as warning code")]
+    InvalidWarningCode(String),
 }
 
 // #[derive(Error, Debug)]
@@ -41,6 +43,12 @@ pub enum SingleFixErr {
 }
 
 #[derive(Error, Debug)]
+pub enum ExplainErr {
+    #[error("lint with code `{0}` not found")]
+    LintNotFound(u32),
+}
+
+#[derive(Error, Debug)]
 pub enum StatixErr {
     // #[error("linter error: {0}")]
     // Lint(#[from] LintErr),
@@ -50,4 +58,6 @@ pub enum StatixErr {
     Single(#[from] SingleFixErr),
     #[error("config error: {0}")]
     Config(#[from] ConfigErr),
+    #[error("explain error: {0}")]
+    Explain(#[from] ExplainErr),
 }
