@@ -53,11 +53,8 @@
 
           statix = with final; pkgs.stdenv.mkDerivation {
             pname = "statix";
-            version = "v0.3.2";
-            src = builtins.path {
-              path = gitignoreSource ./.;
-              name = "statix";
-            };
+            version = "v0.3.3";
+            src = gitignoreSource ./.;
             nativeBuildInputs = [
               (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
               rust
