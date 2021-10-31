@@ -20,7 +20,7 @@ pub fn generate_explain_impl(struct_item: &ItemStruct) -> TokenStream2 {
         .join("\n");
     quote! {
         impl crate::Explain for #struct_name {
-            fn explaination(&self) -> &'static str {
+            fn explanation(&self) -> &'static str {
                 #explain
             }
         }

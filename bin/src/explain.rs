@@ -9,7 +9,7 @@ pub fn explain(code: u32) -> Result<&'static str, ExplainErr> {
             .values()
             .flatten()
             .find(|l| l.code() == code)
-            .map(|l| l.explaination())
+            .map(|l| l.explanation())
             .ok_or(ExplainErr::LintNotFound(code)),
     }
 }

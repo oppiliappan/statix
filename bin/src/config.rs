@@ -26,7 +26,7 @@ pub enum SubCommand {
     Fix(Fix),
     /// Fix exactly one issue at provided position
     Single(Single),
-    /// Print detailed explaination for a lint warning
+    /// Print detailed explanation for a lint warning
     Explain(Explain),
 }
 

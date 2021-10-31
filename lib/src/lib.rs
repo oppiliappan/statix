@@ -234,15 +234,15 @@ pub trait Metadata {
     fn match_kind(&self) -> Vec<SyntaxKind>;
 }
 
-/// Contains offline explaination for each lint
+/// Contains offline explanation for each lint
 /// The `lint` macro scans nearby doc comments for
-/// explainations and derives this trait.
+/// explanations and derives this trait.
 ///
 /// FIXME: the lint macro does way too much, maybe
 /// split it into smaller macros.
 pub trait Explain {
-    fn explaination(&self) -> &'static str {
-        "no explaination found"
+    fn explanation(&self) -> &'static str {
+        "no explanation found"
     }
 }
 
