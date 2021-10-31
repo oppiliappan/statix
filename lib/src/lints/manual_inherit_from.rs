@@ -1,4 +1,4 @@
-use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
+use crate::{make, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -7,6 +7,30 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for bindings of the form `a = someAttr.a`.
+///
+/// ## Why is this bad?
+/// If the aim is to extract or bring attributes of an attrset into
+/// scope, prefer an inherit statement.
+///
+/// ## Example
+///
+/// ```
+/// let
+///   mtl = pkgs.haskellPackages.mtl;
+/// in
+///   null
+/// ```
+///
+/// Try `inherit` instead:
+///
+/// ```
+/// let
+///   inherit (pkgs.haskellPackages) mtl;
+/// in
+///   null
+/// ```
 #[lint(
     name = "manual inherit from",
     note = "Assignment instead of inherit from",
@@ -40,7 +64,7 @@ impl Rule for ManualInherit {
                     make::inherit_from_stmt(set, &[key]).node().clone()
                 };
                 let message = "This assignment is better written with `inherit`";
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }

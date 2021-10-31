@@ -1,12 +1,37 @@
-use crate::{Lint, Metadata, Report, Rule, Suggestion, Diagnostic};
+use crate::{Diagnostic, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{ParsedType, KeyValue, Paren, TypedNode, Wrapper},
+    types::{KeyValue, Paren, ParsedType, TypedNode, Wrapper},
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for unnecessary parentheses.
+///
+/// ## Why is this bad?
+/// Unnecessarily parenthesized code is hard to read.
+///
+/// ## Example
+///
+/// ```
+/// let
+///   double = (x: 2 * x);
+///   ls = map (double) [ 1 2 3 ];
+/// in
+///   (2 + 3)
+/// ```
+///
+/// Remove unnecessary parentheses:
+///
+/// ```
+/// let
+///   double = x: 2 * x;
+///   ls = map double [ 1 2 3 ];
+/// in
+///   2 + 3
+/// ```
 #[lint(
     name = "useless parens",
     note = "These parentheses can be omitted",
@@ -27,7 +52,7 @@ impl Rule for UselessParens {
 
             if let Some(diagnostic) = do_thing(parsed_type_node);
             then {
-                let mut report = Self::report();
+                let mut report = self.report();
                 report.diagnostics.push(diagnostic);
                 Some(report)
             } else {
@@ -79,7 +104,7 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
             if let Some(parsed_inner) = ParsedType::cast(inner_node);
             if matches!(
                 parsed_inner,
-                ParsedType::List(_) 
+                ParsedType::List(_)
                 | ParsedType::Paren(_)
                 | ParsedType::Str(_)
                 | ParsedType::AttrSet(_)
@@ -95,6 +120,6 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
                 None
             }
         },
-        _ => None
+        _ => None,
     }
 }

@@ -1,4 +1,4 @@
-use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
+use crate::{make, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -7,6 +7,34 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for legacy-let syntax that was never formalized.
+///
+/// ## Why is this bad?
+/// This syntax construct is undocumented, refrain from using it.
+///
+/// ## Example
+///
+/// Legacy let syntax makes use of an attribute set annotated with
+/// `let` and expects a `body` attribute.
+/// ```
+/// let {
+///   body = x + y;
+///   x = 2;
+///   y = 3;
+/// }
+/// ```
+///
+/// This is trivially representible via `rec`, which is documented
+/// and more widely known:
+///
+/// ```
+/// rec {
+///   body = x + y;
+///   x = 2;
+///   y = 3;
+/// }.body
+/// ```
 #[lint(
     name = "legacy let syntax",
     note = "Using undocumented `let` syntax",
@@ -36,7 +64,7 @@ impl Rule for ManualInherit {
                 let message = "Prefer `rec` over undocumented `let` syntax";
                 let replacement = selected.node().clone();
 
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }

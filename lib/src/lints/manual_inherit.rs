@@ -1,4 +1,4 @@
-use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
+use crate::{make, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -7,6 +7,30 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for bindings of the form `a = a`.
+///
+/// ## Why is this bad?
+/// If the aim is to bring attributes from a larger scope into
+/// the current scope, prefer an inherit statement.
+///
+/// ## Example
+///
+/// ```
+/// let
+///   a = 2;
+/// in
+///   { a = a; b = 3; }
+/// ```
+///
+/// Try `inherit` instead:
+///
+/// ```
+/// let
+///   a = 2;
+/// in
+///   { inherit a; b = 3; }
+/// ```
 #[lint(
     name = "manual inherit",
     note = "Assignment instead of inherit",
@@ -35,7 +59,7 @@ impl Rule for ManualInherit {
                 let at = node.text_range();
                 let replacement = make::inherit_stmt(&[key]).node().clone();
                 let message = "This assignment is better written with `inherit`";
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }

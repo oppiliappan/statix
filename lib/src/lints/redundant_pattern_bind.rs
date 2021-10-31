@@ -1,4 +1,4 @@
-use crate::{Lint, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -7,10 +7,29 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for binds of the form `inputs @ { ... }` in function
+/// arguments.
+///
+/// ## Why is this bad?
+/// The variadic pattern here is redundant, as it does not capture
+/// anything.
+///
+/// ## Example
+///
+/// ```
+/// inputs @ { ... }: inputs.nixpkgs
+/// ```
+///
+/// Remove the pattern altogether:
+///
+/// ```
+/// inputs: inputs.nixpkgs
+/// ```
 #[lint(
     name = "redundant pattern bind",
     note = "Found redundant pattern bind in function argument",
-    code = 10,
+    code = 11,
     match_with = SyntaxKind::NODE_PATTERN
 )]
 struct RedundantPatternBind;
@@ -32,7 +51,7 @@ impl Rule for RedundantPatternBind {
                 let at = node.text_range();
                 let message = format!("This pattern bind is redundant, use `{}` instead", ident.as_str());
                 let replacement = ident.node().clone();
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }

@@ -1,5 +1,6 @@
 mod config;
 mod err;
+mod explain;
 mod fix;
 mod lint;
 mod traits;
@@ -85,6 +86,10 @@ fn _main() -> Result<(), StatixErr> {
             } else {
                 print!("{}", &*single_fix_result.src)
             }
+        }
+        SubCommand::Explain(explain_config) => {
+            let explanation = explain::explain(explain_config.target)?;
+            println!("{}", explanation)
         }
     }
     Ok(())

@@ -1,4 +1,4 @@
-use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
+use crate::{make, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -7,6 +7,33 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for an empty variadic pattern: `{...}`, in a function
+/// argument.
+///
+/// ## Why is this bad?
+/// The intention with empty patterns is not instantly obvious. Prefer
+/// an underscore identifier instead, to indicate that the argument
+/// is being ignored.
+///
+/// ## Example
+///
+/// ```
+/// client = { ... }: {
+///   imports = [ self.nixosModules.irmaseal-pkg ];
+///   services.irmaseal-pkg.enable = true;
+/// };
+/// ```
+///
+/// Replace the empty variadic pattern with `_` to indicate that you
+/// intend to ignore the argument:
+///
+/// ```
+/// client = _: {
+///   imports = [ self.nixosModules.irmaseal-pkg ];
+///   services.irmaseal-pkg.enable = true;
+/// };
+/// ```
 #[lint(
     name = "empty pattern",
     note = "Found empty pattern in function argument",
@@ -28,7 +55,7 @@ impl Rule for EmptyPattern {
                 let at = node.text_range();
                 let message = "This pattern is empty, use `_` instead";
                 let replacement = make::ident("_").node().clone();
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }

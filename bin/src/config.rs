@@ -26,6 +26,8 @@ pub enum SubCommand {
     Fix(Fix),
     /// Fix exactly one issue at provided position
     Single(Single),
+    /// Print detailed explanation for a lint warning
+    Explain(Explain),
 }
 
 #[derive(Clap, Debug)]
@@ -86,6 +88,13 @@ pub struct Single {
     /// Do not fix files in place, display a diff instead
     #[clap(short, long = "dry-run")]
     pub diff_only: bool,
+}
+
+#[derive(Clap, Debug)]
+pub struct Explain {
+    /// Warning code to explain
+    #[clap(parse(try_from_str = parse_warning_code))]
+    pub target: u32,
 }
 
 mod dirs {
@@ -157,6 +166,21 @@ fn parse_line_col(src: &str) -> Result<(usize, usize), ConfigErr> {
             Ok((l, c))
         }
         _ => Err(ConfigErr::InvalidPosition(src.to_owned())),
+    }
+}
+
+fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
+    let mut char_stream = src.chars();
+    let severity = char_stream
+        .next()
+        .ok_or(ConfigErr::InvalidWarningCode(src.to_owned()))?
+        .to_ascii_lowercase();
+    match severity {
+        'w' => char_stream
+            .collect::<String>()
+            .parse::<u32>()
+            .map_err(|_| ConfigErr::InvalidWarningCode(src.to_owned())),
+        _ => Ok(0),
     }
 }
 

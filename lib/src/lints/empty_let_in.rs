@@ -1,12 +1,30 @@
-use crate::{Lint, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{LetIn, TypedNode, EntryHolder},
+    types::{EntryHolder, LetIn, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for `let-in` expressions which create no new bindings.
+///
+/// ## Why is this bad?
+/// `let-in` expressions that create no new bindings are useless.
+/// These are probably remnants from debugging or editing expressions.
+///
+/// ## Example
+///
+/// ```
+/// let in pkgs.statix
+/// ```
+///
+/// Preserve only the body of the `let-in` expression:
+///
+/// ```
+/// pkgs.statix
+/// ```
 #[lint(
     name = "empty let-in",
     note = "Useless let-in expression",
@@ -31,11 +49,10 @@ impl Rule for EmptyLetIn {
                 let at = node.text_range();
                 let replacement = body;
                 let message = "This let-in expression has no entries";
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }
         }
     }
 }
-
