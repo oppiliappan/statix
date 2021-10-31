@@ -1,4 +1,4 @@
-use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
+use crate::{make, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -35,7 +35,7 @@ impl Rule for ManualInherit {
                 let at = node.text_range();
                 let replacement = make::inherit_stmt(&[key]).node().clone();
                 let message = "This assignment is better written with `inherit`";
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }

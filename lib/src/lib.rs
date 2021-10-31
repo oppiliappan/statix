@@ -226,25 +226,29 @@ pub trait Rule {
 /// Contains information about the lint itself. Do not implement manually,
 /// look at the `lint` attribute macro instead for implementing rules
 pub trait Metadata {
-    fn name() -> &'static str
-    where
-        Self: Sized;
-    fn note() -> &'static str
-    where
-        Self: Sized;
-    fn code() -> u32
-    where
-        Self: Sized;
-    fn report() -> Report
-    where
-        Self: Sized;
+    fn name(&self) -> &'static str;
+    fn note(&self) -> &'static str;
+    fn code(&self) -> u32;
+    fn report(&self) -> Report;
     fn match_with(&self, with: &SyntaxKind) -> bool;
     fn match_kind(&self) -> Vec<SyntaxKind>;
 }
 
+/// Contains offline explaination for each lint
+/// The `lint` macro scans nearby doc comments for
+/// explainations and derives this trait.
+///
+/// FIXME: the lint macro does way too much, maybe
+/// split it into smaller macros.
+pub trait Explain {
+    fn explaination(&self) -> &'static str {
+        "no explaination found"
+    }
+}
+
 /// Combines Rule and Metadata, do not implement manually, this is derived by
 /// the `lint` macro.
-pub trait Lint: Metadata + Rule + Send + Sync {}
+pub trait Lint: Metadata + Explain + Rule + Send + Sync {}
 
 /// Helper utility to take lints from modules and insert them into a map for efficient
 /// access. Mapping is from a SyntaxKind to a list of lints that apply on that Kind.

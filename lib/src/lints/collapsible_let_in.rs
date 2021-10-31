@@ -1,12 +1,12 @@
-use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
+use crate::{make, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
-use rowan::Direction;
 use rnix::{
     types::{LetIn, TypedNode},
-    NodeOrToken, SyntaxElement, SyntaxKind, TextRange
+    NodeOrToken, SyntaxElement, SyntaxKind, TextRange,
 };
+use rowan::Direction;
 
 #[lint(
     name = "collapsible let in",
@@ -47,7 +47,7 @@ impl Rule for CollapsibleLetIn {
                 let replacement = make::empty().node().clone();
 
                 Some(
-                    Self::report()
+                    self.report()
                         .diagnostic(first_annotation, first_message)
                         .suggest(second_annotation, second_message, Suggestion::new(replacement_at, replacement))
                 )
@@ -57,4 +57,3 @@ impl Rule for CollapsibleLetIn {
         }
     }
 }
-

@@ -1,4 +1,4 @@
-use crate::{Lint, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -43,7 +43,7 @@ impl Rule for EtaReduction {
                         "Found eta-reduction: `{}`",
                         replacement.text().to_string()
                     );
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }

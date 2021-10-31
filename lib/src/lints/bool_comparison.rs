@@ -1,4 +1,4 @@
-use crate::{make, Lint, Metadata, Report, Rule, Suggestion};
+use crate::{make, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -7,6 +7,28 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
+/// What it does
+/// ------------
+/// Checks for expressions of the form x == true, x != true and
+/// suggests using the variable directly.
+///
+/// Why is this bad?
+/// ----------------
+/// Unnecessary code.
+///
+/// Example
+/// --------
+/// Instead of checking the value of x:
+///
+///     if x == true
+///     then 0
+///     else 1
+///
+/// Use x directly:
+///
+///     if x
+///     then 0
+///     else 1
 #[lint(
     name = "bool_comparison",
     note = "Unnecessary comparison with boolean",
@@ -71,7 +93,7 @@ impl Rule for BoolComparison {
                     non_bool_side,
                     bool_side
                 );
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }

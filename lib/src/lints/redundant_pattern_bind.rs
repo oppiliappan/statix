@@ -1,4 +1,4 @@
-use crate::{Lint, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -32,7 +32,7 @@ impl Rule for RedundantPatternBind {
                 let at = node.text_range();
                 let message = format!("This pattern bind is redundant, use `{}` instead", ident.as_str());
                 let replacement = ident.node().clone();
-                Some(Self::report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }
