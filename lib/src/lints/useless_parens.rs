@@ -7,6 +7,31 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for unnecessary parentheses.
+///
+/// ## Why is this bad?
+/// Unnecessarily parenthesized code is hard to read.
+///
+/// ## Example
+///
+/// ```
+/// let
+///   double = (x: 2 * x);
+///   ls = map (double) [ 1 2 3 ];
+/// in
+///   (2 + 3)
+/// ```
+///
+/// Remove unnecessary parentheses:
+///
+/// ```
+/// let
+///   double = x: 2 * x;
+///   ls = map double [ 1 2 3 ];
+/// in
+///   2 + 3
+/// ```
 #[lint(
     name = "useless parens",
     note = "These parentheses can be omitted",

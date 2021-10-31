@@ -7,6 +7,33 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for an empty variadic pattern: `{...}`, in a function
+/// argument.
+///
+/// ## Why is this bad?
+/// The intention with empty patterns is not instantly obvious. Prefer
+/// an underscore identifier instead, to indicate that the argument
+/// is being ignored.
+///
+/// ## Example
+///
+/// ```
+/// client = { ... }: {
+///   imports = [ self.nixosModules.irmaseal-pkg ];
+///   services.irmaseal-pkg.enable = true;
+/// };
+/// ```
+///
+/// Replace the empty variadic pattern with `_` to indicate that you
+/// intend to ignore the argument:
+///
+/// ```
+/// client = _: {
+///   imports = [ self.nixosModules.irmaseal-pkg ];
+///   services.irmaseal-pkg.enable = true;
+/// };
+/// ```
 #[lint(
     name = "empty pattern",
     note = "Found empty pattern in function argument",

@@ -7,10 +7,29 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for binds of the form `inputs @ { ... }` in function
+/// arguments.
+///
+/// ## Why is this bad?
+/// The variadic pattern here is redundant, as it does not capture
+/// anything.
+///
+/// ## Example
+///
+/// ```
+/// inputs @ { ... }: inputs.nixpkgs
+/// ```
+///
+/// Remove the pattern altogether:
+///
+/// ```
+/// inputs: inputs.nixpkgs
+/// ```
 #[lint(
     name = "redundant pattern bind",
     note = "Found redundant pattern bind in function argument",
-    code = 10,
+    code = 11,
     match_with = SyntaxKind::NODE_PATTERN
 )]
 struct RedundantPatternBind;

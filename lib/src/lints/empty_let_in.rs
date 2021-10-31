@@ -7,7 +7,24 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
-/// empty let-in found
+/// ## What it does
+/// Checks for `let-in` expressions which create no new bindings.
+///
+/// ## Why is this bad?
+/// `let-in` expressions that create no new bindings are useless.
+/// These are probably remnants from debugging or editing expressions.
+///
+/// ## Example
+///
+/// ```
+/// let in pkgs.statix
+/// ```
+///
+/// Preserve only the body of the `let-in` expression:
+///
+/// ```
+/// pkgs.statix
+/// ```
 #[lint(
     name = "empty let-in",
     note = "Useless let-in expression",

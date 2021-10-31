@@ -8,6 +8,34 @@ use rnix::{
 };
 use rowan::Direction;
 
+/// ## What it does
+/// Checks for `let-in` expressions whose body is another `let-in`
+/// expression.
+///
+/// ## Why is this bad?
+/// Unnecessary code, the `let-in` expressions can be merged.
+///
+/// ## Example
+///
+/// ```
+/// let
+///   a = 2;
+/// in
+/// let
+///   b = 3;
+/// in
+///   a + b
+/// ```
+///
+/// Merge both `let-in` expressions:
+///
+/// ```
+/// let
+///   a = 2;
+///   b = 3;
+/// in
+///   a + b
+/// ```
 #[lint(
     name = "collapsible let in",
     note = "These let-in expressions are collapsible",

@@ -7,6 +7,32 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
+/// ## What it does
+/// Checks for eta-reducible functions, i.e.: converts lambda
+/// expressions into free standing functions where applicable.
+///
+/// ## Why is this bad?
+/// Oftentimes, eta-reduction results in code that is more natural
+/// to read.
+///
+/// ## Example
+///
+/// ```
+/// let
+///   double = i: 2 * i;
+/// in
+/// map (x: double x) [ 1 2 3 ]
+/// ```
+///
+/// The lambda passed to the `map` function is eta-reducible, and the
+/// result reads more naturally:
+///
+/// ```
+/// let
+///   double = i: 2 * i;
+/// in
+/// map double [ 1 2 3 ]
+/// ```
 #[lint(
     name = "eta reduction",
     note = "This function expression is eta reducible",

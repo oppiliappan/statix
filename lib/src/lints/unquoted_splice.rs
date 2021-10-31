@@ -7,6 +7,30 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for antiquote/splice expressions that are not quoted.
+///
+/// ## Why is this bad?
+/// An *anti*quoted expression should always occur within a *quoted*
+/// expression.
+///
+/// ## Example
+///
+/// ```
+/// let
+///   pkgs = nixpkgs.legacyPackages.${system};
+/// in
+///   pkgs
+/// ```
+///
+/// Quote the splice expression:
+///
+/// ```
+/// let
+///   pkgs = nixpkgs.legacyPackages."${system}";
+/// in
+///   pkgs
+/// ```
 #[lint(
     name = "unquoted splice",
     note = "Found unquoted splice expression",

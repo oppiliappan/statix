@@ -7,28 +7,25 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
-/// What it does
-/// ------------
-/// Checks for expressions of the form x == true, x != true and
+/// ## What it does
+/// Checks for expressions of the form `x == true`, `x != true` and
 /// suggests using the variable directly.
 ///
-/// Why is this bad?
-/// ----------------
+/// ## Why is this bad?
 /// Unnecessary code.
 ///
-/// Example
-/// --------
-/// Instead of checking the value of x:
+/// ## Example
+/// Instead of checking the value of `x`:
 ///
-///     if x == true
-///     then 0
-///     else 1
+/// ```
+/// if x == true then 0 else 1
+/// ```
 ///
-/// Use x directly:
+/// Use `x` directly:
 ///
-///     if x
-///     then 0
-///     else 1
+/// ```
+/// if x then 0 else 1
+/// ```
 #[lint(
     name = "bool_comparison",
     note = "Unnecessary comparison with boolean",

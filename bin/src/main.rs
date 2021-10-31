@@ -88,8 +88,8 @@ fn _main() -> Result<(), StatixErr> {
             }
         }
         SubCommand::Explain(explain_config) => {
-            let explaination = explain::explain(explain_config.target)?;
-            println!("{}", explaination);
+            let explanation = explain::explain(explain_config.target)?;
+            println!("{}", explanation)
         }
     }
     Ok(())
