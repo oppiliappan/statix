@@ -8,7 +8,9 @@
       flake = false;
     };
 
-    import-cargo.url = github:edolstra/import-cargo;
+    import-cargo.url = "github:edolstra/import-cargo";
+
+    gitignore.url = "github:hercules-ci/gitignore.nix";
 
   };
 
@@ -17,10 +19,12 @@
     , nixpkgs
     , mozillapkgs
     , import-cargo
+    , gitignore
     , ...
     }:
     let
       inherit (import-cargo.builders) importCargo;
+      inherit (gitignore.lib) gitignoreSource;
 
       supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
@@ -49,9 +53,9 @@
 
           statix = with final; pkgs.stdenv.mkDerivation {
             pname = "statix";
-            version = "v0.3.1";
+            version = "v0.3.2";
             src = builtins.path {
-              path = ./.;
+              path = gitignoreSource ./.;
               name = "statix";
             };
             nativeBuildInputs = [
