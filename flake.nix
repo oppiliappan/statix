@@ -43,22 +43,28 @@
     {
 
       overlay = final: prev: {
-        statix = with final; (makeRustPlatform {
-          inherit (rustChannel final) cargo rustc;
-        }).buildRustPackage rec {
-          pname = "statix";
-          version = (lib.importTOML ./bin/Cargo.toml).package.version;
 
-          src = gitignoreSource ./.;
+        statix = with final;
+          let
+            pname = "statix";
+            packageMeta = (lib.importTOML ./bin/Cargo.toml).package;
+            rustPlatform = makeRustPlatform {
+              inherit (rustChannel final) cargo rustc;
+            };
+          in
+          rustPlatform.buildRustPackage {
+            inherit pname;
+            inherit (packageMeta) version;
 
-          cargoLock.lockFile = ./Cargo.lock;
+            src = gitignoreSource ./.;
+            cargoLock.lockFile = ./Cargo.lock;
 
-          meta = with lib; {
-            description = "Lints and suggestions for the Nix programming language";
-            homepage = "https://git.peppe.rs/languages/statix/about";
-            license = licenses.mit;
+            meta = with lib; {
+              description = "Lints and suggestions for the Nix programming language";
+              homepage = "https://git.peppe.rs/languages/statix/about";
+              license = licenses.mit;
+            };
           };
-        };
 
         statix-vim =
           with final; vimUtils.buildVimPlugin {
