@@ -1,7 +1,6 @@
 Release checklist:
 
 - bump version in Cargo.toml
-- bump version in flake.nix
 - run `cargo build --release` to bump Cargo.lock
 - run nix-build and update cachix cache
 - tag commit with latest version
