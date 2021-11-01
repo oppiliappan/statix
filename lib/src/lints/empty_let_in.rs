@@ -16,13 +16,13 @@ use rnix::{
 ///
 /// ## Example
 ///
-/// ```
+/// ```nix
 /// let in pkgs.statix
 /// ```
 ///
 /// Preserve only the body of the `let-in` expression:
 ///
-/// ```
+/// ```nix
 /// pkgs.statix
 /// ```
 #[lint(

@@ -17,7 +17,7 @@ use rnix::{
 ///
 /// Legacy let syntax makes use of an attribute set annotated with
 /// `let` and expects a `body` attribute.
-/// ```
+/// ```nix
 /// let {
 ///   body = x + y;
 ///   x = 2;
@@ -28,7 +28,7 @@ use rnix::{
 /// This is trivially representible via `rec`, which is documented
 /// and more widely known:
 ///
-/// ```
+/// ```nix
 /// rec {
 ///   body = x + y;
 ///   x = 2;

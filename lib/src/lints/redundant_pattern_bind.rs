@@ -17,13 +17,13 @@ use rnix::{
 ///
 /// ## Example
 ///
-/// ```
+/// ```nix
 /// inputs @ { ... }: inputs.nixpkgs
 /// ```
 ///
 /// Remove the pattern altogether:
 ///
-/// ```
+/// ```nix
 /// inputs: inputs.nixpkgs
 /// ```
 #[lint(

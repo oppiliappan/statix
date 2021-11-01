@@ -16,7 +16,7 @@ use rnix::{
 ///
 /// ## Example
 ///
-/// ```
+/// ```nix
 /// let
 ///   pkgs = nixpkgs.legacyPackages.${system};
 /// in
@@ -25,7 +25,7 @@ use rnix::{
 ///
 /// Quote the splice expression:
 ///
-/// ```
+/// ```nix
 /// let
 ///   pkgs = nixpkgs.legacyPackages."${system}";
 /// in

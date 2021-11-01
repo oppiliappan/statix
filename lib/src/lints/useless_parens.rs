@@ -15,7 +15,7 @@ use rnix::{
 ///
 /// ## Example
 ///
-/// ```
+/// ```nix
 /// let
 ///   double = (x: 2 * x);
 ///   ls = map (double) [ 1 2 3 ];
@@ -25,7 +25,7 @@ use rnix::{
 ///
 /// Remove unnecessary parentheses:
 ///
-/// ```
+/// ```nix
 /// let
 ///   double = x: 2 * x;
 ///   ls = map double [ 1 2 3 ];

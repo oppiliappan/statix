@@ -17,7 +17,7 @@ use rnix::{
 ///
 /// ## Example
 ///
-/// ```
+/// ```nix
 /// let
 ///   double = i: 2 * i;
 /// in
@@ -27,7 +27,7 @@ use rnix::{
 /// The lambda passed to the `map` function is eta-reducible, and the
 /// result reads more naturally:
 ///
-/// ```
+/// ```nix
 /// let
 ///   double = i: 2 * i;
 /// in
