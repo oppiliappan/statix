@@ -16,7 +16,7 @@ use rnix::{
 ///
 /// ## Example
 ///
-/// ```
+/// ```nix
 /// let
 ///   a = 2;
 /// in
@@ -25,7 +25,7 @@ use rnix::{
 ///
 /// Try `inherit` instead:
 ///
-/// ```
+/// ```nix
 /// let
 ///   a = 2;
 /// in

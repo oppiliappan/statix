@@ -18,7 +18,7 @@ use rnix::{
 ///
 /// ## Example
 ///
-/// ```
+/// ```nix
 /// client = { ... }: {
 ///   imports = [ self.nixosModules.irmaseal-pkg ];
 ///   services.irmaseal-pkg.enable = true;
@@ -28,7 +28,7 @@ use rnix::{
 /// Replace the empty variadic pattern with `_` to indicate that you
 /// intend to ignore the argument:
 ///
-/// ```
+/// ```nix
 /// client = _: {
 ///   imports = [ self.nixosModules.irmaseal-pkg ];
 ///   services.irmaseal-pkg.enable = true;

@@ -17,7 +17,7 @@ use rowan::Direction;
 ///
 /// ## Example
 ///
-/// ```
+/// ```nix
 /// let
 ///   a = 2;
 /// in
@@ -29,7 +29,7 @@ use rowan::Direction;
 ///
 /// Merge both `let-in` expressions:
 ///
-/// ```
+/// ```nix
 /// let
 ///   a = 2;
 ///   b = 3;

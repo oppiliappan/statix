@@ -16,7 +16,7 @@ use rnix::{
 ///
 /// ## Example
 ///
-/// ```
+/// ```nix
 /// let
 ///   mtl = pkgs.haskellPackages.mtl;
 /// in
@@ -25,7 +25,7 @@ use rnix::{
 ///
 /// Try `inherit` instead:
 ///
-/// ```
+/// ```nix
 /// let
 ///   inherit (pkgs.haskellPackages) mtl;
 /// in

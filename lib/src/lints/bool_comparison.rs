@@ -17,13 +17,13 @@ use rnix::{
 /// ## Example
 /// Instead of checking the value of `x`:
 ///
-/// ```
+/// ```nix
 /// if x == true then 0 else 1
 /// ```
 ///
 /// Use `x` directly:
 ///
-/// ```
+/// ```nix
 /// if x then 0 else 1
 /// ```
 #[lint(
