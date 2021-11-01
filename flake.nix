@@ -3,27 +3,25 @@
 
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
-    mozillapkgs = {
-      url = "github:mozilla/nixpkgs-mozilla";
-      flake = false;
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    import-cargo.url = "github:edolstra/import-cargo";
-
-    gitignore.url = "github:hercules-ci/gitignore.nix";
+    gitignore = {
+      url = "github:hercules-ci/gitignore.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
   };
 
   outputs =
     { self
     , nixpkgs
-    , mozillapkgs
-    , import-cargo
+    , fenix
     , gitignore
-    , ...
     }:
     let
-      inherit (import-cargo.builders) importCargo;
       inherit (gitignore.lib) gitignoreSource;
 
       supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -34,56 +32,42 @@
           overlays = [ self.overlay ];
         });
 
-      mozilla = p: p.callPackage (mozillapkgs + "/package-set.nix") { };
       chanspec = {
-        date = "2021-09-30";
+        date = "2021-11-01";
         channel = "nightly";
-        sha256 = "Elqn7GDBDE/QT1XTDyj0EvivbC//uwjWX8d+J3Pi0dY="; # set zeros after modifying channel or date
+        sha256 = "2BmxGawDNjXHJvnQToxmErMGgEPOfVzUvxhkvuixHYU="; # set zeros after modifying channel or date
       };
-      rustChannel = p: (mozilla p).rustChannelOf chanspec;
+      rustChannel = p: (fenix.overlay p p).fenix.toolchainOf chanspec;
 
     in
     {
 
-      overlay = final: prev:
-        let
-          inherit (rustChannel final.pkgs) rust rust-src;
-        in
-        {
+      overlay = final: prev: {
+        statix = with final; (makeRustPlatform {
+          inherit (rustChannel final) cargo rustc;
+        }).buildRustPackage rec {
+          pname = "statix";
+          version = (lib.importTOML ./bin/Cargo.toml).package.version;
 
-          statix = with final; pkgs.stdenv.mkDerivation {
-            pname = "statix";
-            version = "v0.3.4";
-            src = gitignoreSource ./.;
-            nativeBuildInputs = [
-              (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
-              rust
-              cargo
-            ] ++ lib.optionals stdenv.isDarwin [ libiconv ];
-            buildPhase = ''
-              cargo build -p statix --all-features --release --offline
-            '';
-            # statix does not have any tests currently
-            doCheck = false;
-            installPhase = ''
-              install -Dm775 ./target/release/statix $out/bin/statix
-            '';
+          src = gitignoreSource ./.;
 
-            meta = with pkgs.lib; {
-              description = "Lints and suggestions for the Nix programming language";
-              homepage = "https://git.peppe.rs/languages/statix/about";
-              license = licenses.mit;
-            };
+          cargoLock.lockFile = ./Cargo.lock;
+
+          meta = with lib; {
+            description = "Lints and suggestions for the Nix programming language";
+            homepage = "https://git.peppe.rs/languages/statix/about";
+            license = licenses.mit;
+          };
+        };
+
+        statix-vim =
+          with final; vimUtils.buildVimPlugin {
+            pname = "statix-vim";
+            version = "0.1.0";
+            src = ./vim-plugin;
           };
 
-          statix-vim =
-            with final; pkgs.vimUtils.buildVimPlugin {
-              pname = "statix-vim";
-              version = "0.1.0";
-              src = ./vim-plugin;
-            };
-
-        };
+      };
 
       packages = forAllSystems (system: {
         inherit (nixpkgsFor."${system}") statix statix-vim;
@@ -92,31 +76,27 @@
       defaultPackage =
         forAllSystems (system: self.packages."${system}".statix);
 
-      defaultApp = forAllSystems (system:
-        {
-          type = "app";
-          program = "${self.packages."${system}".statix}/bin/statix";
-        });
-
       devShell = forAllSystems (system:
         let
           pkgs = nixpkgsFor."${system}";
-          inherit (rustChannel pkgs) rust rust-src rust-analysis;
+          toolchain = (rustChannel pkgs).withComponents [
+            "rustc"
+            "cargo"
+            "rust-std"
+            "rustfmt"
+            "clippy"
+            "rust-src"
+          ];
         in
         with pkgs;
         mkShell rec {
-          buildInputs = [
-            rustfmt
-            cargo
+          nativeBuildInputs = [
             cargo-watch
-            rust
-            rust-src
+            toolchain
           ];
-          RUST_SRC_PATH = "${rust-src}/lib/rustlib/src/rust/library";
           RUST_LOG = "info";
           RUST_BACKTRACE = 1;
         });
-
 
     };
 }
