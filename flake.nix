@@ -53,7 +53,7 @@
 
           statix = with final; pkgs.stdenv.mkDerivation {
             pname = "statix";
-            version = "v0.3.3";
+            version = "v0.3.4";
             src = gitignoreSource ./.;
             nativeBuildInputs = [
               (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
