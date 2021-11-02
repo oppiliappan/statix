@@ -12,4 +12,5 @@ lint_map! {
     unquoted_splice,
     empty_pattern,
     redundant_pattern_bind,
+    unquoted_uri,
 }

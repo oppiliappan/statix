@@ -98,6 +98,7 @@
         mkShell rec {
           nativeBuildInputs = [
             cargo-watch
+            rust-analyzer
             toolchain
           ];
           RUST_LOG = "info";
