@@ -16,7 +16,7 @@ pub fn lint(vfs_entry: VfsEntry) -> LintResult {
     let error_reports = parsed
         .errors()
         .into_iter()
-        .map(|e| Report::from_parse_err(e));
+        .map(Report::from_parse_err);
 
     let reports = parsed
         .node()

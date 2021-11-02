@@ -40,8 +40,7 @@ fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
                 rules
                     .iter()
                     .filter_map(|rule| rule.validate(&child))
-                    .filter(|report| report.total_suggestion_range().is_some())
-                    .next()
+                    .find(|report| report.total_suggestion_range().is_some())
             }),
             _ => None,
         })

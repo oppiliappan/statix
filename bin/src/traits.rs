@@ -101,8 +101,8 @@ fn write_errfmt<T: Write>(
     let path = vfs.file_path(file_id);
     for report in lint_result.reports.iter() {
         for diagnostic in report.diagnostics.iter() {
-            let line = line(diagnostic.at.start(), &src);
-            let col = column(diagnostic.at.start(), &src);
+            let line = line(diagnostic.at.start(), src);
+            let col = column(diagnostic.at.start(), src);
             writeln!(
                 writer,
                 "{filename}>{linenumber}:{columnnumber}:{errortype}:{errornumber}:{errormessage}",
@@ -131,7 +131,6 @@ mod json {
     use lib::Severity;
     use rnix::TextRange;
     use serde::Serialize;
-    use serde_json;
     use vfs::ReadOnlyVfs;
 
     #[derive(Serialize)]

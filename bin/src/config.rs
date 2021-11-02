@@ -154,7 +154,7 @@ mod dirs {
 }
 
 fn parse_line_col(src: &str) -> Result<(usize, usize), ConfigErr> {
-    let parts = src.split(",");
+    let parts = src.split(',');
     match parts.collect::<Vec<_>>().as_slice() {
         [line, col] => {
             let l = line
@@ -173,7 +173,7 @@ fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
     let mut char_stream = src.chars();
     let severity = char_stream
         .next()
-        .ok_or(ConfigErr::InvalidWarningCode(src.to_owned()))?
+        .ok_or_else(|| ConfigErr::InvalidWarningCode(src.to_owned()))?
         .to_ascii_lowercase();
     match severity {
         'w' => char_stream
@@ -187,7 +187,7 @@ fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
 fn build_ignore_set(ignores: &[String]) -> Result<GlobSet, GlobError> {
     let mut set = GlobSetBuilder::new();
     for pattern in ignores {
-        let glob = GlobBuilder::new(&pattern).build()?;
+        let glob = GlobBuilder::new(pattern).build()?;
         set.add(glob);
     }
     set.build()

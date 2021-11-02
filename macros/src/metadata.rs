@@ -156,7 +156,7 @@ impl<'μ> LintMeta<'μ> {
 }
 
 pub fn generate_meta_impl(struct_name: &Ident, meta: &RawLintMeta) -> TokenStream2 {
-    let not_raw = LintMeta::from_raw(&meta);
+    let not_raw = LintMeta::from_raw(meta);
     let name_fn = not_raw.generate_name_fn();
     let note_fn = not_raw.generate_note_fn();
     let code_fn = not_raw.generate_code_fn();

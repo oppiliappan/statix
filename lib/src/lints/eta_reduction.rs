@@ -67,7 +67,7 @@ impl Rule for EtaReduction {
                 let message =
                     format!(
                         "Found eta-reduction: `{}`",
-                        replacement.text().to_string()
+                        replacement.text()
                     );
                 Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
@@ -81,6 +81,6 @@ fn mentions_ident(ident: &Ident, node: &SyntaxNode) -> bool {
     if let Some(node_ident) = Ident::cast(node.clone()) {
         node_ident.as_str() == ident.as_str()
     } else {
-        node.children().any(|child| mentions_ident(&ident, &child))
+        node.children().any(|child| mentions_ident(ident, &child))
     }
 }

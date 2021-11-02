@@ -71,7 +71,7 @@ fn _main() -> Result<(), StatixErr> {
             let single_fix_result = fix::single(line, col, &src)?;
             if single_config.diff_only {
                 let text_diff = TextDiff::from_lines(src.as_str(), &single_fix_result.src);
-                let old_file = format!("{}", path_id);
+                let old_file = path_id.to_string();
                 let new_file = format!("{} [fixed]", path_id);
                 println!(
                     "{}",
@@ -96,8 +96,7 @@ fn _main() -> Result<(), StatixErr> {
 }
 
 fn main() {
-    match _main() {
-        Err(e) => eprintln!("{}", e),
-        _ => (),
+    if let Err(e) = _main() {
+        eprintln!("{}", e);
     }
 }

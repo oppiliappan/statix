@@ -46,7 +46,7 @@ impl Rule for UnquotedSplice {
             if Dynamic::cast(node.clone()).is_some();
             then {
                 let at = node.text_range();
-                let replacement = make::quote(&node).node().clone();
+                let replacement = make::quote(node).node().clone();
                 let message = "Consider quoting this splice expression";
                 Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
