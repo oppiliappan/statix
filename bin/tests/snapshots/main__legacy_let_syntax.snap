@@ -1,0 +1,14 @@
+---
+source: bin/tests/main.rs
+expression: "&out"
+
+---
+[W05] Warning: Using undocumented `let` syntax
+   ╭─[data/legacy_let_syntax.nix:1:1]
+   │
+ 1 │ ╭─▶ let {
+ 5 │ ├─▶ }
+   · │       
+   · ╰─────── Prefer rec over undocumented let syntax
+───╯
+

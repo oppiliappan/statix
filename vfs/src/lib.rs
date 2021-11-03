@@ -7,7 +7,7 @@ use std::{
 use indexmap::IndexSet;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct FileId(u32);
+pub struct FileId(pub u32);
 
 #[derive(Debug, Default)]
 pub struct Interner {

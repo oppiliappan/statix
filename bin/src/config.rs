@@ -2,17 +2,17 @@ use std::{default::Default, fmt, fs, path::PathBuf, str::FromStr};
 
 use crate::{dirs, err::ConfigErr};
 
-use clap::Clap;
+use clap::Parser;
 use vfs::ReadOnlyVfs;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(version, author, about)]
 pub struct Opts {
     #[clap(subcommand)]
     pub cmd: SubCommand,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub enum SubCommand {
     /// Lints and suggestions for the nix programming language
     Check(Check),
@@ -24,7 +24,7 @@ pub enum SubCommand {
     Explain(Explain),
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct Check {
     /// File or directory to run check on
     #[clap(default_value = ".", parse(from_os_str))]
@@ -67,7 +67,7 @@ impl Check {
     }
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct Fix {
     /// File or directory to run fix on
     #[clap(default_value = ".", parse(from_os_str))]
@@ -127,7 +127,7 @@ impl Fix {
     }
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct Single {
     /// File to run single-fix on
     #[clap(parse(from_os_str))]
@@ -174,7 +174,7 @@ impl Single {
     }
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct Explain {
     /// Warning code to explain
     #[clap(parse(try_from_str = parse_warning_code))]

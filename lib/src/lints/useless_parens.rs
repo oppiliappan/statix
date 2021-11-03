@@ -3,7 +3,7 @@ use crate::{Diagnostic, Metadata, Report, Rule, Suggestion};
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{KeyValue, Paren, ParsedType, TypedNode, Wrapper},
+    types::{KeyValue, LetIn, Paren, ParsedType, TypedNode, Wrapper},
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
@@ -71,7 +71,7 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
             if let Some(inner) = value_in_parens.inner();
             then {
                 let at = value_range;
-                let message = "Useless parentheses around value in `let` binding";
+                let message = "Useless parentheses around value in binding";
                 let replacement = inner;
                 Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement)))
             } else {
@@ -98,7 +98,11 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
 
             // ensure that we don't lint inside let-in statements
             // we already lint such cases in previous match stmt
-            if KeyValue::cast(father_node).is_none();
+            if KeyValue::cast(father_node.clone()).is_none();
+
+            // ensure that we don't lint inside let-bodies
+            // if this primitive is a let-body, we have already linted it
+            if LetIn::cast(father_node).is_none();
 
             if let Some(inner_node) = paren_expr.inner();
             if let Some(parsed_inner) = ParsedType::cast(inner_node);

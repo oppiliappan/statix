@@ -93,11 +93,12 @@
             "clippy"
             "rust-src"
           ];
+          inherit (fenix.packages."${system}") rust-analyzer;
         in
-        with pkgs;
-        mkShell rec {
+        pkgs.mkShell {
           nativeBuildInputs = [
-            cargo-watch
+            pkgs.cargo-watch
+            pkgs.cargo-insta
             rust-analyzer
             toolchain
           ];

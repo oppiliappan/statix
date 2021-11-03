@@ -1,0 +1,14 @@
+---
+source: bin/tests/main.rs
+expression: "&out"
+
+---
+[W02] Warning: Useless let-in expression
+   ╭─[data/empty_let_in.nix:1:1]
+   │
+ 1 │ ╭─▶ let
+ 3 │ ├─▶   null
+   · │            
+   · ╰──────────── This let-in expression has no entries
+───╯
+

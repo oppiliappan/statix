@@ -1,15 +1,9 @@
-mod config;
-mod dirs;
-mod err;
-mod explain;
-mod fix;
-mod lint;
-mod traits;
-
-use crate::err::StatixErr;
-
-use clap::Clap;
-use config::{Opts, SubCommand};
+use clap::Parser;
+use statix::{
+    config::{Opts, SubCommand},
+    err::StatixErr,
+    explain, fix, lint,
+};
 
 fn _main() -> Result<(), StatixErr> {
     let opts = Opts::parse();

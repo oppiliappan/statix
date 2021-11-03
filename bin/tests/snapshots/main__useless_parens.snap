@@ -1,0 +1,48 @@
+---
+source: bin/tests/main.rs
+expression: "&out"
+
+---
+[W08] Warning: These parentheses can be omitted
+    ╭─[data/useless_parens.nix:16:3]
+    │
+ 16 │   (null)
+    ·   ───┬──  
+    ·      ╰──── Useless parentheses around body of let expression
+────╯
+[W08] Warning: These parentheses can be omitted
+   ╭─[data/useless_parens.nix:4:9]
+   │
+ 4 │     b = ("hello");
+   ·         ────┬────  
+   ·             ╰────── Useless parentheses around value in binding
+───╯
+[W08] Warning: These parentheses can be omitted
+   ╭─[data/useless_parens.nix:5:9]
+   │
+ 5 │     c = (d);
+   ·         ─┬─  
+   ·          ╰─── Useless parentheses around value in binding
+───╯
+[W08] Warning: These parentheses can be omitted
+   ╭─[data/useless_parens.nix:6:9]
+   │
+ 6 │     e = ({ f = 2; });
+   ·         ──────┬─────  
+   ·               ╰─────── Useless parentheses around value in binding
+───╯
+[W08] Warning: These parentheses can be omitted
+    ╭─[data/useless_parens.nix:10:7]
+    │
+ 10 │   g = (1 + 2);
+    ·       ───┬───  
+    ·          ╰───── Useless parentheses around value in binding
+────╯
+[W08] Warning: These parentheses can be omitted
+    ╭─[data/useless_parens.nix:11:7]
+    │
+ 11 │   h = ({ inherit i; });
+    ·       ────────┬───────  
+    ·               ╰───────── Useless parentheses around value in binding
+────╯
+
