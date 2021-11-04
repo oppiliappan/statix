@@ -13,4 +13,5 @@ lint_map! {
     empty_pattern,
     redundant_pattern_bind,
     unquoted_uri,
+    deprecated_is_null,
 }

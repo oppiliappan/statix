@@ -47,6 +47,8 @@ Lint ideas
   `_: expr`)
 - redundant pattern `{...} @ inputs : expr`, replace with
   `inputs: expr`
+- useless hasAttr: `if x ? a then x.a else default` can be
+  replaced with `x.a or default`
 
 Extensions
 ----------
