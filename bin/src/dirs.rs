@@ -54,7 +54,11 @@ impl Iterator for Walker {
                         if path.is_dir() {
                             self.dirs.push(path);
                         } else if path.is_file() {
-                            self.files.push(path);
+                            if let Match::None | Match::Whitelist(_) =
+                                self.ignore.matched(&path, false)
+                            {
+                                self.files.push(path);
+                            }
                         }
                     }
                 }
