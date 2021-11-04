@@ -1,4 +1,5 @@
 mod config;
+mod dirs;
 mod err;
 mod explain;
 mod fix;

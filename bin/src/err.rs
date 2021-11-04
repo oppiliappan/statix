@@ -1,13 +1,13 @@
 use std::io;
 
-use globset::ErrorKind;
+// use globset::ErrorKind;
 // use rnix::parser::ParseError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ConfigErr {
-    #[error("error parsing glob `{0:?}`: {1}")]
-    InvalidGlob(Option<String>, ErrorKind),
+    #[error("error parsing ignore list `{0}`")]
+    InvalidGlob(#[from] ignore::Error),
     #[error("path error: {0}")]
     InvalidPath(#[from] io::Error),
     #[error("unable to parse `{0}` as line and column")]
