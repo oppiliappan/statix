@@ -57,7 +57,17 @@ Basic usage is as simple as:
 statix check /path/to/dir
 
 # ignore generated files, such as Cargo.nix
-statix check /path/to/dir -i '*Cargo.nix'
+statix check /path/to/dir -i Cargo.nix
+
+# ignore more than one file
+statix check /path/to/dir -i a.nix b.nix c.nix
+
+# ignore an entire directory
+statix check /path/to/dir -i .direnv
+
+# statix respects your .gitignore if it exists
+# run statix in "unrestricted" mode, to disable that
+statix check /path/to/dir -u
 
 # see `statix -h` for a full list of options
 ```
@@ -115,8 +125,6 @@ their metadata.
 
 ## TODO
 
-- Offline documentation for each lint
 - Test suite for lints and suggestions
-- Vim plugin (qf list population, apply suggestions)
 - Resolve imports and scopes for better lints
 - Add silent flag that exits with status
