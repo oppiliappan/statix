@@ -1,15 +1,9 @@
-use std::{
-    default::Default,
-    fmt, fs, io,
-    path::{Path, PathBuf},
-    str::FromStr,
-};
+use std::{default::Default, fmt, fs, path::PathBuf, str::FromStr};
+
+use crate::{dirs, err::ConfigErr};
 
 use clap::Clap;
-use globset::{Error as GlobError, GlobBuilder, GlobSet, GlobSetBuilder};
 use vfs::ReadOnlyVfs;
-
-use crate::err::ConfigErr;
 
 #[derive(Clap, Debug)]
 #[clap(version, author, about)]
@@ -40,6 +34,10 @@ pub struct Check {
     #[clap(short, long)]
     ignore: Vec<String>,
 
+    /// Don't respect .gitignore files
+    #[clap(short, long)]
+    unrestricted: bool,
+
     /// Output format.
     /// Supported values: stderr, errfmt, json (on feature flag only)
     #[clap(short = 'o', long, default_value_t, parse(try_from_str))]
@@ -48,8 +46,9 @@ pub struct Check {
 
 impl Check {
     pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
-        let files = walk_with_ignores(&self.ignore, &self.target)?;
-        vfs(files)
+        let ignore = dirs::build_ignore_set(&self.ignore, &self.target, self.unrestricted)?;
+        let files = dirs::walk_nix_files(ignore, &self.target)?;
+        vfs(files.collect::<Vec<_>>())
     }
 }
 
@@ -63,6 +62,10 @@ pub struct Fix {
     #[clap(short, long)]
     ignore: Vec<String>,
 
+    /// Don't respect .gitignore files
+    #[clap(short, long)]
+    unrestricted: bool,
+
     /// Do not fix files in place, display a diff instead
     #[clap(short, long = "dry-run")]
     pub diff_only: bool,
@@ -70,8 +73,9 @@ pub struct Fix {
 
 impl Fix {
     pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
-        let files = walk_with_ignores(&self.ignore, &self.target)?;
-        vfs(files)
+        let ignore = dirs::build_ignore_set(&self.ignore, &self.target, self.unrestricted)?;
+        let files = dirs::walk_nix_files(ignore, &self.target)?;
+        vfs(files.collect::<Vec<_>>())
     }
 }
 
@@ -95,62 +99,6 @@ pub struct Explain {
     /// Warning code to explain
     #[clap(parse(try_from_str = parse_warning_code))]
     pub target: u32,
-}
-
-mod dirs {
-    use std::{
-        fs,
-        io::{self, Error, ErrorKind},
-        path::{Path, PathBuf},
-    };
-
-    #[derive(Default, Debug)]
-    pub struct Walker {
-        dirs: Vec<PathBuf>,
-        files: Vec<PathBuf>,
-    }
-
-    impl Walker {
-        pub fn new<P: AsRef<Path>>(target: P) -> io::Result<Self> {
-            let target = target.as_ref().to_path_buf();
-            if !target.exists() {
-                Err(Error::new(
-                    ErrorKind::NotFound,
-                    format!("file not found: {}", target.display()),
-                ))
-            } else if target.is_dir() {
-                Ok(Self {
-                    dirs: vec![target],
-                    ..Default::default()
-                })
-            } else {
-                Ok(Self {
-                    files: vec![target],
-                    ..Default::default()
-                })
-            }
-        }
-    }
-
-    impl Iterator for Walker {
-        type Item = PathBuf;
-        fn next(&mut self) -> Option<Self::Item> {
-            if let Some(dir) = self.dirs.pop() {
-                if dir.is_dir() {
-                    for entry in fs::read_dir(dir).ok()? {
-                        let entry = entry.ok()?;
-                        let path = entry.path();
-                        if path.is_dir() {
-                            self.dirs.push(path);
-                        } else if path.is_file() {
-                            self.files.push(path);
-                        }
-                    }
-                }
-            }
-            self.files.pop()
-        }
-    }
 }
 
 fn parse_line_col(src: &str) -> Result<(usize, usize), ConfigErr> {
@@ -182,33 +130,6 @@ fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
             .map_err(|_| ConfigErr::InvalidWarningCode(src.to_owned())),
         _ => Ok(0),
     }
-}
-
-fn build_ignore_set(ignores: &[String]) -> Result<GlobSet, GlobError> {
-    let mut set = GlobSetBuilder::new();
-    for pattern in ignores {
-        let glob = GlobBuilder::new(pattern).build()?;
-        set.add(glob);
-    }
-    set.build()
-}
-
-fn walk_nix_files<P: AsRef<Path>>(target: P) -> Result<impl Iterator<Item = PathBuf>, io::Error> {
-    let walker = dirs::Walker::new(target)?;
-    Ok(walker.filter(|path: &PathBuf| matches!(path.extension(), Some(e) if e == "nix")))
-}
-
-fn walk_with_ignores<P: AsRef<Path>>(
-    ignores: &[String],
-    target: P,
-) -> Result<Vec<PathBuf>, ConfigErr> {
-    let ignores = build_ignore_set(ignores).map_err(|err| {
-        ConfigErr::InvalidGlob(err.glob().map(|i| i.to_owned()), err.kind().clone())
-    })?;
-
-    Ok(walk_nix_files(&target)?
-        .filter(|path| !ignores.is_match(path))
-        .collect())
 }
 
 fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
