@@ -7,6 +7,25 @@ use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
+/// ## What it does
+/// Checks for usage of the `isNull` function.
+///
+/// ## Why is this bad?
+/// `isNull` is deprecated.
+///
+/// ## Example
+///
+/// Instead of `isNull` for `null` checks,
+///
+/// ```nix
+/// isNull e
+/// ```
+///
+/// use the equality operator:
+///
+/// ```nix
+/// e == null
+/// ```
 #[lint(
     name = "deprecated isNull",
     note = "Found usage of deprecated builtin isNull",
