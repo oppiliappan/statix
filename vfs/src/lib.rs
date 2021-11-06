@@ -36,6 +36,11 @@ pub struct ReadOnlyVfs {
 }
 
 impl ReadOnlyVfs {
+    pub fn singleton<P: AsRef<Path>>(path: P, contents: &[u8]) -> Self {
+        let mut vfs = ReadOnlyVfs::default();
+        vfs.set_file_contents(path, contents);
+        vfs
+    }
     pub fn alloc_file_id<P: AsRef<Path>>(&mut self, path: P) -> FileId {
         self.interner.intern(path.as_ref().to_owned())
     }
