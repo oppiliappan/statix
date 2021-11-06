@@ -42,9 +42,9 @@ pub mod main {
 
     pub fn main(check_config: CheckConfig) -> Result<(), StatixErr> {
         let vfs = check_config.vfs()?;
-        let mut stderr = io::stderr();
+        let mut stdout = io::stdout();
         vfs.iter().map(lint).for_each(|r| {
-            stderr.write(&r, &vfs, check_config.format).unwrap();
+            stdout.write(&r, &vfs, check_config.format).unwrap();
         });
         Ok(())
     }
