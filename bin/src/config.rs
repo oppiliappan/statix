@@ -42,13 +42,28 @@ pub struct Check {
     /// Supported values: stderr, errfmt, json (on feature flag only)
     #[clap(short = 'o', long, default_value_t, parse(try_from_str))]
     pub format: OutFormat,
+
+    /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
+    #[clap(short, long = "stdin")]
+    pub streaming: bool,
 }
 
 impl Check {
     pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
-        let ignore = dirs::build_ignore_set(&self.ignore, &self.target, self.unrestricted)?;
-        let files = dirs::walk_nix_files(ignore, &self.target)?;
-        vfs(files.collect::<Vec<_>>())
+        if self.streaming {
+            use std::io::{self, BufRead};
+            let src = io::stdin()
+                .lock()
+                .lines()
+                .map(|l| l.unwrap())
+                .collect::<Vec<String>>()
+                .join("\n");
+            Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
+        } else {
+            let ignore = dirs::build_ignore_set(&self.ignore, &self.target, self.unrestricted)?;
+            let files = dirs::walk_nix_files(ignore, &self.target)?;
+            vfs(files.collect::<Vec<_>>())
+        }
     }
 }
 
@@ -69,13 +84,46 @@ pub struct Fix {
     /// Do not fix files in place, display a diff instead
     #[clap(short, long = "dry-run")]
     pub diff_only: bool,
+
+    /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
+    #[clap(short, long = "stdin")]
+    pub streaming: bool,
+}
+
+pub enum FixOut {
+    Diff,
+    Stream,
+    Write,
 }
 
 impl Fix {
     pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
-        let ignore = dirs::build_ignore_set(&self.ignore, &self.target, self.unrestricted)?;
-        let files = dirs::walk_nix_files(ignore, &self.target)?;
-        vfs(files.collect::<Vec<_>>())
+        if self.streaming {
+            use std::io::{self, BufRead};
+            let src = io::stdin()
+                .lock()
+                .lines()
+                .map(|l| l.unwrap())
+                .collect::<Vec<String>>()
+                .join("\n");
+            Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
+        } else {
+            let ignore = dirs::build_ignore_set(&self.ignore, &self.target, self.unrestricted)?;
+            let files = dirs::walk_nix_files(ignore, &self.target)?;
+            vfs(files.collect::<Vec<_>>())
+        }
+    }
+
+    // i need this ugly helper because clap's data model
+    // does not reflect what i have in mind
+    pub fn out(&self) -> FixOut {
+        if self.diff_only {
+            FixOut::Diff
+        } else if self.streaming {
+            FixOut::Stream
+        } else {
+            FixOut::Write
+        }
     }
 }
 
@@ -92,6 +140,38 @@ pub struct Single {
     /// Do not fix files in place, display a diff instead
     #[clap(short, long = "dry-run")]
     pub diff_only: bool,
+
+    /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
+    #[clap(short, long = "stdin")]
+    pub streaming: bool,
+}
+
+impl Single {
+    pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
+        if self.streaming {
+            use std::io::{self, BufRead};
+            let src = io::stdin()
+                .lock()
+                .lines()
+                .map(|l| l.unwrap())
+                .collect::<Vec<String>>()
+                .join("\n");
+            Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
+        } else {
+            let src = std::fs::read_to_string(self.target.as_ref().unwrap())
+                .map_err(ConfigErr::InvalidPath)?;
+            Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
+        }
+    }
+    pub fn out(&self) -> FixOut {
+        if self.diff_only {
+            FixOut::Diff
+        } else if self.streaming {
+            FixOut::Stream
+        } else {
+            FixOut::Write
+        }
+    }
 }
 
 #[derive(Clap, Debug)]
