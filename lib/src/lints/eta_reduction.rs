@@ -34,7 +34,7 @@ use rnix::{
 /// map double [ 1 2 3 ]
 /// ```
 #[lint(
-    name = "eta reduction",
+    name = "eta_reduction",
     note = "This function expression is eta reducible",
     code = 7,
     match_with = SyntaxKind::NODE_LAMBDA

@@ -32,7 +32,7 @@ use rnix::{
 ///   pkgs
 /// ```
 #[lint(
-    name = "unquoted splice",
+    name = "unquoted_splice",
     note = "Found unquoted splice expression",
     code = 9,
     match_with = SyntaxKind::NODE_DYNAMIC

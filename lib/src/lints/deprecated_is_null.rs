@@ -27,7 +27,7 @@ use rnix::{
 /// e == null
 /// ```
 #[lint(
-    name = "deprecated isNull",
+    name = "deprecated_is_null",
     note = "Found usage of deprecated builtin isNull",
     code = 13,
     match_with = SyntaxKind::NODE_APPLY

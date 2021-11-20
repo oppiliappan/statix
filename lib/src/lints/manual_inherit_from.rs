@@ -32,7 +32,7 @@ use rnix::{
 ///   null
 /// ```
 #[lint(
-    name = "manual inherit from",
+    name = "manual_inherit_from",
     note = "Assignment instead of inherit from",
     code = 4,
     match_with = SyntaxKind::NODE_KEY_VALUE
