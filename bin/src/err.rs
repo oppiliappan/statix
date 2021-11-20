@@ -14,6 +14,8 @@ pub enum ConfigErr {
     InvalidPosition(String),
     #[error("unable to parse `{0}` as warning code")]
     InvalidWarningCode(String),
+    #[error("unable to parse config file, error at: `{0}`")]
+    ConfFileParse(String),
 }
 
 // #[derive(Error, Debug)]

@@ -255,31 +255,24 @@ pub trait Lint: Metadata + Explain + Rule + Send + Sync {}
 ///
 /// See `lints.rs` for usage.
 #[macro_export]
-macro_rules! lint_map {
+macro_rules! lints {
     ($($s:ident),*,) => {
-        lint_map!($($s),*);
+        lints!($($s),*);
     };
     ($($s:ident),*) => {
-        use ::std::collections::HashMap;
-        use ::rnix::SyntaxKind;
         $(
             mod $s;
         )*
         ::lazy_static::lazy_static! {
-            pub static ref LINTS: HashMap<SyntaxKind, Vec<&'static Box<dyn $crate::Lint>>> = {
-                let mut map = HashMap::new();
+            pub static ref LINTS: Vec<&'static Box<dyn $crate::Lint>> = {
+                let mut v = Vec::new();
                 $(
                     {
                         let temp_lint = &*$s::LINT;
-                        let temp_matches = temp_lint.match_kind();
-                        for temp_match in temp_matches {
-                            map.entry(temp_match)
-                               .and_modify(|v: &mut Vec<_>| v.push(temp_lint))
-                               .or_insert_with(|| vec![temp_lint]);
-                        }
+                        v.push(temp_lint);
                     }
                 )*
-                map
+                v
             };
         }
     }

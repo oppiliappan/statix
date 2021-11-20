@@ -1,11 +1,10 @@
-use crate::err::ExplainErr;
-
-use lib::LINTS;
+use crate::{err::ExplainErr, utils};
 
 pub fn explain(code: u32) -> Result<&'static str, ExplainErr> {
+    let lints = utils::lint_map();
     match code {
         0 => Ok("syntax error"),
-        _ => LINTS
+        _ => lints
             .values()
             .flatten()
             .find(|l| l.code() == code)

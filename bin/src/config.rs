@@ -1,8 +1,15 @@
-use std::{default::Default, fmt, fs, path::PathBuf, str::FromStr};
+use std::{
+    default::Default,
+    fmt, fs,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
-use crate::{dirs, err::ConfigErr};
+use crate::{dirs, err::ConfigErr, utils, LintMap};
 
 use clap::Parser;
+use lib::LINTS;
+use serde::{Deserialize, Serialize};
 use vfs::ReadOnlyVfs;
 
 #[derive(Parser, Debug)]
@@ -43,6 +50,10 @@ pub struct Check {
     #[clap(short = 'o', long, default_value_t, parse(try_from_str))]
     pub format: OutFormat,
 
+    /// Path to statix.toml
+    #[clap(short = 'c', long = "config")]
+    pub conf_path: Option<PathBuf>,
+
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
     #[clap(short, long = "stdin")]
     pub streaming: bool,
@@ -65,6 +76,10 @@ impl Check {
             vfs(files.collect::<Vec<_>>())
         }
     }
+
+    pub fn lints(&self) -> Result<LintMap, ConfigErr> {
+        lints(self.conf_path.as_ref())
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -84,6 +99,10 @@ pub struct Fix {
     /// Do not fix files in place, display a diff instead
     #[clap(short, long = "dry-run")]
     pub diff_only: bool,
+
+    /// Path to statix.toml
+    #[clap(short = 'c', long = "config")]
+    pub conf_path: Option<PathBuf>,
 
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
     #[clap(short, long = "stdin")]
@@ -124,6 +143,10 @@ impl Fix {
         } else {
             FixOut::Write
         }
+    }
+
+    pub fn lints(&self) -> Result<LintMap, ConfigErr> {
+        lints(self.conf_path.as_ref())
     }
 }
 
@@ -181,6 +204,72 @@ pub struct Explain {
     pub target: u32,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum OutFormat {
+    #[cfg(feature = "json")]
+    Json,
+    Errfmt,
+    StdErr,
+}
+
+impl Default for OutFormat {
+    fn default() -> Self {
+        OutFormat::StdErr
+    }
+}
+
+impl fmt::Display for OutFormat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                #[cfg(feature = "json")]
+                Self::Json => "json",
+                Self::Errfmt => "errfmt",
+                Self::StdErr => "stderr",
+            }
+        )
+    }
+}
+
+impl FromStr for OutFormat {
+    type Err = &'static str;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.to_ascii_lowercase().as_str() {
+            #[cfg(feature = "json")]
+            "json" => Ok(Self::Json),
+            #[cfg(not(feature = "json"))]
+            "json" => Err("statix was not compiled with the `json` feature flag"),
+            "errfmt" => Ok(Self::Errfmt),
+            "stderr" => Ok(Self::StdErr),
+            _ => Err("unknown output format, try: json, errfmt"),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConfFile {
+    checks: Vec<String>,
+}
+
+impl ConfFile {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
+        let path = path.as_ref();
+        let config_file = fs::read_to_string(path).map_err(ConfigErr::InvalidPath)?;
+        toml::de::from_str(&config_file).map_err(|err| {
+            let pos = err.line_col();
+            let msg = if let Some((line, col)) = pos {
+                format!("line {}, col {}", line, col)
+            } else {
+                "unknown".to_string()
+            };
+            ConfigErr::ConfFileParse(msg)
+        })
+    }
+}
+
 fn parse_line_col(src: &str) -> Result<(usize, usize), ConfigErr> {
     let parts = src.split(',');
     match parts.collect::<Vec<_>>().as_slice() {
@@ -225,47 +314,18 @@ fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
     Ok(vfs)
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum OutFormat {
-    #[cfg(feature = "json")]
-    Json,
-    Errfmt,
-    StdErr,
-}
-
-impl Default for OutFormat {
-    fn default() -> Self {
-        OutFormat::StdErr
-    }
-}
-
-impl fmt::Display for OutFormat {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                #[cfg(feature = "json")]
-                Self::Json => "json",
-                Self::Errfmt => "errfmt",
-                Self::StdErr => "stderr",
-            }
-        )
-    }
-}
-
-impl FromStr for OutFormat {
-    type Err = &'static str;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        match value.to_ascii_lowercase().as_str() {
-            #[cfg(feature = "json")]
-            "json" => Ok(Self::Json),
-            #[cfg(not(feature = "json"))]
-            "json" => Err("statix was not compiled with the `json` feature flag"),
-            "errfmt" => Ok(Self::Errfmt),
-            "stderr" => Ok(Self::StdErr),
-            _ => Err("unknown output format, try: json, errfmt"),
-        }
+fn lints(conf_path: Option<&PathBuf>) -> Result<LintMap, ConfigErr> {
+    if let Some(conf_path) = conf_path {
+        let config_file = ConfFile::from_path(conf_path)?;
+        Ok(utils::lint_map_of(
+            (&*LINTS)
+                .into_iter()
+                .filter(|l| config_file.checks.iter().any(|check| check == l.name()))
+                .cloned()
+                .collect::<Vec<_>>()
+                .as_slice(),
+        ))
+    } else {
+        Ok(utils::lint_map())
     }
 }
