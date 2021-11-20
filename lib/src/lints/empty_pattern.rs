@@ -35,7 +35,7 @@ use rnix::{
 /// };
 /// ```
 #[lint(
-    name = "empty pattern",
+    name = "empty_pattern",
     note = "Found empty pattern in function argument",
     code = 10,
     match_with = SyntaxKind::NODE_PATTERN

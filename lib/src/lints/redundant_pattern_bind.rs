@@ -27,7 +27,7 @@ use rnix::{
 /// inputs: inputs.nixpkgs
 /// ```
 #[lint(
-    name = "redundant pattern bind",
+    name = "redundant_pattern_bind",
     note = "Found redundant pattern bind in function argument",
     code = 11,
     match_with = SyntaxKind::NODE_PATTERN

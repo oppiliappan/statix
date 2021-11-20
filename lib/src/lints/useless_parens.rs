@@ -33,7 +33,7 @@ use rnix::{
 ///   2 + 3
 /// ```
 #[lint(
-    name = "useless parens",
+    name = "useless_parens",
     note = "These parentheses can be omitted",
     code = 8,
     match_with = [

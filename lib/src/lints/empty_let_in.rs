@@ -26,7 +26,7 @@ use rnix::{
 /// pkgs.statix
 /// ```
 #[lint(
-    name = "empty let-in",
+    name = "empty_let_in",
     note = "Useless let-in expression",
     code = 2,
     match_with = SyntaxKind::NODE_LET_IN

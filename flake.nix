@@ -97,7 +97,7 @@
         in
         pkgs.mkShell {
           nativeBuildInputs = [
-            pkgs.cargo-watch
+            pkgs.bacon
             pkgs.cargo-insta
             rust-analyzer
             toolchain

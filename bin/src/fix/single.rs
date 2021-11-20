@@ -1,10 +1,9 @@
 use std::{borrow::Cow, convert::TryFrom};
 
-use lib::{Report, LINTS};
+use lib::Report;
 use rnix::{TextSize, WalkEvent};
 
-use crate::err::SingleFixErr;
-use crate::fix::Source;
+use crate::{err::SingleFixErr, fix::Source, utils};
 
 pub struct SingleFixResult<'δ> {
     pub src: Source<'δ>,
@@ -31,12 +30,13 @@ fn pos_to_byte(line: usize, col: usize, src: &str) -> Result<TextSize, SingleFix
 fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
     // we don't really need the source to form a completely parsed tree
     let parsed = rnix::parse(src);
+    let lints = utils::lint_map();
 
     parsed
         .node()
         .preorder_with_tokens()
         .filter_map(|event| match event {
-            WalkEvent::Enter(child) => LINTS.get(&child.kind()).map(|rules| {
+            WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
                 rules
                     .iter()
                     .filter_map(|rule| rule.validate(&child))

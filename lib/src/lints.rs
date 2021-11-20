@@ -1,6 +1,6 @@
-use crate::lint_map;
+use crate::lints;
 
-lint_map! {
+lints! {
     bool_comparison,
     empty_let_in,
     manual_inherit,

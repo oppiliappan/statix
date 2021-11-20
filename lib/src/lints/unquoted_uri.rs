@@ -38,7 +38,7 @@ use rnix::{types::TypedNode, NodeOrToken, SyntaxElement, SyntaxKind};
 /// }
 /// ```
 #[lint(
-    name = "unquoted uri",
+    name = "unquoted_uri",
     note = "Found unquoted URI expression",
     code = 12,
     match_with = SyntaxKind::TOKEN_URI

@@ -37,7 +37,7 @@ use rowan::Direction;
 ///   a + b
 /// ```
 #[lint(
-    name = "collapsible let in",
+    name = "collapsible_let_in",
     note = "These let-in expressions are collapsible",
     code = 6,
     match_with = SyntaxKind::NODE_LET_IN

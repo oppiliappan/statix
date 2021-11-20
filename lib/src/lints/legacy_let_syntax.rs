@@ -36,7 +36,7 @@ use rnix::{
 /// }.body
 /// ```
 #[lint(
-    name = "legacy let syntax",
+    name = "legacy_let_syntax",
     note = "Using undocumented `let` syntax",
     code = 5,
     match_with = SyntaxKind::NODE_LEGACY_LET

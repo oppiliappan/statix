@@ -1,8 +1,15 @@
-use std::{default::Default, fmt, fs, path::PathBuf, str::FromStr};
+use std::{
+    default::Default,
+    fmt, fs,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
-use crate::{dirs, err::ConfigErr};
+use crate::{dirs, err::ConfigErr, utils, LintMap};
 
 use clap::Parser;
+use lib::LINTS;
+use serde::{Deserialize, Serialize};
 use vfs::ReadOnlyVfs;
 
 #[derive(Parser, Debug)]
@@ -43,6 +50,10 @@ pub struct Check {
     #[clap(short = 'o', long, default_value_t, parse(try_from_str))]
     pub format: OutFormat,
 
+    /// Path to statix.toml
+    #[clap(short = 'c', long = "config", default_value = ".")]
+    pub conf_path: PathBuf,
+
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
     #[clap(short, long = "stdin")]
     pub streaming: bool,
@@ -65,6 +76,10 @@ impl Check {
             vfs(files.collect::<Vec<_>>())
         }
     }
+
+    pub fn lints(&self) -> Result<LintMap, ConfigErr> {
+        lints(&self.conf_path)
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -84,6 +99,10 @@ pub struct Fix {
     /// Do not fix files in place, display a diff instead
     #[clap(short, long = "dry-run")]
     pub diff_only: bool,
+
+    /// Path to statix.toml
+    #[clap(short = 'c', long = "config", default_value = ".")]
+    pub conf_path: PathBuf,
 
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
     #[clap(short, long = "stdin")]
@@ -124,6 +143,10 @@ impl Fix {
         } else {
             FixOut::Write
         }
+    }
+
+    pub fn lints(&self) -> Result<LintMap, ConfigErr> {
+        lints(&self.conf_path)
     }
 }
 
@@ -181,50 +204,6 @@ pub struct Explain {
     pub target: u32,
 }
 
-fn parse_line_col(src: &str) -> Result<(usize, usize), ConfigErr> {
-    let parts = src.split(',');
-    match parts.collect::<Vec<_>>().as_slice() {
-        [line, col] => {
-            let l = line
-                .parse::<usize>()
-                .map_err(|_| ConfigErr::InvalidPosition(src.to_owned()))?;
-            let c = col
-                .parse::<usize>()
-                .map_err(|_| ConfigErr::InvalidPosition(src.to_owned()))?;
-            Ok((l, c))
-        }
-        _ => Err(ConfigErr::InvalidPosition(src.to_owned())),
-    }
-}
-
-fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
-    let mut char_stream = src.chars();
-    let severity = char_stream
-        .next()
-        .ok_or_else(|| ConfigErr::InvalidWarningCode(src.to_owned()))?
-        .to_ascii_lowercase();
-    match severity {
-        'w' => char_stream
-            .collect::<String>()
-            .parse::<u32>()
-            .map_err(|_| ConfigErr::InvalidWarningCode(src.to_owned())),
-        _ => Ok(0),
-    }
-}
-
-fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
-    let mut vfs = ReadOnlyVfs::default();
-    for file in files.iter() {
-        if let Ok(data) = fs::read_to_string(&file) {
-            let _id = vfs.alloc_file_id(&file);
-            vfs.set_file_contents(&file, data.as_bytes());
-        } else {
-            println!("{} contains non-utf8 content", file.display());
-        };
-    }
-    Ok(vfs)
-}
-
 #[derive(Debug, Copy, Clone)]
 pub enum OutFormat {
     #[cfg(feature = "json")]
@@ -268,4 +247,101 @@ impl FromStr for OutFormat {
             _ => Err("unknown output format, try: json, errfmt"),
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConfFile {
+    disabled: Vec<String>,
+}
+
+impl Default for ConfFile {
+    fn default() -> Self {
+        let disabled = vec![];
+        Self { disabled }
+    }
+}
+
+impl ConfFile {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
+        let path = path.as_ref();
+        let config_file = fs::read_to_string(path).map_err(ConfigErr::InvalidPath)?;
+        toml::de::from_str(&config_file).map_err(|err| {
+            let pos = err.line_col();
+            let msg = if let Some((line, col)) = pos {
+                format!("line {}, col {}", line, col)
+            } else {
+                "unknown".to_string()
+            };
+            ConfigErr::ConfFileParse(msg)
+        })
+    }
+    pub fn discover<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
+        let cannonical_path = fs::canonicalize(path.as_ref()).map_err(ConfigErr::InvalidPath)?;
+        for p in cannonical_path.ancestors() {
+            let statix_toml_path = p.with_file_name("statix.toml");
+            if statix_toml_path.exists() {
+                return Self::from_path(statix_toml_path);
+            };
+        }
+        Ok(Self::default())
+    }
+    pub fn dump(&self) -> String {
+        toml::ser::to_string_pretty(&self).unwrap()
+    }
+}
+
+fn parse_line_col(src: &str) -> Result<(usize, usize), ConfigErr> {
+    let parts = src.split(',');
+    match parts.collect::<Vec<_>>().as_slice() {
+        [line, col] => {
+            let do_parse = |val: &str| {
+                val.parse::<usize>()
+                    .map_err(|_| ConfigErr::InvalidPosition(src.to_owned()))
+            };
+            let l = do_parse(line)?;
+            let c = do_parse(col)?;
+            Ok((l, c))
+        }
+        _ => Err(ConfigErr::InvalidPosition(src.to_owned())),
+    }
+}
+
+fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
+    let mut char_stream = src.chars();
+    let severity = char_stream
+        .next()
+        .ok_or_else(|| ConfigErr::InvalidWarningCode(src.to_owned()))?
+        .to_ascii_lowercase();
+    match severity {
+        'w' => char_stream
+            .collect::<String>()
+            .parse::<u32>()
+            .map_err(|_| ConfigErr::InvalidWarningCode(src.to_owned())),
+        _ => Ok(0),
+    }
+}
+
+fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
+    let mut vfs = ReadOnlyVfs::default();
+    for file in files.iter() {
+        if let Ok(data) = fs::read_to_string(&file) {
+            let _id = vfs.alloc_file_id(&file);
+            vfs.set_file_contents(&file, data.as_bytes());
+        } else {
+            println!("{} contains non-utf8 content", file.display());
+        };
+    }
+    Ok(vfs)
+}
+
+fn lints(conf_path: &PathBuf) -> Result<LintMap, ConfigErr> {
+    let config_file = ConfFile::discover(conf_path)?;
+    Ok(utils::lint_map_of(
+        (&*LINTS)
+            .into_iter()
+            .filter(|l| !config_file.disabled.iter().any(|check| check == l.name()))
+            .cloned()
+            .collect::<Vec<_>>()
+            .as_slice(),
+    ))
 }

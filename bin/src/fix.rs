@@ -1,19 +1,21 @@
 use std::borrow::Cow;
 
+use crate::LintMap;
+
 use rnix::TextRange;
 
 mod all;
-use all::all;
+use all::all_with;
 
 mod single;
 use single::single;
 
 type Source<'a> = Cow<'a, str>;
 
-#[derive(Debug)]
 pub struct FixResult<'a> {
     pub src: Source<'a>,
     pub fixed: Vec<Fixed>,
+    pub lints: &'a LintMap,
 }
 
 #[derive(Debug, Clone)]
@@ -23,10 +25,11 @@ pub struct Fixed {
 }
 
 impl<'a> FixResult<'a> {
-    fn empty(src: Source<'a>) -> Self {
+    fn empty(src: Source<'a>, lints: &'a LintMap) -> Self {
         Self {
             src,
             fixed: Vec::new(),
+            lints,
         }
     }
 }
@@ -43,8 +46,9 @@ pub mod main {
 
     pub fn all(fix_config: FixConfig) -> Result<(), StatixErr> {
         let vfs = fix_config.vfs()?;
+        let lints = fix_config.lints()?;
         for entry in vfs.iter() {
-            match (fix_config.out(), super::all(entry.contents)) {
+            match (fix_config.out(), super::all_with(entry.contents, &lints)) {
                 (FixOut::Diff, fix_result) => {
                     let src = fix_result
                         .map(|r| r.src)
