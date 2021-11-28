@@ -90,6 +90,45 @@ statix check /path/to/dir -o json   # only when compiled with --all-features
 statix check /path/to/dir -o errfmt # singleline, easy to integrate with vim
 ```
 
+### Configuration
+
+Ignore lints and fixes by creating a `statix.toml` file at
+your project root:
+
+```
+# within statix.toml
+disabled = [
+  "unquoted_splices"
+]
+```
+
+`statix` automatically discovers the configuration file by
+traversing parents of the current directory and looking for
+a `statix.toml` file. Alternatively, you can pass the path
+to the `statix.toml` file on the command line with the
+`--config` flag (available on `statix check` and `statix
+fix`.
+
+The available lints are:
+
+```
+bool_comparison
+empty_let_in
+manual_inherit
+manual_inherit_from
+legacy_let_syntax
+collapsible_let_in
+eta_reduction
+useless_parens
+unquoted_splice
+empty_pattern
+redundant_pattern_bind
+unquoted_uri
+deprecated_is_null
+```
+
+All lints are enabled by default.
+
 ## Architecture
 
 `statix` has the following components:
