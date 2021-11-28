@@ -98,7 +98,8 @@ your project root:
 ```
 # within statix.toml
 disabled = [
-  "unquoted_splices"
+  "unquoted_splice",
+  "empty_pattern",
 ]
 ```
 
