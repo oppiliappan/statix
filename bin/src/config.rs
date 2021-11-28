@@ -51,8 +51,8 @@ pub struct Check {
     pub format: OutFormat,
 
     /// Path to statix.toml
-    #[clap(short = 'c', long = "config")]
-    pub conf_path: Option<PathBuf>,
+    #[clap(short = 'c', long = "config", default_value = ".")]
+    pub conf_path: PathBuf,
 
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
     #[clap(short, long = "stdin")]
@@ -78,7 +78,7 @@ impl Check {
     }
 
     pub fn lints(&self) -> Result<LintMap, ConfigErr> {
-        lints(self.conf_path.as_ref())
+        lints(&self.conf_path)
     }
 }
 
@@ -101,8 +101,8 @@ pub struct Fix {
     pub diff_only: bool,
 
     /// Path to statix.toml
-    #[clap(short = 'c', long = "config")]
-    pub conf_path: Option<PathBuf>,
+    #[clap(short = 'c', long = "config", default_value = ".")]
+    pub conf_path: PathBuf,
 
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
     #[clap(short, long = "stdin")]
@@ -146,7 +146,7 @@ impl Fix {
     }
 
     pub fn lints(&self) -> Result<LintMap, ConfigErr> {
-        lints(self.conf_path.as_ref())
+        lints(&self.conf_path)
     }
 }
 
@@ -251,7 +251,14 @@ impl FromStr for OutFormat {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfFile {
-    checks: Vec<String>,
+    disabled: Vec<String>,
+}
+
+impl Default for ConfFile {
+    fn default() -> Self {
+        let disabled = vec![];
+        Self { disabled }
+    }
 }
 
 impl ConfFile {
@@ -268,18 +275,31 @@ impl ConfFile {
             ConfigErr::ConfFileParse(msg)
         })
     }
+    pub fn discover<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
+        let cannonical_path = fs::canonicalize(path.as_ref()).map_err(ConfigErr::InvalidPath)?;
+        for p in cannonical_path.ancestors() {
+            let statix_toml_path = p.with_file_name("statix.toml");
+            if statix_toml_path.exists() {
+                return Self::from_path(statix_toml_path);
+            };
+        }
+        Ok(Self::default())
+    }
+    pub fn dump(&self) -> String {
+        toml::ser::to_string_pretty(&self).unwrap()
+    }
 }
 
 fn parse_line_col(src: &str) -> Result<(usize, usize), ConfigErr> {
     let parts = src.split(',');
     match parts.collect::<Vec<_>>().as_slice() {
         [line, col] => {
-            let l = line
-                .parse::<usize>()
-                .map_err(|_| ConfigErr::InvalidPosition(src.to_owned()))?;
-            let c = col
-                .parse::<usize>()
-                .map_err(|_| ConfigErr::InvalidPosition(src.to_owned()))?;
+            let do_parse = |val: &str| {
+                val.parse::<usize>()
+                    .map_err(|_| ConfigErr::InvalidPosition(src.to_owned()))
+            };
+            let l = do_parse(line)?;
+            let c = do_parse(col)?;
             Ok((l, c))
         }
         _ => Err(ConfigErr::InvalidPosition(src.to_owned())),
@@ -314,18 +334,14 @@ fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
     Ok(vfs)
 }
 
-fn lints(conf_path: Option<&PathBuf>) -> Result<LintMap, ConfigErr> {
-    if let Some(conf_path) = conf_path {
-        let config_file = ConfFile::from_path(conf_path)?;
-        Ok(utils::lint_map_of(
-            (&*LINTS)
-                .into_iter()
-                .filter(|l| config_file.checks.iter().any(|check| check == l.name()))
-                .cloned()
-                .collect::<Vec<_>>()
-                .as_slice(),
-        ))
-    } else {
-        Ok(utils::lint_map())
-    }
+fn lints(conf_path: &PathBuf) -> Result<LintMap, ConfigErr> {
+    let config_file = ConfFile::discover(conf_path)?;
+    Ok(utils::lint_map_of(
+        (&*LINTS)
+            .into_iter()
+            .filter(|l| !config_file.disabled.iter().any(|check| check == l.name()))
+            .cloned()
+            .collect::<Vec<_>>()
+            .as_slice(),
+    ))
 }
