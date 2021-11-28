@@ -100,7 +100,7 @@ pub mod main {
                     text_diff
                         .unified_diff()
                         .context_radius(4)
-                        .header(&old_file, &new_file)
+                        .header(old_file, &new_file)
                 );
             }
             (FixOut::Stream, single_result) => {

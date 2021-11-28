@@ -59,6 +59,8 @@
             src = gitignoreSource ./.;
             cargoLock.lockFile = ./Cargo.lock;
 
+            buildFeatures = "json";
+
             meta = with lib; {
               description = "Lints and suggestions for the Nix programming language";
               homepage = "https://git.peppe.rs/languages/statix/about";

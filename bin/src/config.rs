@@ -334,11 +334,11 @@ fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
     Ok(vfs)
 }
 
-fn lints(conf_path: &PathBuf) -> Result<LintMap, ConfigErr> {
+fn lints(conf_path: &Path) -> Result<LintMap, ConfigErr> {
     let config_file = ConfFile::discover(conf_path)?;
     Ok(utils::lint_map_of(
         (&*LINTS)
-            .into_iter()
+            .iter()
             .filter(|l| !config_file.disabled.iter().any(|check| check == l.name()))
             .cloned()
             .collect::<Vec<_>>()

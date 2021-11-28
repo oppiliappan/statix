@@ -98,8 +98,7 @@ your project root:
 ```
 # within statix.toml
 disabled = [
-  "unquoted_splice",
-  "empty_pattern",
+  "empty_pattern"
 ]
 ```
 
@@ -108,7 +107,7 @@ traversing parents of the current directory and looking for
 a `statix.toml` file. Alternatively, you can pass the path
 to the `statix.toml` file on the command line with the
 `--config` flag (available on `statix check` and `statix
-fix`.
+fix`).
 
 The available lints are:
 
@@ -121,7 +120,6 @@ legacy_let_syntax
 collapsible_let_in
 eta_reduction
 useless_parens
-unquoted_splice
 empty_pattern
 redundant_pattern_bind
 unquoted_uri
