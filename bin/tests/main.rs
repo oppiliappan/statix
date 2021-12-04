@@ -39,9 +39,9 @@ test_lint! {
     collapsible_let_in,
     eta_reduction,
     useless_parens,
-    unquoted_splices,
     empty_pattern,
     redundant_pattern_bind,
     unquoted_uri,
     deprecated_is_null,
+    empty_inherit,
 }
