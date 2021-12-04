@@ -1,6 +1,6 @@
 [package]
 name = "statix"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2018"
 license = "MIT"
 authors = [ "Akshay <nerdy@peppe.rs>" ]
