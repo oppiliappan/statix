@@ -14,4 +14,5 @@ lints! {
     redundant_pattern_bind,
     unquoted_uri,
     deprecated_is_null,
+    empty_inherit,
 }
