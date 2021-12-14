@@ -7,7 +7,7 @@ fix` can fix several such occurrences.
 
 For the time-being, `statix` works only with ASTs
 produced by the `rnix-parser` crate and does not evaluate
-any nix code (imports, attr sets etc.). 
+any nix code (imports, attr sets etc.).
 
 ## Examples
 
@@ -46,6 +46,12 @@ nix run git+https://git.peppe.rs/languages/statix -- --help
 
 # save time on builds using cachix
 cachix use statix
+```
+
+Install with [brew/linuxbrew](https://brew.sh)
+
+```bash
+brew install statix
 ```
 
 ## Usage
