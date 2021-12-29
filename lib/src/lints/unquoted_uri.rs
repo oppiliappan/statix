@@ -1,4 +1,4 @@
-use crate::{make, Metadata, Report, Rule, Suggestion};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -46,7 +46,7 @@ use rnix::{types::TypedNode, NodeOrToken, SyntaxElement, SyntaxKind};
 struct UnquotedUri;
 
 impl Rule for UnquotedUri {
-    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if_chain! {
             if let NodeOrToken::Token(token) = node;
             then {

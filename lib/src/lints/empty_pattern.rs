@@ -1,4 +1,4 @@
-use crate::{make, Metadata, Report, Rule, Suggestion};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -43,7 +43,7 @@ use rnix::{
 struct EmptyPattern;
 
 impl Rule for EmptyPattern {
-    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if_chain! {
             if let NodeOrToken::Node(node) = node;
             if let Some(pattern) = Pattern::cast(node.clone());

@@ -1,4 +1,4 @@
-use crate::{Metadata, Report, Rule, Suggestion};
+use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -42,7 +42,7 @@ use rnix::{
 struct EtaReduction;
 
 impl Rule for EtaReduction {
-    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if_chain! {
             if let NodeOrToken::Node(node) = node;
             if let Some(lambda_expr) = Lambda::cast(node.clone());

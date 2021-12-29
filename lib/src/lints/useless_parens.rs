@@ -1,4 +1,4 @@
-use crate::{Diagnostic, Metadata, Report, Rule, Suggestion};
+use crate::{session::SessionInfo, Diagnostic, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -45,7 +45,7 @@ use rnix::{
 struct UselessParens;
 
 impl Rule for UselessParens {
-    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if_chain! {
             if let NodeOrToken::Node(node) = node;
             if let Some(parsed_type_node) = ParsedType::cast(node.clone());

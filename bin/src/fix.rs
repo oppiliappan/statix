@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use crate::LintMap;
 
+use lib::session::SessionInfo;
 use rnix::TextRange;
 
 mod all;
@@ -16,6 +17,7 @@ pub struct FixResult<'a> {
     pub src: Source<'a>,
     pub fixed: Vec<Fixed>,
     pub lints: &'a LintMap,
+    pub sess: &'a SessionInfo,
 }
 
 #[derive(Debug, Clone)]
@@ -25,11 +27,12 @@ pub struct Fixed {
 }
 
 impl<'a> FixResult<'a> {
-    fn empty(src: Source<'a>, lints: &'a LintMap) -> Self {
+    fn empty(src: Source<'a>, lints: &'a LintMap, sess: &'a SessionInfo) -> Self {
         Self {
             src,
             fixed: Vec::new(),
             lints,
+            sess,
         }
     }
 }
@@ -40,15 +43,27 @@ pub mod main {
     use crate::{
         config::{Fix as FixConfig, FixOut, Single as SingleConfig},
         err::{FixErr, StatixErr},
+        utils,
     };
 
+    use lib::session::{SessionInfo, Version};
     use similar::TextDiff;
 
     pub fn all(fix_config: FixConfig) -> Result<(), StatixErr> {
         let vfs = fix_config.vfs()?;
         let lints = fix_config.lints()?;
+
+        let version = utils::get_version_info()
+            .unwrap()
+            .parse::<Version>()
+            .unwrap();
+        let session = SessionInfo::from_version(version);
+
         for entry in vfs.iter() {
-            match (fix_config.out(), super::all_with(entry.contents, &lints)) {
+            match (
+                fix_config.out(),
+                super::all_with(entry.contents, &lints, &session),
+            ) {
                 (FixOut::Diff, fix_result) => {
                     let src = fix_result
                         .map(|r| r.src)
@@ -87,7 +102,16 @@ pub mod main {
         let original_src = entry.contents;
         let (line, col) = single_config.position;
 
-        match (single_config.out(), super::single(line, col, original_src)) {
+        let version = utils::get_version_info()
+            .unwrap()
+            .parse::<Version>()
+            .unwrap();
+        let session = SessionInfo::from_version(version);
+
+        match (
+            single_config.out(),
+            super::single(line, col, original_src, &session),
+        ) {
             (FixOut::Diff, single_result) => {
                 let fixed_src = single_result
                     .map(|r| r.src)

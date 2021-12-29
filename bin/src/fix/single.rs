@@ -1,6 +1,6 @@
 use std::{borrow::Cow, convert::TryFrom};
 
-use lib::Report;
+use lib::{session::SessionInfo, Report};
 use rnix::{TextSize, WalkEvent};
 
 use crate::{err::SingleFixErr, fix::Source, utils};
@@ -27,7 +27,7 @@ fn pos_to_byte(line: usize, col: usize, src: &str) -> Result<TextSize, SingleFix
     }
 }
 
-fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
+fn find(offset: TextSize, src: &str, sess: &SessionInfo) -> Result<Report, SingleFixErr> {
     // we don't really need the source to form a completely parsed tree
     let parsed = rnix::parse(src);
     let lints = utils::lint_map();
@@ -39,7 +39,7 @@ fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
             WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
                 rules
                     .iter()
-                    .filter_map(|rule| rule.validate(&child))
+                    .filter_map(|rule| rule.validate(&child, sess))
                     .find(|report| report.total_suggestion_range().is_some())
             }),
             _ => None,
@@ -49,10 +49,15 @@ fn find(offset: TextSize, src: &str) -> Result<Report, SingleFixErr> {
         .ok_or(SingleFixErr::NoOp)
 }
 
-pub fn single(line: usize, col: usize, src: &str) -> Result<SingleFixResult, SingleFixErr> {
+pub fn single<'a, 'b>(
+    line: usize,
+    col: usize,
+    src: &'a str,
+    sess: &'b SessionInfo,
+) -> Result<SingleFixResult<'a>, SingleFixErr> {
     let mut src = Cow::from(src);
     let offset = pos_to_byte(line, col, &*src)?;
-    let report = find(offset, &*src)?;
+    let report = find(offset, &*src, &sess)?;
 
     report.apply(src.to_mut());
 

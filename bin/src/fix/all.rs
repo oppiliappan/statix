@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use lib::Report;
+use lib::{session::SessionInfo, Report};
 use rnix::{parser::ParseError as RnixParseErr, WalkEvent};
 
 use crate::{
@@ -8,7 +8,11 @@ use crate::{
     LintMap,
 };
 
-fn collect_fixes(source: &str, lints: &LintMap) -> Result<Vec<Report>, RnixParseErr> {
+fn collect_fixes(
+    source: &str,
+    lints: &LintMap,
+    sess: &SessionInfo,
+) -> Result<Vec<Report>, RnixParseErr> {
     let parsed = rnix::parse(source).as_result()?;
 
     Ok(parsed
@@ -18,7 +22,7 @@ fn collect_fixes(source: &str, lints: &LintMap) -> Result<Vec<Report>, RnixParse
             WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
                 rules
                     .iter()
-                    .filter_map(|rule| rule.validate(&child))
+                    .filter_map(|rule| rule.validate(&child, sess))
                     .filter(|report| report.total_suggestion_range().is_some())
                     .collect::<Vec<_>>()
             }),
@@ -57,7 +61,7 @@ fn reorder(mut reports: Vec<Report>) -> Vec<Report> {
 impl<'a> Iterator for FixResult<'a> {
     type Item = FixResult<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        let all_reports = collect_fixes(&self.src, self.lints).ok()?;
+        let all_reports = collect_fixes(&self.src, self.lints, &self.sess).ok()?;
         if all_reports.is_empty() {
             return None;
         }
@@ -78,13 +82,18 @@ impl<'a> Iterator for FixResult<'a> {
             src: self.src.clone(),
             fixed,
             lints: self.lints,
+            sess: self.sess,
         })
     }
 }
 
-pub fn all_with<'a>(src: &'a str, lints: &'a LintMap) -> Option<FixResult<'a>> {
+pub fn all_with<'a>(
+    src: &'a str,
+    lints: &'a LintMap,
+    sess: &'a SessionInfo,
+) -> Option<FixResult<'a>> {
     let src = Cow::from(src);
     let _ = rnix::parse(&src).as_result().ok()?;
-    let initial = FixResult::empty(src, lints);
+    let initial = FixResult::empty(src, lints, sess);
     initial.into_iter().last()
 }

@@ -22,3 +22,14 @@ pub fn lint_map_of(
 pub fn lint_map() -> HashMap<SyntaxKind, Vec<&'static Box<dyn Lint>>> {
     lint_map_of(&*LINTS)
 }
+
+pub fn get_version_info() -> Option<String> {
+    use std::process::Command;
+    let program = Command::new("nix")
+        .arg("--version")
+        .output()
+        .expect("failed to execute");
+    std::str::from_utf8(&program.stdout)
+        .ok()
+        .map(ToOwned::to_owned)
+}
