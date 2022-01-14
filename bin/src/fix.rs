@@ -41,22 +41,22 @@ pub mod main {
     use std::borrow::Cow;
 
     use crate::{
-        config::{Fix as FixConfig, FixOut, Single as SingleConfig},
+        config::{
+            FixOut, Single as SingleConfig, {ConfFile, Fix as FixConfig},
+        },
         err::{FixErr, StatixErr},
-        utils,
     };
 
-    use lib::session::{SessionInfo, Version};
+    use lib::session::SessionInfo;
     use similar::TextDiff;
 
     pub fn all(fix_config: FixConfig) -> Result<(), StatixErr> {
         let vfs = fix_config.vfs()?;
-        let lints = fix_config.lints()?;
+        let conf_file = ConfFile::discover(&fix_config.conf_path)?;
 
-        let version = utils::get_version_info()
-            .unwrap()
-            .parse::<Version>()
-            .unwrap();
+        let lints = conf_file.lints();
+        let version = conf_file.version()?;
+
         let session = SessionInfo::from_version(version);
 
         for entry in vfs.iter() {
@@ -102,10 +102,10 @@ pub mod main {
         let original_src = entry.contents;
         let (line, col) = single_config.position;
 
-        let version = utils::get_version_info()
-            .unwrap()
-            .parse::<Version>()
-            .unwrap();
+        let conf_file = ConfFile::discover(&single_config.conf_path)?;
+
+        let version = conf_file.version()?;
+
         let session = SessionInfo::from_version(version);
 
         match (

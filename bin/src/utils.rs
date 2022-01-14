@@ -35,3 +35,7 @@ pub fn get_version_info() -> Option<String> {
         .nth(2)
         .map(ToOwned::to_owned)
 }
+
+pub fn default_nix_version() -> String {
+    String::from("2.4")
+}

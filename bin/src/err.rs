@@ -1,7 +1,5 @@
 use std::io;
 
-// use globset::ErrorKind;
-// use rnix::parser::ParseError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -14,8 +12,10 @@ pub enum ConfigErr {
     InvalidPosition(String),
     #[error("unable to parse `{0}` as warning code")]
     InvalidWarningCode(String),
-    #[error("unable to parse config file, error at: `{0}`")]
-    ConfFileParse(String),
+    #[error("unable to parse config file: {0}")]
+    ConfFileParse(toml::de::Error),
+    #[error("unable to parse nix version: `{0}`")]
+    ConfFileVersionParse(String),
 }
 
 // #[derive(Error, Debug)]

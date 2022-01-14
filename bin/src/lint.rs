@@ -43,19 +43,22 @@ pub mod main {
     use std::io;
 
     use super::lint_with;
-    use crate::{config::Check as CheckConfig, err::StatixErr, traits::WriteDiagnostic, utils};
+    use crate::{
+        config::{Check as CheckConfig, ConfFile},
+        err::StatixErr,
+        traits::WriteDiagnostic,
+    };
 
-    use lib::session::{SessionInfo, Version};
+    use lib::session::SessionInfo;
 
     pub fn main(check_config: CheckConfig) -> Result<(), StatixErr> {
         let vfs = check_config.vfs()?;
         let mut stdout = io::stdout();
-        let lints = check_config.lints()?;
 
-        let version = utils::get_version_info()
-            .unwrap()
-            .parse::<Version>()
-            .unwrap();
+        let conf_file = ConfFile::discover(&check_config.conf_path)?;
+        let lints = conf_file.lints();
+        let version = conf_file.version()?;
+
         let session = SessionInfo::from_version(version);
 
         let lint = |vfs_entry| lint_with(vfs_entry, &lints, &session);

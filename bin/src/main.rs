@@ -1,6 +1,7 @@
 use clap::Parser;
 use statix::{
     config::{Opts, SubCommand},
+    dump,
     err::StatixErr,
     explain, fix, lint,
 };
@@ -12,6 +13,7 @@ fn _main() -> Result<(), StatixErr> {
         SubCommand::Fix(config) => fix::main::all(config),
         SubCommand::Single(config) => fix::main::single(config),
         SubCommand::Explain(config) => explain::main::main(config),
+        SubCommand::Dump(_) => dump::main::main(),
     }
 }
 

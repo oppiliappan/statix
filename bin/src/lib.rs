@@ -1,5 +1,6 @@
 pub mod config;
 pub mod dirs;
+pub mod dump;
 pub mod err;
 pub mod explain;
 pub mod fix;

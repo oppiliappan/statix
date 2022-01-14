@@ -8,7 +8,7 @@ use std::{
 use crate::{dirs, err::ConfigErr, utils, LintMap};
 
 use clap::Parser;
-use lib::LINTS;
+use lib::{session::Version, LINTS};
 use serde::{Deserialize, Serialize};
 use vfs::ReadOnlyVfs;
 
@@ -29,6 +29,8 @@ pub enum SubCommand {
     Single(Single),
     /// Print detailed explanation for a lint warning
     Explain(Explain),
+    /// Dump a sample config to stdout
+    Dump(Dump),
 }
 
 #[derive(Parser, Debug)]
@@ -51,7 +53,7 @@ pub struct Check {
     pub format: OutFormat,
 
     /// Path to statix.toml
-    #[clap(short = 'c', long = "config", default_value = ".")]
+    #[clap(short = 'c', long = "config", default_value = "./statix.toml")]
     pub conf_path: PathBuf,
 
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
@@ -76,10 +78,6 @@ impl Check {
             vfs(files.collect::<Vec<_>>())
         }
     }
-
-    pub fn lints(&self) -> Result<LintMap, ConfigErr> {
-        lints(&self.conf_path)
-    }
 }
 
 #[derive(Parser, Debug)]
@@ -101,7 +99,7 @@ pub struct Fix {
     pub diff_only: bool,
 
     /// Path to statix.toml
-    #[clap(short = 'c', long = "config", default_value = ".")]
+    #[clap(short = 'c', long = "config", default_value = "./statix.toml")]
     pub conf_path: PathBuf,
 
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
@@ -144,10 +142,6 @@ impl Fix {
             FixOut::Write
         }
     }
-
-    pub fn lints(&self) -> Result<LintMap, ConfigErr> {
-        lints(&self.conf_path)
-    }
 }
 
 #[derive(Parser, Debug)]
@@ -167,6 +161,10 @@ pub struct Single {
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
     #[clap(short, long = "stdin")]
     pub streaming: bool,
+
+    /// Path to statix.toml
+    #[clap(short = 'c', long = "config", default_value = "./statix.toml")]
+    pub conf_path: PathBuf,
 }
 
 impl Single {
@@ -203,6 +201,9 @@ pub struct Explain {
     #[clap(parse(try_from_str = parse_warning_code))]
     pub target: u32,
 }
+
+#[derive(Parser, Debug)]
+pub struct Dump {}
 
 #[derive(Debug, Copy, Clone)]
 pub enum OutFormat {
@@ -251,13 +252,19 @@ impl FromStr for OutFormat {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfFile {
+    #[serde(default = "Vec::new")]
     disabled: Vec<String>,
+    nix_version: Option<String>,
 }
 
 impl Default for ConfFile {
     fn default() -> Self {
         let disabled = vec![];
-        Self { disabled }
+        let nix_version = Some(utils::default_nix_version());
+        Self {
+            disabled,
+            nix_version,
+        }
     }
 }
 
@@ -265,15 +272,7 @@ impl ConfFile {
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
         let path = path.as_ref();
         let config_file = fs::read_to_string(path).map_err(ConfigErr::InvalidPath)?;
-        toml::de::from_str(&config_file).map_err(|err| {
-            let pos = err.line_col();
-            let msg = if let Some((line, col)) = pos {
-                format!("line {}, col {}", line, col)
-            } else {
-                "unknown".to_string()
-            };
-            ConfigErr::ConfFileParse(msg)
-        })
+        (toml::de::from_str(&config_file)).map_err(ConfigErr::ConfFileParse)
     }
     pub fn discover<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
         let cannonical_path = fs::canonicalize(path.as_ref()).map_err(ConfigErr::InvalidPath)?;
@@ -287,6 +286,29 @@ impl ConfFile {
     }
     pub fn dump(&self) -> String {
         toml::ser::to_string_pretty(&self).unwrap()
+    }
+    pub fn lints(&self) -> LintMap {
+        utils::lint_map_of(
+            (&*LINTS)
+                .iter()
+                .filter(|l| !self.disabled.iter().any(|check| check == l.name()))
+                .cloned()
+                .collect::<Vec<_>>()
+                .as_slice(),
+        )
+    }
+    pub fn version(&self) -> Result<Version, ConfigErr> {
+        if let Some(v) = &self.nix_version {
+            v.parse::<Version>()
+                .map_err(|_| ConfigErr::ConfFileVersionParse(v.clone()))
+        } else if let Some(v) = utils::get_version_info()
+            .map(|o| o.parse::<Version>().ok())
+            .flatten()
+        {
+            Ok(v)
+        } else {
+            Ok(utils::default_nix_version().parse::<Version>().unwrap())
+        }
     }
 }
 
@@ -328,20 +350,8 @@ fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
             let _id = vfs.alloc_file_id(&file);
             vfs.set_file_contents(&file, data.as_bytes());
         } else {
-            println!("{} contains non-utf8 content", file.display());
+            println!("`{}` contains non-utf8 content", file.display());
         };
     }
     Ok(vfs)
-}
-
-fn lints(conf_path: &Path) -> Result<LintMap, ConfigErr> {
-    let config_file = ConfFile::discover(conf_path)?;
-    Ok(utils::lint_map_of(
-        (&*LINTS)
-            .iter()
-            .filter(|l| !config_file.disabled.iter().any(|check| check == l.name()))
-            .cloned()
-            .collect::<Vec<_>>()
-            .as_slice(),
-    ))
 }
