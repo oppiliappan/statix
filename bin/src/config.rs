@@ -53,7 +53,7 @@ pub struct Check {
     pub format: OutFormat,
 
     /// Path to statix.toml
-    #[clap(short = 'c', long = "config", default_value = "./statix.toml")]
+    #[clap(short = 'c', long = "config", default_value = ".")]
     pub conf_path: PathBuf,
 
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
@@ -99,7 +99,7 @@ pub struct Fix {
     pub diff_only: bool,
 
     /// Path to statix.toml
-    #[clap(short = 'c', long = "config", default_value = "./statix.toml")]
+    #[clap(short = 'c', long = "config", default_value = ".")]
     pub conf_path: PathBuf,
 
     /// Enable "streaming" mode, accept file on stdin, output diagnostics on stdout
@@ -163,7 +163,7 @@ pub struct Single {
     pub streaming: bool,
 
     /// Path to statix.toml
-    #[clap(short = 'c', long = "config", default_value = "./statix.toml")]
+    #[clap(short = 'c', long = "config", default_value = ".")]
     pub conf_path: PathBuf,
 }
 
@@ -260,7 +260,7 @@ pub struct ConfFile {
 impl Default for ConfFile {
     fn default() -> Self {
         let disabled = vec![];
-        let nix_version = Some(utils::default_nix_version());
+        let nix_version = None;
         Self {
             disabled,
             nix_version,
@@ -277,7 +277,11 @@ impl ConfFile {
     pub fn discover<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
         let cannonical_path = fs::canonicalize(path.as_ref()).map_err(ConfigErr::InvalidPath)?;
         for p in cannonical_path.ancestors() {
-            let statix_toml_path = p.with_file_name("statix.toml");
+            let statix_toml_path = if p.is_dir() {
+                p.join("statix.toml")
+            } else {
+                p.with_file_name("statix.toml")
+            };
             if statix_toml_path.exists() {
                 return Self::from_path(statix_toml_path);
             };
@@ -285,7 +289,15 @@ impl ConfFile {
         Ok(Self::default())
     }
     pub fn dump(&self) -> String {
-        toml::ser::to_string_pretty(&self).unwrap()
+        let ideal_config = {
+            let disabled = vec![];
+            let nix_version = Some(utils::default_nix_version());
+            Self {
+                disabled,
+                nix_version,
+            }
+        };
+        toml::ser::to_string_pretty(&ideal_config).unwrap()
     }
     pub fn lints(&self) -> LintMap {
         utils::lint_map_of(
