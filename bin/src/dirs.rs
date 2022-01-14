@@ -85,6 +85,9 @@ pub fn build_ignore_set<P: AsRef<Path>>(
     // add globs from gitignore path as well
     if !unrestricted {
         gitignore.add(&gitignore_path);
+
+        // ignore .git by default, nobody cares about .git, i'm sure
+        gitignore.add_line(None, ".git")?;
     }
 
     for i in ignore {
