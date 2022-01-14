@@ -29,20 +29,15 @@ fn parse_number(s: &str) -> Option<u16> {
 }
 
 fn parse_version(s: &str) -> Option<Version> {
-    match s.split(' ').collect::<Vec<_>>().as_slice() {
-        [_, _, version] => {
-            let mut parts = version.split('.');
-            let major = parse_number(parts.next()?)?;
-            let minor = parse_number(parts.next()?)?;
-            let patch = parts.next().map(|p| parse_number(p)).flatten();
-            Some(Version {
-                major,
-                minor,
-                patch,
-            })
-        }
-        _ => None,
-    }
+    let mut parts = s.split('.');
+    let major = parse_number(parts.next()?)?;
+    let minor = parse_number(parts.next()?)?;
+    let patch = parts.next().map(|p| parse_number(p)).flatten();
+    Some(Version {
+        major,
+        minor,
+        patch,
+    })
 }
 
 impl FromStr for Version {
@@ -67,37 +62,33 @@ impl SessionInfo {
     }
 }
 
-pub fn get_nix_version() -> Option<Version> {
-    "nix (Nix) 2.4pre20211006_53e4794".parse::<Version>().ok()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn parse_trivial() {
-        let v = "nix (Nix) 1.6.1".parse::<Version>().ok();
+        let v = "1.6.1".parse::<Version>().ok();
         assert!(v.is_some())
     }
 
     #[test]
     fn parse() {
-        let v = "nix (Nix) 2.4pre20211006_53e4794".parse::<Version>().ok();
+        let v = "2.4pre20211006_53e4794".parse::<Version>().ok();
         assert!(v.is_some())
     }
 
     #[test]
     fn compare_trivial() {
-        let v1 = "nix (Nix) 1.6.1".parse::<Version>().ok();
-        let v2 = "nix (Nix) 1.7.2".parse::<Version>().ok();
+        let v1 = "1.6.1".parse::<Version>().ok();
+        let v2 = "1.7.2".parse::<Version>().ok();
         assert!(v2 > v1);
     }
 
     #[test]
     fn compare() {
-        let v1 = "nix (Nix) 1.7".parse::<Version>().ok();
-        let v2 = "nix (Nix) 2.4pre20211006_53e4794".parse::<Version>().ok();
+        let v1 = "1.7".parse::<Version>().ok();
+        let v2 = "2.4pre20211006_53e4794".parse::<Version>().ok();
         assert!(v2 >= v1);
     }
 }

@@ -27,7 +27,7 @@ use rnix::{
 ///
 /// Replace `lib.groupBy` with `builtins.groupBy`:
 ///
-/// ```
+/// ```nix
 /// builtins.groupBy (x: if x > 2 then "big" else "small") [ 1 2 3 4 5 6 ];
 /// ```
 #[lint(
@@ -40,7 +40,7 @@ struct FasterGroupBy;
 
 impl Rule for FasterGroupBy {
     fn validate(&self, node: &SyntaxElement, sess: &SessionInfo) -> Option<Report> {
-        let lint_version = "nix (Nix) 2.5".parse::<Version>().unwrap();
+        let lint_version = "2.5".parse::<Version>().unwrap();
         if_chain! {
             if sess.version() >=  &lint_version;
             if let NodeOrToken::Node(node) = node;

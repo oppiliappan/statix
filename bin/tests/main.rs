@@ -19,7 +19,7 @@ mod util {
                 test_lint!($($tail)*);
         };
         ($tname:ident) => {
-            test_lint!($tname => session_info!("nix (Nix) 2.5"));
+            test_lint!($tname => session_info!("2.5"));
         };
         ($tname:ident => $sess:expr) => {
             #[test]
@@ -61,5 +61,5 @@ test_lint! {
     unquoted_uri,
     deprecated_is_null,
     empty_inherit,
-    faster_groupby => session_info!("nix (Nix) 2.5")
+    faster_groupby => session_info!("2.5")
 }
