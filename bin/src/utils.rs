@@ -25,10 +25,7 @@ pub fn lint_map() -> HashMap<SyntaxKind, Vec<&'static Box<dyn Lint>>> {
 
 pub fn get_version_info() -> Option<String> {
     use std::process::Command;
-    let program = Command::new("nix")
-        .arg("--version")
-        .output()
-        .expect("failed to execute");
+    let program = Command::new("nix").arg("--version").output().ok()?;
     std::str::from_utf8(&program.stdout)
         .ok()?
         .split(' ')
