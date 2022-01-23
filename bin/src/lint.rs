@@ -54,17 +54,20 @@ pub mod main {
     pub fn main(check_config: CheckConfig) -> Result<(), StatixErr> {
         let vfs = check_config.vfs()?;
         let mut stdout = io::stdout();
-
         let conf_file = ConfFile::discover(&check_config.conf_path)?;
         let lints = conf_file.lints();
         let version = conf_file.version()?;
-
         let session = SessionInfo::from_version(version);
-
         let lint = |vfs_entry| lint_with(vfs_entry, &lints, &session);
-        vfs.iter().map(lint).for_each(|r| {
-            stdout.write(&r, &vfs, check_config.format).unwrap();
-        });
-        Ok(())
+        let results = vfs.iter().map(lint).collect::<Vec<_>>();
+
+        if results.len() != 0 {
+            for r in &results {
+                stdout.write(&r, &vfs, check_config.format).unwrap();
+            }
+            std::process::exit(1);
+        }
+
+        std::process::exit(0);
     }
 }
