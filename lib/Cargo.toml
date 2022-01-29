@@ -7,15 +7,12 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rnix = "0.10.1"
 if_chain = "1.0"
 macros = { path = "../macros" }
 lazy_static = "1.0"
 rowan = "0.12.5"
 serde_json = { version = "1.0.68", optional = true }
-
-[dependencies.rnix]
-git = "https://github.com/nix-community/rnix-parser"
-rev = "8083f5694ddeaca47c946aa9ae7ecf117fa4823b"
 
 [dependencies.serde]
 version = "1.0.130"
