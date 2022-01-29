@@ -3,8 +3,8 @@ use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Pattern, TypedNode},
-    NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{AttrSet, EntryHolder, Lambda, Pattern, TypedNode},
+    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
 /// ## What it does
@@ -20,7 +20,6 @@ use rnix::{
 ///
 /// ```nix
 /// client = { ... }: {
-///   imports = [ self.nixosModules.irmaseal-pkg ];
 ///   services.irmaseal-pkg.enable = true;
 /// };
 /// ```
@@ -30,7 +29,6 @@ use rnix::{
 ///
 /// ```nix
 /// client = _: {
-///   imports = [ self.nixosModules.irmaseal-pkg ];
 ///   services.irmaseal-pkg.enable = true;
 /// };
 /// ```
@@ -38,7 +36,7 @@ use rnix::{
     name = "empty_pattern",
     note = "Found empty pattern in function argument",
     code = 10,
-    match_with = SyntaxKind::NODE_PATTERN
+    match_with = SyntaxKind::NODE_LAMBDA
 )]
 struct EmptyPattern;
 
@@ -46,19 +44,43 @@ impl Rule for EmptyPattern {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if_chain! {
             if let NodeOrToken::Node(node) = node;
-            if let Some(pattern) = Pattern::cast(node.clone());
+            if let Some(lambda_expr) = Lambda::cast(node.clone());
+            if let Some(arg) = lambda_expr.arg();
+            if let Some(body) = lambda_expr.body();
+
+            if let Some(pattern) = Pattern::cast(arg.clone());
             // no patterns within `{ }`
             if pattern.entries().count() == 0;
             // pattern is not bound
             if pattern.at().is_none();
+
+            // not a nixos module
+            if !is_module(&body);
+
             then {
-                let at = node.text_range();
+                let at = pattern.node().text_range();
                 let message = "This pattern is empty, use `_` instead";
                 let replacement = make::ident("_").node().clone();
                 Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
                 None
             }
+        }
+    }
+}
+
+fn is_module(body: &SyntaxNode) -> bool {
+    if_chain! {
+        if let Some(attr_set) = AttrSet::cast(body.clone());
+        if attr_set
+            .entries()
+            .map(|e| e.key())
+            .flatten()
+            .any(|k| k.node().to_string() == "imports");
+        then {
+            true
+        } else {
+            false
         }
     }
 }
