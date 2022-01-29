@@ -398,9 +398,8 @@ checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
 
 [[package]]
 name = "rnix"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "294becb48f58c496d96c10a12df290266204ca75c9799be4d04222bfaebb6a37"
+version = "0.10.1"
+source = "git+https://github.com/nix-community/rnix-parser?rev=8083f5694ddeaca47c946aa9ae7ecf117fa4823b#8083f5694ddeaca47c946aa9ae7ecf117fa4823b"
 dependencies = [
  "cbitset",
  "rowan",

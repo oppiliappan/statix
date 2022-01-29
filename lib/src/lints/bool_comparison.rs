@@ -41,8 +41,9 @@ impl Rule for BoolComparison {
             if let Some(bin_expr) = BinOp::cast(node.clone());
             if let Some(lhs) = bin_expr.lhs();
             if let Some(rhs) = bin_expr.rhs();
+            if let Some(op) = bin_expr.operator();
 
-            if let op@(BinOpKind::Equal | BinOpKind::NotEqual) = bin_expr.operator();
+            if let BinOpKind::Equal | BinOpKind::NotEqual = op;
             let (non_bool_side, bool_side) = if boolean_ident(&lhs).is_some() {
                 (rhs, lhs)
             } else if boolean_ident(&rhs).is_some() {
@@ -70,7 +71,7 @@ impl Rule for BoolComparison {
                                 SyntaxKind::NODE_BIN_OP => {
                                     let inner = BinOp::cast(non_bool_side.clone()).unwrap();
                                     // `!a ? b`, no paren required
-                                    if inner.operator() == BinOpKind::IsSet {
+                                    if inner.operator()? == BinOpKind::IsSet {
                                         make::unary_not(&non_bool_side).node().clone()
                                     } else {
                                         let parens = make::parenthesize(&non_bool_side);

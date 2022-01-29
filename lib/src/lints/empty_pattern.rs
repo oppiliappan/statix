@@ -49,6 +49,7 @@ impl Rule for EmptyPattern {
             if let Some(body) = lambda_expr.body();
 
             if let Some(pattern) = Pattern::cast(arg.clone());
+
             // no patterns within `{ }`
             if pattern.entries().count() == 0;
             // pattern is not bound

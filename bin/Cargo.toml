@@ -16,7 +16,6 @@ path = "src/main.rs"
 
 [dependencies]
 ariadne = "0.1.3"
-rnix = "0.9.0"
 clap = "3.0.0-beta.4"
 ignore = "0.4.18"
 thiserror = "1.0.30"
@@ -24,6 +23,10 @@ similar = "2.1.0"
 vfs = { path = "../vfs" }
 lib = { path = "../lib" }
 toml = "0.5.8"
+
+[dependencies.rnix]
+git = "https://github.com/nix-community/rnix-parser"
+rev = "8083f5694ddeaca47c946aa9ae7ecf117fa4823b"
 
 [dependencies.serde]
 version = "1.0.68"
