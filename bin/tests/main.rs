@@ -62,5 +62,6 @@ test_lint! {
     deprecated_is_null,
     empty_inherit,
     faster_groupby => session_info!("2.5"),
-    faster_zipattrswith => session_info!("2.6")
+    faster_zipattrswith => session_info!("2.6"),
+    deprecated_to_path => session_info!("2.4")
 }

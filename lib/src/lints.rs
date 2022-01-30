@@ -17,4 +17,5 @@ lints! {
     empty_inherit,
     faster_groupby,
     faster_zipattrswith,
+    deprecated_to_path,
 }

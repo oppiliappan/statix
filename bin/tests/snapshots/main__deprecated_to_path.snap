@@ -1,0 +1,34 @@
+---
+source: bin/tests/main.rs
+expression: "&out"
+
+---
+[W17] Warning: Found usage of deprecated builtin toPath
+   ╭─[data/deprecated_to_path.nix:2:4]
+   │
+ 2 │   (builtins.toPath x)
+   ·    ────────┬────────  
+   ·            ╰────────── builtins.toPath is deprecated, see :doc builtins.toPath within the REPL for more
+───╯
+[W17] Warning: Found usage of deprecated builtin toPath
+   ╭─[data/deprecated_to_path.nix:3:4]
+   │
+ 3 │   (toPath x)
+   ·    ────┬───  
+   ·        ╰───── toPath is deprecated, see :doc builtins.toPath within the REPL for more
+───╯
+[W17] Warning: Found usage of deprecated builtin toPath
+   ╭─[data/deprecated_to_path.nix:4:4]
+   │
+ 4 │   (toPath "/abc/def")
+   ·    ────────┬────────  
+   ·            ╰────────── toPath is deprecated, see :doc builtins.toPath within the REPL for more
+───╯
+[W17] Warning: Found usage of deprecated builtin toPath
+   ╭─[data/deprecated_to_path.nix:5:4]
+   │
+ 5 │   (builtins.toPath "/some/path")
+   ·    ──────────────┬─────────────  
+   ·                  ╰─────────────── builtins.toPath is deprecated, see :doc builtins.toPath within the REPL for more
+───╯
+
