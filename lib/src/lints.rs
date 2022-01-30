@@ -16,4 +16,5 @@ lints! {
     deprecated_is_null,
     empty_inherit,
     faster_groupby,
+    faster_zipattrswith,
 }
