@@ -48,6 +48,12 @@ nix run git+https://git.peppe.rs/languages/statix -- --help
 cachix use statix
 ```
 
+Install from nixpkgs:
+
+```shell
+nix run nixpkgs#statix -- help
+```
+
 Install with [brew/linuxbrew](https://brew.sh)
 
 ```bash
@@ -130,45 +136,15 @@ empty_pattern
 redundant_pattern_bind
 unquoted_uri
 deprecated_is_null
+empty_inherit
+faster_groupby
+faster_zipattrswith
+deprecated_to_path
 ```
 
 All lints are enabled by default.
 
-## Architecture
-
-`statix` has the following components:
-
-- `bin`: the CLI/entrypoint
-- `lib`: library of lints and utilities to define these
-  lints
-- `vfs`: virtual filesystem
-- `macros`: procedural macros to help define a lint
-
-### `bin`
-
-This is the main point of interaction between `statix`
-and the end user. It's output is human-readable and should
-also support JSON/errorfmt outputs for external tools to
-use.
-
-### `lib`
-
-A library of AST-based lints and utilities to help write
-those lints. It should be easy for newcomers to write lints
-without being familiar with the rest of the codebase.
-
-### `vfs`
-
-VFS is an in-memory filesystem. It provides cheap-to-copy
-handles (`FileId`s) to access paths and file contents.
-
-### `macros`
-
-This crate intends to be a helper layer to declare lints and
-their metadata.
-
 ## TODO
 
-- Test suite for lints and suggestions
 - Resolve imports and scopes for better lints
 - Add silent flag that exits with status
