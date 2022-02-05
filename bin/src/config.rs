@@ -31,6 +31,8 @@ pub enum SubCommand {
     Explain(Explain),
     /// Dump a sample config to stdout
     Dump(Dump),
+    /// List all available lints
+    List(List),
 }
 
 #[derive(Parser, Debug)]
@@ -204,6 +206,9 @@ pub struct Explain {
 
 #[derive(Parser, Debug)]
 pub struct Dump {}
+
+#[derive(Parser, Debug)]
+pub struct List {}
 
 #[derive(Debug, Copy, Clone)]
 pub enum OutFormat {
