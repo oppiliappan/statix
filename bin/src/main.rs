@@ -1,9 +1,10 @@
 use clap::Parser;
+
+#[rustfmt::skip]
 use statix::{
     config::{Opts, SubCommand},
-    dump,
     err::StatixErr,
-    explain, fix, lint,
+    lint, fix, explain, dump, list,
 };
 
 fn _main() -> Result<(), StatixErr> {
@@ -14,6 +15,7 @@ fn _main() -> Result<(), StatixErr> {
         SubCommand::Single(config) => fix::main::single(config),
         SubCommand::Explain(config) => explain::main::main(config),
         SubCommand::Dump(_) => dump::main::main(),
+        SubCommand::List(_) => list::main::main(),
     }
 }
 
