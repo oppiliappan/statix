@@ -61,7 +61,7 @@ pub mod main {
         let lint = |vfs_entry| lint_with(vfs_entry, &lints, &session);
         let results = vfs.iter().map(lint).collect::<Vec<_>>();
 
-        if results.len() != 0 {
+        if results.iter().map(|r| r.reports.len()).sum::<usize>() != 0 {
             for r in &results {
                 stdout.write(&r, &vfs, check_config.format).unwrap();
             }
