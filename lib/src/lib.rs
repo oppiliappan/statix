@@ -201,6 +201,8 @@ impl Suggestion {
     }
 }
 
+unsafe impl Send for Suggestion {}
+
 #[cfg(feature = "json-out")]
 impl Serialize for Suggestion {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

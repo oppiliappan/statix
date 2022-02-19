@@ -50,6 +50,7 @@ pub mod main {
     };
 
     use lib::session::SessionInfo;
+    use rayon::prelude::*;
 
     pub fn main(check_config: CheckConfig) -> Result<(), StatixErr> {
         let vfs = check_config.vfs()?;
@@ -59,9 +60,13 @@ pub mod main {
         let version = conf_file.version()?;
         let session = SessionInfo::from_version(version);
         let lint = |vfs_entry| lint_with(vfs_entry, &lints, &session);
-        let results = vfs.iter().map(lint).collect::<Vec<_>>();
+        let results = vfs
+            .par_iter()
+            .map(lint)
+            .filter(|lr| !lr.reports.is_empty())
+            .collect::<Vec<_>>();
 
-        if results.iter().map(|r| r.reports.len()).sum::<usize>() != 0 {
+        if results.len() != 0 {
             for r in &results {
                 stdout.write(&r, &vfs, check_config.format).unwrap();
             }

@@ -5,6 +5,7 @@ use std::{
 };
 
 use indexmap::IndexSet;
+use rayon::prelude::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct FileId(pub u32);
@@ -65,6 +66,13 @@ impl ReadOnlyVfs {
     }
     pub fn iter(&self) -> impl Iterator<Item = VfsEntry> {
         self.data.iter().map(move |(file_id, _)| VfsEntry {
+            file_id: *file_id,
+            file_path: self.file_path(*file_id),
+            contents: self.get_str(*file_id),
+        })
+    }
+    pub fn par_iter(&self) -> impl ParallelIterator<Item = VfsEntry> {
+        self.data.par_iter().map(move |(file_id, _)| VfsEntry {
             file_id: *file_id,
             file_path: self.file_path(*file_id),
             contents: self.get_str(*file_id),

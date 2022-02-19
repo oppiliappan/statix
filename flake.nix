@@ -33,9 +33,9 @@
         });
 
       chanspec = {
-        date = "2021-12-01";
+        date = "2022-02-06";
         channel = "nightly";
-        sha256 = "DhIP1w63/hMbWlgElJGBumEK/ExFWCdLaeBV5F8uWHc="; # set zeros after modifying channel or date
+        sha256 = "oKkTWopCDx4tphzTtRn+zDDtvmIZrL/H44tV2ruSfDw="; # set zeros after modifying channel or date
       };
       rustChannel = p: (fenix.overlay p p).fenix.toolchainOf chanspec;
 
