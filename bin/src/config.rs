@@ -50,7 +50,8 @@ pub struct Check {
     unrestricted: bool,
 
     /// Output format.
-    /// Supported values: stderr, errfmt, json (on feature flag only)
+    #[cfg_attr(feature = "json", doc = "Supported values: stderr, errfmt, json")]
+    #[cfg_attr(not(feature = "json"), doc = "Supported values: stderr, errfmt")]
     #[clap(short = 'o', long, default_value_t, parse(try_from_str))]
     pub format: OutFormat,
 
