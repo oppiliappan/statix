@@ -63,7 +63,8 @@ impl Rule for UselessHasAttr {
                     | SyntaxKind::NODE_PAREN
                     | SyntaxKind::NODE_STRING
                     | SyntaxKind::NODE_ATTR_SET
-                    | SyntaxKind::NODE_IDENT => default_expr,
+                    | SyntaxKind::NODE_IDENT
+                    | SyntaxKind::NODE_SELECT => default_expr,
                     _ => make::parenthesize(&default_expr).node().clone(),
                 };
                 let replacement = make::or_default(&set, &attr_path, &default_with_parens).node().clone();

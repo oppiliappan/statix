@@ -31,4 +31,11 @@ expression: "&out"
    ·    ────────────────────┬────────────────────  
    ·                        ╰────────────────────── Consider using x.a or (if b then c else d) instead of this if expression
 ───╯
+[W19] Warning: This `if` expression can be simplified with `or`
+   ╭─[data/useless_has_attr.nix:9:4]
+   │
+ 9 │   (if x ? a then x.a else b.c)
+   ·    ─────────────┬────────────  
+   ·                 ╰────────────── Consider using x.a or b.c instead of this if expression
+───╯
 

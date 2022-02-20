@@ -6,4 +6,5 @@
 
   # complex body
   (if x ? a then x.a else if b then c else d)
+  (if x ? a then x.a else b.c)
 ]
