@@ -1,0 +1,13 @@
+---
+source: bin/tests/main.rs
+expression: "&out"
+
+---
+[W18] Warning: This boolean expression can be simplified
+   ╭─[data/bool_simplification.nix:2:7]
+   │
+ 2 │   _ = !(a == b);
+   ·       ────┬────  
+   ·           ╰────── Try != instead of !(... == ...)
+───╯
+

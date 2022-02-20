@@ -18,4 +18,5 @@ lints! {
     faster_groupby,
     faster_zipattrswith,
     deprecated_to_path,
+    bool_simplification,
 }
