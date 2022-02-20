@@ -19,4 +19,5 @@ lints! {
     faster_zipattrswith,
     deprecated_to_path,
     bool_simplification,
+    useless_has_attr,
 }

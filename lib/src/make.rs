@@ -88,3 +88,7 @@ pub fn empty() -> types::Root {
 pub fn binary(lhs: &SyntaxNode, op: &str, rhs: &SyntaxNode) -> types::BinOp {
     ast_from_text(&format!("{} {} {}", lhs, op, rhs))
 }
+
+pub fn or_default(set: &SyntaxNode, index: &SyntaxNode, default: &SyntaxNode) -> types::OrDefault {
+    ast_from_text(&format!("{}.{} or {}", set, index, default))
+}

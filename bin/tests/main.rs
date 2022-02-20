@@ -64,5 +64,6 @@ test_lint! {
     faster_groupby => session_info!("2.5"),
     faster_zipattrswith => session_info!("2.6"),
     deprecated_to_path => session_info!("2.4"),
-    bool_simplification
+    bool_simplification,
+    useless_has_attr
 }
