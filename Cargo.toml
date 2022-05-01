@@ -4,6 +4,6 @@ members = [
     "bin",
     "lib",
     "macros",
-    "vfs"
+    "vfs",
 ]
 

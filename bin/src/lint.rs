@@ -53,12 +53,14 @@ pub mod main {
     use rayon::prelude::*;
 
     pub fn main(check_config: CheckConfig) -> Result<(), StatixErr> {
-        let vfs = check_config.vfs()?;
-        let mut stdout = io::stdout();
         let conf_file = ConfFile::discover(&check_config.conf_path)?;
         let lints = conf_file.lints();
         let version = conf_file.version()?;
         let session = SessionInfo::from_version(version);
+
+        let vfs = check_config.vfs(conf_file.ignore.as_slice())?;
+
+        let mut stdout = io::stdout();
         let lint = |vfs_entry| lint_with(vfs_entry, &lints, &session);
         let results = vfs
             .par_iter()

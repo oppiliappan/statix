@@ -65,7 +65,7 @@ pub struct Check {
 }
 
 impl Check {
-    pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
+    pub fn vfs(&self, extra_ignores: &[String]) -> Result<ReadOnlyVfs, ConfigErr> {
         if self.streaming {
             use std::io::{self, BufRead};
             let src = io::stdin()
@@ -76,7 +76,8 @@ impl Check {
                 .join("\n");
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         } else {
-            let ignore = dirs::build_ignore_set(&self.ignore, &self.target, self.unrestricted)?;
+            let all_ignores = dbg!([self.ignore.as_slice(), extra_ignores].concat());
+            let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
             let files = dirs::walk_nix_files(ignore, &self.target)?;
             vfs(files.collect::<Vec<_>>())
         }
@@ -117,7 +118,7 @@ pub enum FixOut {
 }
 
 impl Fix {
-    pub fn vfs(&self) -> Result<ReadOnlyVfs, ConfigErr> {
+    pub fn vfs(&self, extra_ignores: &[String]) -> Result<ReadOnlyVfs, ConfigErr> {
         if self.streaming {
             use std::io::{self, BufRead};
             let src = io::stdin()
@@ -128,7 +129,8 @@ impl Fix {
                 .join("\n");
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         } else {
-            let ignore = dirs::build_ignore_set(&self.ignore, &self.target, self.unrestricted)?;
+            let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
+            let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
             let files = dirs::walk_nix_files(ignore, &self.target)?;
             vfs(files.collect::<Vec<_>>())
         }
@@ -260,16 +262,22 @@ impl FromStr for OutFormat {
 pub struct ConfFile {
     #[serde(default = "Vec::new")]
     disabled: Vec<String>,
+
     nix_version: Option<String>,
+
+    #[serde(default = "Vec::new")]
+    pub ignore: Vec<String>,
 }
 
 impl Default for ConfFile {
     fn default() -> Self {
-        let disabled = vec![];
-        let nix_version = None;
+        let disabled = Default::default();
+        let ignore = Default::default();
+        let nix_version = Default::default();
         Self {
             disabled,
             nix_version,
+            ignore,
         }
     }
 }
@@ -298,9 +306,11 @@ impl ConfFile {
         let ideal_config = {
             let disabled = vec![];
             let nix_version = Some(utils::default_nix_version());
+            let ignore = vec![".direnv".into()];
             Self {
                 disabled,
                 nix_version,
+                ignore,
             }
         };
         toml::ser::to_string_pretty(&ideal_config).unwrap()

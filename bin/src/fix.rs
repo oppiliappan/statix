@@ -51,8 +51,8 @@ pub mod main {
     use similar::TextDiff;
 
     pub fn all(fix_config: FixConfig) -> Result<(), StatixErr> {
-        let vfs = fix_config.vfs()?;
         let conf_file = ConfFile::discover(&fix_config.conf_path)?;
+        let vfs = fix_config.vfs(conf_file.ignore.as_slice())?;
 
         let lints = conf_file.lints();
         let version = conf_file.version()?;
