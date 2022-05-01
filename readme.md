@@ -121,7 +121,8 @@ to the `statix.toml` file on the command line with the
 `--config` flag (available on `statix check` and `statix
 fix`).
 
-The available lints are:
+The available lints are (see `statix list` for an updated
+list):
 
 ```
 bool_comparison
@@ -140,9 +141,12 @@ empty_inherit
 faster_groupby
 faster_zipattrswith
 deprecated_to_path
+bool_simplification
+useless_has_attr
 ```
 
-All lints are enabled by default.
+All lints are enabled by default. Generate a minimal config
+with `statix dump > statix.toml`.
 
 ## TODO
 
