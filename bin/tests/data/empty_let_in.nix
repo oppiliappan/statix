@@ -6,7 +6,8 @@
   )
   (
     let
-      # don't match this, we have a comment
+      # don't fix this, we have a comment
+      # raise the lint though
     in
     null
   )

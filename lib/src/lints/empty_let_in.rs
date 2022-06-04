@@ -1,5 +1,3 @@
-use std::ops::Not;
-
 use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
@@ -49,15 +47,18 @@ impl Rule for EmptyLetIn {
             if let Some(body) = let_in_expr.body();
 
             // ensure that the let-in-expr does not have comments
-            if node
+            let has_comments = node
                 .children_with_tokens()
-                .any(|el| el.kind() == SyntaxKind::TOKEN_COMMENT)
-                .not();
+                .any(|el| el.kind() == SyntaxKind::TOKEN_COMMENT);
             then {
                 let at = node.text_range();
                 let replacement = body;
                 let message = "This let-in expression has no entries";
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(if has_comments {
+                    self.report().diagnostic(at, message)
+                } else {
+                    self.report().suggest(at, message, Suggestion::new(at, replacement))
+                })
             } else {
                 None
             }
