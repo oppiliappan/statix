@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
@@ -45,6 +47,12 @@ impl Rule for EmptyLetIn {
             if inherits.count() == 0;
 
             if let Some(body) = let_in_expr.body();
+
+            // ensure that the let-in-expr does not have comments
+            if node
+                .children_with_tokens()
+                .any(|el| el.kind() == SyntaxKind::TOKEN_COMMENT)
+                .not();
             then {
                 let at = node.text_range();
                 let replacement = body;
