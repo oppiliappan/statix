@@ -49,6 +49,7 @@ impl Rule for LongRootPattern {
             if let Some(pattern) = lambda.arg();
             if let Some(pattern) = Pattern::cast(pattern.clone());
             if count_pattern_entries(&pattern) > 6;
+            if !pattern.node().text().to_string().contains("\n");
             then {
                 let at = pattern.node().text_range();
                 let message = "Split the long pattern line into multiple lines";
