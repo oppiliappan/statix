@@ -1,4 +1,4 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use if_chain::if_chain;
 use macros::lint;
@@ -53,9 +53,10 @@ impl Rule for LongRootPattern {
             then {
                 let at = pattern.node().text_range();
                 let message = "Split the long pattern line into multiple lines";
+                let replacement = make::multiline_pattern(&pattern).node().clone();
                 Some(
                     self.report()
-                        .diagnostic(at, message),
+                        .suggest(at, message, Suggestion::new(at, replacement)),
                 )
             } else {
                 None
