@@ -1,0 +1,32 @@
+---
+source: bin/tests/main.rs
+expression: "&out"
+
+---
+[W20] Warning: Avoid repeated keys in attribute sets
+    ╭─[data/repeated_keys.nix:16:5]
+    │
+ 16 │     foo.bar = 1;
+    ·     ───┬───  
+    ·        ╰───── The key foo is first assigned here ...
+ 17 │     foo.bar."hello" = 1;
+    ·     ───────┬───────  
+    ·            ╰───────── ... repeated here ...
+ 18 │     foo.again = 1;
+    ·     ────┬────  
+    ·         ╰────── ... and here. Try foo = { bar=...; bar."hello"=...; again=...; } instead.
+────╯
+[W20] Warning: Avoid repeated keys in attribute sets
+    ╭─[data/repeated_keys.nix:23:5]
+    │
+ 23 │     foo.baz.bar1 = 1;
+    ·     ──────┬─────  
+    ·           ╰─────── The key foo is first assigned here ...
+ 24 │     foo.baz.bar2 = 2;
+    ·     ──────┬─────  
+    ·           ╰─────── ... repeated here ...
+ 25 │     foo.baz.bar3 = 3;
+    ·     ──────┬─────  
+    ·           ╰─────── ... and here (2 occurrences omitted). Try foo = { baz.bar1=...; baz.bar2=...; baz.bar3=...; } instead.
+────╯
+
