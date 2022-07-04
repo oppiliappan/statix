@@ -66,5 +66,6 @@ test_lint! {
     deprecated_to_path => session_info!("2.4"),
     bool_simplification,
     useless_has_attr,
-    repeated_keys
+    repeated_keys,
+    empty_list_concat
 }
