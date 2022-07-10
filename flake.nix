@@ -56,7 +56,7 @@
             inherit pname;
             inherit (packageMeta) version;
 
-            src = gitignoreSource ./.;
+            src = self;
             cargoLock.lockFile = ./Cargo.lock;
 
             buildFeatures = "json";
