@@ -45,7 +45,16 @@ struct RepeatedKeys;
 fn path_counts(attr_set: &AttrSet) -> Vec<String> {
     let mut counts = BTreeMap::new();
     counts = attr_set.node().children().filter_map(|ref c| {
-        KeyValue::cast(c.clone()).map(|kv| kv.key().unwrap().path().next().unwrap().to_string())
+        KeyValue::cast(c.clone()).and_then(|kv| {
+            let key = kv.key().unwrap();
+            let mut path = key.path();
+            let first_path_part = path.next().unwrap().to_string();
+            if path.next().is_none() {
+                None
+            } else {
+                Some(first_path_part)
+            }
+        })
     }).fold(counts, |mut acc, x| {
         *acc.entry(x).or_insert(0) += 1;
         acc
