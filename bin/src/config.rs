@@ -55,7 +55,7 @@ pub struct Check {
     #[clap(short = 'o', long, default_value_t, parse(try_from_str))]
     pub format: OutFormat,
 
-    /// Path to statix.toml
+    /// Path to statix.toml or its parent directory
     #[clap(short = 'c', long = "config", default_value = ".")]
     pub conf_path: PathBuf,
 
@@ -101,7 +101,7 @@ pub struct Fix {
     #[clap(short, long = "dry-run")]
     pub diff_only: bool,
 
-    /// Path to statix.toml
+    /// Path to statix.toml or its parent directory
     #[clap(short = 'c', long = "config", default_value = ".")]
     pub conf_path: PathBuf,
 
@@ -165,7 +165,7 @@ pub struct Single {
     #[clap(short, long = "stdin")]
     pub streaming: bool,
 
-    /// Path to statix.toml
+    /// Path to statix.toml or its parent directory
     #[clap(short = 'c', long = "config", default_value = ".")]
     pub conf_path: PathBuf,
 }
@@ -278,7 +278,7 @@ impl ConfFile {
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
         let path = path.as_ref();
         let config_file = fs::read_to_string(path).map_err(ConfigErr::InvalidPath)?;
-        (toml::de::from_str(&config_file)).map_err(ConfigErr::ConfFileParse)
+        toml::de::from_str(&config_file).map_err(ConfigErr::ConfFileParse)
     }
     pub fn discover<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
         let cannonical_path = fs::canonicalize(path.as_ref()).map_err(ConfigErr::InvalidPath)?;
@@ -286,7 +286,7 @@ impl ConfFile {
             let statix_toml_path = if p.is_dir() {
                 p.join("statix.toml")
             } else {
-                p.with_file_name("statix.toml")
+                p.to_path_buf()
             };
             if statix_toml_path.exists() {
                 return Self::from_path(statix_toml_path);
