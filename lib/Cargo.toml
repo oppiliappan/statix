@@ -7,7 +7,7 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rnix = "0.10.1"
+rnix = "0.10.2"
 if_chain = "1.0"
 macros = { path = "../macros" }
 lazy_static = "1.0"

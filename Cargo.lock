@@ -473,9 +473,9 @@ checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
 
 [[package]]
 name = "rnix"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "065c5eac8e8f7e7b0e7227bdc46e2d8dd7d69fff7a9a2734e21f686bbcb9b2c9"
+checksum = "8024a523e8836f1a5d051203dc00d833357fee94e351b51348dfaeca5364daa9"
 dependencies = [
  "cbitset",
  "rowan",
