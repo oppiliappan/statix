@@ -76,7 +76,7 @@ impl Check {
                 .join("\n");
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         } else {
-            let all_ignores = dbg!([self.ignore.as_slice(), extra_ignores].concat());
+            let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
             let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
             let files = dirs::walk_nix_files(ignore, &self.target)?;
             vfs(files.collect::<Vec<_>>())
