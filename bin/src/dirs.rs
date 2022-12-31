@@ -19,26 +19,27 @@ pub struct Walker {
 }
 
 impl Walker {
-    pub fn new<P: AsRef<Path>>(target: P, ignore: Gitignore) -> io::Result<Self> {
-        let target = target.as_ref().to_path_buf();
-        if !target.exists() {
-            Err(Error::new(
-                ErrorKind::NotFound,
-                format!("file not found: {}", target.display()),
-            ))
-        } else if target.is_dir() {
-            Ok(Self {
-                dirs: vec![target],
-                files: vec![],
-                ignore,
-            })
-        } else {
-            Ok(Self {
-                dirs: vec![],
-                files: vec![target],
-                ignore,
-            })
+    pub fn new<P: AsRef<Path>>(targets: &[P], ignore: Gitignore) -> io::Result<Self> {
+        let mut dirs = vec![];
+        let mut files = vec![];
+        for target in targets {
+            let target = target.as_ref().to_path_buf();
+            if !target.exists() {
+                return Err(Error::new(
+                    ErrorKind::NotFound,
+                    format!("file not found: {}", target.display()),
+                ));
+            } else if target.is_dir() {
+                dirs.push(target);
+            } else {
+                files.push(target);
+            }
         }
+        Ok(Self {
+            dirs: dirs,
+            files: files,
+            ignore,
+        })
     }
 }
 
@@ -70,7 +71,7 @@ impl Iterator for Walker {
 
 pub fn build_ignore_set<P: AsRef<Path>>(
     ignore: &[String],
-    target: P,
+    target: &P,
     unrestricted: bool,
 ) -> Result<Gitignore, IgnoreError> {
     let gitignore_path = target.as_ref().join(".gitignore");
@@ -99,8 +100,8 @@ pub fn build_ignore_set<P: AsRef<Path>>(
 
 pub fn walk_nix_files<P: AsRef<Path>>(
     ignore: Gitignore,
-    target: P,
+    targets: &[P],
 ) -> Result<impl Iterator<Item = PathBuf>, io::Error> {
-    let walker = dirs::Walker::new(target, ignore)?;
+    let walker = dirs::Walker::new(targets, ignore)?;
     Ok(walker.filter(|path: &PathBuf| matches!(path.extension(), Some(e) if e == "nix")))
 }

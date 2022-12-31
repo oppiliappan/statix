@@ -37,9 +37,9 @@ pub enum SubCommand {
 
 #[derive(Parser, Debug)]
 pub struct Check {
-    /// File or directory to run check on
+    /// Files or directories to run check on
     #[clap(default_value = ".", parse(from_os_str))]
-    target: PathBuf,
+    targets: Vec<PathBuf>,
 
     /// Globs of file patterns to skip
     #[clap(short, long)]
@@ -77,8 +77,9 @@ impl Check {
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         } else {
             let all_ignores = dbg!([self.ignore.as_slice(), extra_ignores].concat());
-            let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
-            let files = dirs::walk_nix_files(ignore, &self.target)?;
+            // FIXME we are only respecting the first argument here fore gitignores
+            let ignore = dirs::build_ignore_set(&all_ignores, &self.targets[0], self.unrestricted)?;
+            let files = dirs::walk_nix_files(ignore, &self.targets)?;
             vfs(files.collect::<Vec<_>>())
         }
     }
@@ -86,9 +87,9 @@ impl Check {
 
 #[derive(Parser, Debug)]
 pub struct Fix {
-    /// File or directory to run fix on
+    /// Files or directories to run fix on
     #[clap(default_value = ".", parse(from_os_str))]
-    target: PathBuf,
+    targets: Vec<PathBuf>,
 
     /// Globs of file patterns to skip
     #[clap(short, long)]
@@ -130,8 +131,9 @@ impl Fix {
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         } else {
             let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
-            let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
-            let files = dirs::walk_nix_files(ignore, &self.target)?;
+            // FIXME we are only respecting the first argument here fore gitignores
+            let ignore = dirs::build_ignore_set(&all_ignores, &self.targets[0], self.unrestricted)?;
+            let files = dirs::walk_nix_files(ignore, &self.targets)?;
             vfs(files.collect::<Vec<_>>())
         }
     }
