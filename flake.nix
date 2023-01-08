@@ -29,7 +29,7 @@
       nixpkgsFor = forAllSystems (system:
         import nixpkgs {
           inherit system;
-          overlays = [ self.overlay ];
+          overlays = [ self.overlays.default ];
         });
 
       chanspec = {
@@ -42,7 +42,7 @@
     in
     {
 
-      overlay = final: prev: {
+      overlays.default = final: prev: {
 
         statix = with final;
           let
