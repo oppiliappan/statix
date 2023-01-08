@@ -21,4 +21,5 @@ lints! {
     bool_simplification,
     useless_has_attr,
     repeated_keys,
+    empty_list_concat
 }
