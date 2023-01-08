@@ -108,6 +108,7 @@ impl Report {
             ParseError::UnexpectedEOF | ParseError::UnexpectedEOFWanted(_) => {
                 TextRange::empty(0u32.into())
             }
+            ParseError::DuplicatedArgs(at, _) => at,
             _ => panic!("report a bug, pepper forgot to handle a parse error"),
         };
         let mut message = err.to_string();
