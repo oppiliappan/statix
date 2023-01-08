@@ -45,26 +45,33 @@ impl Walker {
 impl Iterator for Walker {
     type Item = PathBuf;
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(dir) = self.dirs.pop() {
-            if dir.is_dir() {
-                if let Match::None | Match::Whitelist(_) = self.ignore.matched(&dir, true) {
-                    for entry in fs::read_dir(&dir).ok()? {
-                        let entry = entry.ok()?;
-                        let path = entry.path();
-                        if path.is_dir() {
-                            self.dirs.push(path);
-                        } else if path.is_file() {
-                            if let Match::None | Match::Whitelist(_) =
-                                self.ignore.matched(&path, false)
-                            {
-                                self.files.push(path);
+        self.files.pop().or_else(|| {
+            while let Some(dir) = self.dirs.pop() {
+                if dir.is_dir() {
+                    if let Match::None | Match::Whitelist(_) = self.ignore.matched(&dir, true) {
+                        let mut found = false;
+                        for entry in fs::read_dir(&dir).ok()? {
+                            let entry = entry.ok()?;
+                            let path = entry.path();
+                            if path.is_dir() {
+                                self.dirs.push(path);
+                            } else if path.is_file() {
+                                if let Match::None | Match::Whitelist(_) =
+                                    self.ignore.matched(&path, false)
+                                {
+                                    found = true;
+                                    self.files.push(path);
+                                }
                             }
+                        }
+                        if found {
+                            break;
                         }
                     }
                 }
             }
-        }
-        self.files.pop()
+            self.files.pop()
+        })
     }
 }
 
