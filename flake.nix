@@ -8,22 +8,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    gitignore = {
-      url = "github:hercules-ci/gitignore.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
   };
 
   outputs =
     { self
     , nixpkgs
     , fenix
-    , gitignore
     }:
     let
-      inherit (gitignore.lib) gitignoreSource;
-
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       nixpkgsFor = forAllSystems (system:
@@ -32,12 +24,7 @@
           overlays = [ self.overlays.default ];
         });
 
-      chanspec = {
-        date = "2022-02-06";
-        channel = "nightly";
-        sha256 = "oKkTWopCDx4tphzTtRn+zDDtvmIZrL/H44tV2ruSfDw="; # set zeros after modifying channel or date
-      };
-      rustChannel = p: (fenix.overlay p p).fenix.toolchainOf chanspec;
+      rustChannel = p: (fenix.overlay p p).fenix.complete;
 
     in
     {
@@ -59,7 +46,7 @@
             src = self;
             cargoLock.lockFile = ./Cargo.lock;
 
-            buildFeatures = "json";
+            buildFeatures = [ "json" ];
 
             meta = with lib; {
               description = "Lints and suggestions for the Nix programming language";
