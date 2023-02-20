@@ -48,7 +48,7 @@ impl Rule for EmptyPattern {
             if let Some(arg) = lambda_expr.arg();
             if let Some(body) = lambda_expr.body();
 
-            if let Some(pattern) = Pattern::cast(arg.clone());
+            if let Some(pattern) = Pattern::cast(arg);
 
             // no patterns within `{ }`
             if pattern.entries().count() == 0;
@@ -75,8 +75,7 @@ fn is_module(body: &SyntaxNode) -> bool {
         if let Some(attr_set) = AttrSet::cast(body.clone());
         if attr_set
             .entries()
-            .map(|e| e.key())
-            .flatten()
+            .filter_map(|e| e.key())
             .any(|k| k.node().to_string() == "imports");
         then {
             true

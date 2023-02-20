@@ -22,7 +22,7 @@ impl PartialOrd for Version {
 
 fn parse_number(s: &str) -> Option<u16> {
     s.chars()
-        .take_while(|c| c.is_digit(10))
+        .take_while(|c| c.is_ascii_digit())
         .collect::<String>()
         .parse::<u16>()
         .ok()
@@ -32,7 +32,7 @@ fn parse_version(s: &str) -> Option<Version> {
     let mut parts = s.split('.');
     let major = parse_number(parts.next()?)?;
     let minor = parse_number(parts.next()?)?;
-    let patch = parts.next().map(|p| parse_number(p)).flatten();
+    let patch = parts.next().and_then(parse_number);
     Some(Version {
         major,
         minor,

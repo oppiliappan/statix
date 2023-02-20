@@ -39,7 +39,7 @@ impl Rule for UselessHasAttr {
             if let Some(if_else_expr) = IfElse::cast(node.clone());
             if let Some(condition_expr) = if_else_expr.condition();
             if let Some(default_expr) = if_else_expr.else_body();
-            if let Some(cond_bin_expr) = BinOp::cast(condition_expr.clone());
+            if let Some(cond_bin_expr) = BinOp::cast(condition_expr);
             if let Some(BinOpKind::IsSet) = cond_bin_expr.operator();
 
             // set ? attr_path
@@ -50,7 +50,7 @@ impl Rule for UselessHasAttr {
 
             // check if body of the `if` expression is of the form `set.attr_path`
             if let Some(body_expr) = if_else_expr.body();
-            if let Some(body_select_expr) = Select::cast(body_expr.clone());
+            if let Some(body_select_expr) = Select::cast(body_expr);
             let expected_body = make::select(&set, &attr_path);
 
             // text comparison will do for now

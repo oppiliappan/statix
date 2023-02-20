@@ -55,7 +55,7 @@ impl Rule for RepeatedKeys {
             if components.next().is_some();
 
             if let Some(parent_node) = node.parent();
-            if let Some(parent_attr_set) = AttrSet::cast(parent_node.clone());
+            if let Some(parent_attr_set) = AttrSet::cast(parent_node);
 
             if !parent_attr_set.recursive();
             let occurrences = parent_attr_set.entries().filter_map(|kv_scrutinee| {
@@ -92,8 +92,8 @@ impl Rule for RepeatedKeys {
                 let third_message = {
                     let remaining_occurrences = iter.count();
                     let mut message = match remaining_occurrences {
-                        0 => format!("... and here."),
-                        1 => format!("... and here (`1` occurrence omitted)."),
+                        0 => "... and here.".to_string(),
+                        1 => "... and here (`1` occurrence omitted).".to_string(),
                         n => format!("... and here (`{}` occurrences omitted).", n),
                     };
                     message.push_str(&format!(" Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.", first_component_ident.as_str(), first_subkey, second_subkey, third_subkey));
