@@ -38,7 +38,7 @@ impl Rule for BoolSimplification {
             if let Some(unary_expr) = UnaryOp::cast(node.clone());
             if unary_expr.operator() == UnaryOpKind::Invert;
             if let Some(value_expr) = unary_expr.value();
-            if let Some(paren_expr) = Paren::cast(value_expr.clone());
+            if let Some(paren_expr) = Paren::cast(value_expr);
             if let Some(inner_expr) = paren_expr.inner();
             if let Some(bin_expr) = BinOp::cast(inner_expr);
             if let Some(BinOpKind::Equal) = bin_expr.operator();

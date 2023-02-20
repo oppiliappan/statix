@@ -49,15 +49,15 @@ fn find(offset: TextSize, src: &str, sess: &SessionInfo) -> Result<Report, Singl
         .ok_or(SingleFixErr::NoOp)
 }
 
-pub fn single<'a, 'b>(
+pub fn single<'a>(
     line: usize,
     col: usize,
     src: &'a str,
-    sess: &'b SessionInfo,
+    sess: &SessionInfo,
 ) -> Result<SingleFixResult<'a>, SingleFixErr> {
     let mut src = Cow::from(src);
-    let offset = pos_to_byte(line, col, &*src)?;
-    let report = find(offset, &*src, &sess)?;
+    let offset = pos_to_byte(line, col, &src)?;
+    let report = find(offset, &src, sess)?;
 
     report.apply(src.to_mut());
 

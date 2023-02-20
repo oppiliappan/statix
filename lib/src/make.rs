@@ -7,7 +7,8 @@ use rnix::{
 
 fn ast_from_text<N: TypedNode>(text: &str) -> N {
     let parse = rnix::parse(text);
-    let node = match parse.node().descendants().find_map(N::cast) {
+
+    match parse.node().descendants().find_map(N::cast) {
         Some(it) => it,
         None => {
             panic!(
@@ -16,8 +17,7 @@ fn ast_from_text<N: TypedNode>(text: &str) -> N {
                 text
             )
         }
-    };
-    node
+    }
 }
 
 pub fn parenthesize(node: &SyntaxNode) -> types::Paren {

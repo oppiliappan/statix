@@ -317,7 +317,7 @@ impl ConfFile {
     }
     pub fn lints(&self) -> LintMap {
         utils::lint_map_of(
-            (&*LINTS)
+            (*LINTS)
                 .iter()
                 .filter(|l| !self.disabled.iter().any(|check| check == l.name()))
                 .cloned()
@@ -329,10 +329,7 @@ impl ConfFile {
         if let Some(v) = &self.nix_version {
             v.parse::<Version>()
                 .map_err(|_| ConfigErr::ConfFileVersionParse(v.clone()))
-        } else if let Some(v) = utils::get_version_info()
-            .map(|o| o.parse::<Version>().ok())
-            .flatten()
-        {
+        } else if let Some(v) = utils::get_version_info().and_then(|o| o.parse::<Version>().ok()) {
             Ok(v)
         } else {
             Ok(utils::default_nix_version().parse::<Version>().unwrap())
@@ -374,9 +371,9 @@ fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
 fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
     let mut vfs = ReadOnlyVfs::default();
     for file in files.iter() {
-        if let Ok(data) = fs::read_to_string(&file) {
-            let _id = vfs.alloc_file_id(&file);
-            vfs.set_file_contents(&file, data.as_bytes());
+        if let Ok(data) = fs::read_to_string(file) {
+            let _id = vfs.alloc_file_id(file);
+            vfs.set_file_contents(file, data.as_bytes());
         } else {
             println!("`{}` contains non-utf8 content", file.display());
         };

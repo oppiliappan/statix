@@ -83,29 +83,29 @@ impl<'μ> LintMeta<'μ> {
 
     fn generate_name_fn(&self) -> TokenStream2 {
         let name_str = self.name;
-        return quote! {
+        quote! {
             fn name(&self) -> &'static str {
                 #name_str
             }
-        };
+        }
     }
 
     fn generate_note_fn(&self) -> TokenStream2 {
         let note_str = self.note;
-        return quote! {
+        quote! {
             fn note(&self) -> &'static str {
                 #note_str
             }
-        };
+        }
     }
 
     fn generate_code_fn(&self) -> TokenStream2 {
         let code_int = self.code;
-        return quote! {
+        quote! {
             fn code(&self) -> u32 {
                 #code_int
             }
-        };
+        }
     }
 
     fn generate_match_with_fn(&self) -> TokenStream2 {

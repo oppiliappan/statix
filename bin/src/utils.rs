@@ -20,7 +20,7 @@ pub fn lint_map_of(
 }
 
 pub fn lint_map() -> HashMap<SyntaxKind, Vec<&'static Box<dyn Lint>>> {
-    lint_map_of(&*LINTS)
+    lint_map_of(&LINTS)
 }
 
 pub fn get_version_info() -> Option<String> {

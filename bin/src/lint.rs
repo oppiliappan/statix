@@ -36,7 +36,7 @@ pub fn lint_with(vfs_entry: VfsEntry, lints: &LintMap, sess: &SessionInfo) -> Li
 }
 
 pub fn lint(vfs_entry: VfsEntry, sess: &SessionInfo) -> LintResult {
-    lint_with(vfs_entry, &utils::lint_map(), &sess)
+    lint_with(vfs_entry, &utils::lint_map(), sess)
 }
 
 pub mod main {
@@ -68,9 +68,9 @@ pub mod main {
             .filter(|lr| !lr.reports.is_empty())
             .collect::<Vec<_>>();
 
-        if results.len() != 0 {
+        if !results.is_empty() {
             for r in &results {
-                stdout.write(&r, &vfs, check_config.format).unwrap();
+                stdout.write(r, &vfs, check_config.format).unwrap();
             }
             std::process::exit(1);
         }

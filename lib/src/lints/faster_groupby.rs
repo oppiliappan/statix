@@ -50,8 +50,8 @@ impl Rule for FasterGroupBy {
 
             // a heuristic to lint on nixpkgs.lib.groupBy
             // and lib.groupBy and its variants
-            if select_from.text().to_string() != "builtins";
-            if group_by_attr.text().to_string() == "groupBy";
+            if select_from.text() != "builtins";
+            if group_by_attr.text() == "groupBy";
 
             then {
                 let at = node.text_range();

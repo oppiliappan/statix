@@ -61,7 +61,7 @@ fn reorder(mut reports: Vec<Report>) -> Vec<Report> {
 impl<'a> Iterator for FixResult<'a> {
     type Item = FixResult<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        let all_reports = collect_fixes(&self.src, self.lints, &self.sess).ok()?;
+        let all_reports = collect_fixes(&self.src, self.lints, self.sess).ok()?;
         if all_reports.is_empty() {
             return None;
         }

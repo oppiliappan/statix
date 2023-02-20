@@ -50,8 +50,8 @@ impl Rule for FasterZipAttrsWith {
 
             // a heuristic to lint on nixpkgs.lib.zipAttrsWith
             // and lib.zipAttrsWith and its variants
-            if select_from.text().to_string() != "builtins";
-            if zip_attrs_with.text().to_string() == "zipAttrsWith";
+            if select_from.text() != "builtins";
+            if zip_attrs_with.text() == "zipAttrsWith";
 
             then {
                 let at = node.text_range();
