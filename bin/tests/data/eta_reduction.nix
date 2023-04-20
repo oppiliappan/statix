@@ -15,4 +15,7 @@ in
 
   # other non-free forms
   (map (f: {inherit f;}.double f.val) [ f ])
+
+  # don't reduce on more complex lambda bodies
+  (map (x: builtins.div 3 x) xs)
 ]

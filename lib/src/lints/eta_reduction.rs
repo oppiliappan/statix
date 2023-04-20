@@ -56,10 +56,13 @@ impl Rule for EtaReduction {
             if let Some(value_node) = body.value();
             if let Some(value) = Ident::cast(value_node);
 
-            if arg.as_str() == value.as_str() ;
+            if arg.as_str() == value.as_str();
 
             if let Some(lambda_node) = body.lambda();
             if !mentions_ident(&arg, &lambda_node);
+	    // lambda body should be no more than a single Ident to
+	    // retain code readability
+	    if let Some(_) = Ident::cast(lambda_node);
 
             then {
                 let at = node.text_range();
