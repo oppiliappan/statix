@@ -59,7 +59,6 @@ test_lint! {
     empty_pattern,
     redundant_pattern_bind,
     unquoted_uri,
-    deprecated_is_null,
     empty_inherit,
     faster_groupby => session_info!("2.5"),
     faster_zipattrswith => session_info!("2.6"),
