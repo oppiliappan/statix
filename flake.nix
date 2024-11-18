@@ -24,8 +24,7 @@
           overlays = [ self.overlays.default ];
         });
 
-      rustChannel = p: (fenix.overlay p p).fenix.complete;
-
+      rustChannel = p: (fenix.overlays.default p p).fenix.stable;
     in
     {
 
