@@ -100,7 +100,7 @@
           let
             pkgs = nixpkgsFor."${system}";
             cachix-push-script = pkgs.writeScriptBin "cachix-push" ''
-              ${pkgs.nixUnstable}/bin/nix build --json \
+              ${pkgs.nix}/bin/nix build --json \
               | ${pkgs.jq}/bin/jq -r '.[].outputs | to_entries[].value' \
               | ${pkgs.cachix}/bin/cachix push statix
             '';
