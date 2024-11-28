@@ -65,13 +65,11 @@
 
       packages = forAllSystems (system: {
         inherit (nixpkgsFor."${system}") statix statix-vim;
+        default = (nixpkgsFor."${system}").statix;
       });
 
-      defaultPackage =
-        forAllSystems (system: self.packages."${system}".statix);
-
-      devShell = forAllSystems (system:
-        let
+      devShells = forAllSystems (system: {
+        default = let
           pkgs = nixpkgsFor."${system}";
           toolchain = (rustChannel pkgs).withComponents [
             "rustc"
@@ -92,7 +90,8 @@
           ];
           RUST_LOG = "info";
           RUST_BACKTRACE = 1;
-        });
+        };
+      });
 
 
       apps = forAllSystems
