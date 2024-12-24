@@ -47,6 +47,8 @@
 
             buildFeatures = [ "json" ];
 
+            RUSTFLAGS = "--deny warnings";
+
             meta = with lib; {
               description = "Lints and suggestions for the Nix programming language";
               homepage = "https://git.peppe.rs/languages/statix/about";
