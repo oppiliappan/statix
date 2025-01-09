@@ -2,32 +2,32 @@ use std::{fmt::Write, iter::IntoIterator};
 
 use rnix::{
     ast::{self, AstNode},
-    tokenize, SyntaxNode,
+    SyntaxNode,
 };
 
 fn ast_from_text<N: AstNode>(text: &str) -> N {
-    let (green, errors) = rnix::parser::parse(tokenize(text).into_iter());
-    if !errors.is_empty() {
-        panic!(
-            "Failed to make ast node `{}` from text `{}`\n{errors}",
-            std::any::type_name::<N>(),
-            text,
-            errors = errors
-                .into_iter()
-                .map(|error| error.to_string())
-                .collect::<Vec<_>>()
-                .join("\n")
-        );
-    }
-    let untyped_node = SyntaxNode::new_root(green);
-    let Some(typed_node) = N::cast(untyped_node) else {
-        panic!(
-            "Failed to make ast node `{}` from text `{}`",
-            std::any::type_name::<N>(),
-            text
-        );
-    };
-    typed_node
+    crate::parse::ParseResult::parse(text)
+        .to_result()
+        .map(N::cast)
+        .unwrap_or_else(|errors| {
+            panic!(
+                "Failed to make ast node `{}` from text `{}`\n{errors}",
+                std::any::type_name::<N>(),
+                text,
+                errors = errors
+                    .into_iter()
+                    .map(|error| error.to_string())
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
+        })
+        .unwrap_or_else(|| {
+            panic!(
+                "Failed to make ast node `{}` from text `{}`",
+                std::any::type_name::<N>(),
+                text
+            )
+        })
 }
 
 pub fn parenthesize(node: &SyntaxNode) -> ast::Paren {
