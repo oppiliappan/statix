@@ -18,10 +18,8 @@ impl ParseResult {
     #[must_use]
     pub fn parse(source: impl AsRef<str>) -> Self {
         let (green, errors) = rnix::parser::parse(rnix::tokenize(source.as_ref()).into_iter());
-        Self {
-            parsed: rnix::SyntaxNode::new_root(green),
-            errors,
-        }
+        let parsed = rnix::SyntaxNode::new_root(green);
+        Self { parsed, errors }
     }
 
     /// retrieves both the raw [`rnix::SyntaxNode`] and all of the collected raw [`rnix::parser::ParseError`]

@@ -4,7 +4,7 @@ use rowan::ast::AstNode;
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    ast::{Apply, Ident, Lambda},
+    ast::{Apply, Ident, Lambda, Param},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
@@ -49,7 +49,10 @@ impl Rule for EtaReduction {
             if let Some(lambda_expr) = Lambda::cast(node.clone());
 
             if let Some(arg_node) = lambda_expr.param();
-            if let Some(arg) = Ident::cast(arg_node.syntax().clone());
+            if let Some(arg) = match arg_node {
+                Param::IdentParam(ident) => ident.ident(),
+                _ => None
+            };
 
             if let Some(body_node) = lambda_expr.body();
             if let Some(body) = Apply::cast(body_node.syntax().clone());

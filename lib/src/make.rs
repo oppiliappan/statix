@@ -6,9 +6,8 @@ use rnix::{
 };
 
 fn ast_from_text<N: AstNode>(text: &str) -> N {
-    crate::parse::ParseResult::parse(text)
+    let parsed = crate::parse::ParseResult::parse(text)
         .to_result()
-        .map(N::cast)
         .unwrap_or_else(|errors| {
             panic!(
                 "Failed to make ast node `{}` from text `{}`\n{errors}",
@@ -20,7 +19,11 @@ fn ast_from_text<N: AstNode>(text: &str) -> N {
                     .collect::<Vec<_>>()
                     .join("\n")
             );
-        })
+        });
+
+    parsed
+        .children()
+        .find_map(|child| N::cast(child))
         .unwrap_or_else(|| {
             panic!(
                 "Failed to make ast node `{}` from text `{}`",
@@ -91,7 +94,7 @@ pub fn ident(text: &str) -> ast::Ident {
 }
 
 pub fn empty() -> ast::Root {
-    ast_from_text("")
+    ast::Root::parse("{}").ok().unwrap()
 }
 
 // TODO: make `op` strongly typed here

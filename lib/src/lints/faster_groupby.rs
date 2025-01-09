@@ -46,10 +46,17 @@ impl Rule for FasterGroupBy {
             if let Some(select_from) = select_expr.expr();
             if let Some(group_by_attr) = select_expr.attrpath();
 
+            let select_from_text = select_from.syntax().text().to_string();
+            let group_by_prefix = group_by_attr.attrs()
+                    .take(group_by_attr.attrs().count() - 1)
+                    .map(|attr| attr.to_string())
+                    .collect::<Vec<_>>();
+            let group_by_from = std::iter::once(select_from_text).chain(group_by_prefix).collect::<Vec<_>>().join(".");
+
             // a heuristic to lint on nixpkgs.lib.groupBy
             // and lib.groupBy and its variants
-            if select_from.syntax().text() != "builtins";
-            if group_by_attr.syntax().text() == "groupBy";
+            if group_by_from  != "builtins";
+            if group_by_attr.syntax().text().to_string().ends_with("groupBy");
 
             then {
                 let at = node.text_range();
@@ -57,7 +64,7 @@ impl Rule for FasterGroupBy {
                     let builtins = make::ident("builtins");
                     make::select(builtins.syntax(), group_by_attr.syntax()).syntax().clone()
                 };
-                let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", select_from);
+                let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", group_by_from);
                 Some(
                     self.report()
                         .suggest(at, message, Suggestion::new(at, replacement)),
