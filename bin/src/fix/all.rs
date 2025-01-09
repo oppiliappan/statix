@@ -5,7 +5,7 @@ use rnix::{parser::ParseError as RnixParseErr, WalkEvent};
 
 use crate::{
     fix::{FixResult, Fixed},
-    LintMap,
+    utils::LintMap,
 };
 
 fn collect_fixes(

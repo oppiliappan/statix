@@ -40,9 +40,9 @@ use rnix::{ast::LegacyLet, NodeOrToken, SyntaxElement, SyntaxKind};
     code = 5,
     match_with = SyntaxKind::NODE_LEGACY_LET
 )]
-struct ManualInherit;
+struct LegacyLetSyntax;
 
-impl Rule for ManualInherit {
+impl Rule for LegacyLetSyntax {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if_chain! {
             if let NodeOrToken::Node(node) = node;

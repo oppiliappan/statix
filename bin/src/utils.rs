@@ -1,25 +1,24 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use lib::{Lint, LINTS};
 use rnix::SyntaxKind;
 
-pub fn lint_map_of(
-    lints: &[&'static Box<dyn Lint>],
-) -> HashMap<SyntaxKind, Vec<&'static Box<dyn Lint>>> {
+pub type LintMap = HashMap<SyntaxKind, Vec<Arc<Box<dyn Lint>>>>;
+
+pub fn lint_map_of(lints: &[Arc<Box<dyn Lint>>]) -> LintMap {
     let mut map = HashMap::new();
     for lint in lints.iter() {
-        let lint = *lint;
         let matches = lint.match_kind();
         for m in matches {
             map.entry(m)
-                .and_modify(|v: &mut Vec<_>| v.push(lint))
-                .or_insert_with(|| vec![lint]);
+                .and_modify(|v: &mut Vec<_>| v.push(lint.clone()))
+                .or_insert_with(|| vec![lint.clone()]);
         }
     }
     map
 }
 
-pub fn lint_map() -> HashMap<SyntaxKind, Vec<&'static Box<dyn Lint>>> {
+pub fn lint_map() -> LintMap {
     lint_map_of(&LINTS)
 }
 

@@ -5,7 +5,11 @@ use std::{
     str::FromStr,
 };
 
-use crate::{dirs, err::ConfigErr, utils, LintMap};
+use crate::{
+    dirs,
+    err::ConfigErr,
+    utils::{self, LintMap},
+};
 
 use clap::Parser;
 use lib::{session::Version, LINTS};
@@ -283,6 +287,7 @@ impl ConfFile {
         let config_file = fs::read_to_string(path).map_err(ConfigErr::InvalidPath)?;
         toml::de::from_str(&config_file).map_err(ConfigErr::ConfFileParse)
     }
+
     pub fn discover<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
         let cannonical_path = fs::canonicalize(path.as_ref()).map_err(ConfigErr::InvalidPath)?;
         for p in cannonical_path.ancestors() {
@@ -297,6 +302,7 @@ impl ConfFile {
         }
         Ok(Self::default())
     }
+
     pub fn dump(&self) -> String {
         let ideal_config = {
             let disabled = vec![];
@@ -310,16 +316,17 @@ impl ConfFile {
         };
         toml::ser::to_string_pretty(&ideal_config).unwrap()
     }
+
     pub fn lints(&self) -> LintMap {
         utils::lint_map_of(
-            (*LINTS)
+            &LINTS
                 .iter()
                 .filter(|l| !self.disabled.iter().any(|check| check == l.name()))
                 .cloned()
-                .collect::<Vec<_>>()
-                .as_slice(),
+                .collect::<Vec<_>>(),
         )
     }
+
     pub fn version(&self) -> Result<Version, ConfigErr> {
         if let Some(v) = &self.nix_version {
             v.parse::<Version>()

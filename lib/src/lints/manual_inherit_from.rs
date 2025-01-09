@@ -38,9 +38,9 @@ use rnix::{
     code = 4,
     match_with = SyntaxKind::NODE_ATTRPATH_VALUE
 )]
-struct ManualInherit;
+struct ManualInheritFrom;
 
-impl Rule for ManualInherit {
+impl Rule for ManualInheritFrom {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if_chain! {
             if let NodeOrToken::Node(node) = node;

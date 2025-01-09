@@ -1,4 +1,4 @@
-use crate::{utils, LintMap};
+use crate::utils::{self, LintMap};
 
 use lib::{session::SessionInfo, Report};
 use rnix::WalkEvent;

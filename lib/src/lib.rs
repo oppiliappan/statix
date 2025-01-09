@@ -256,31 +256,3 @@ pub trait Explain {
 /// Combines Rule and Metadata, do not implement manually, this is derived by
 /// the `lint` macro.
 pub trait Lint: Metadata + Explain + Rule + Send + Sync {}
-
-/// Helper utility to take lints from modules and insert them into a map for efficient
-/// access. Mapping is from a SyntaxKind to a list of lints that apply on that Kind.
-///
-/// See `lints.rs` for usage.
-#[macro_export]
-macro_rules! lints {
-    ($($s:ident),*,) => {
-        lints!($($s),*);
-    };
-    ($($s:ident),*) => {
-        $(
-            mod $s;
-        )*
-        ::lazy_static::lazy_static! {
-            pub static ref LINTS: Vec<&'static Box<dyn $crate::Lint>> = {
-                let mut v = Vec::new();
-                $(
-                    {
-                        let temp_lint = &*$s::LINT;
-                        v.push(temp_lint);
-                    }
-                )*
-                v
-            };
-        }
-    }
-}
