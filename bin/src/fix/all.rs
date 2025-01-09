@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use lib::{session::SessionInfo, Report};
-use rnix::{parser::ParseError as RnixParseErr, WalkEvent};
+use rnix::{parser::ParseError as RnixParseErr, tokenize, SyntaxNode, WalkEvent};
 
 use crate::{
     fix::{FixResult, Fixed},
@@ -13,10 +13,15 @@ fn collect_fixes(
     lints: &LintMap,
     sess: &SessionInfo,
 ) -> Result<Vec<Report>, RnixParseErr> {
-    let parsed = rnix::parse(source).as_result()?;
+    let (green, mut errors) = rnix::parser::parse(tokenize(source).into_iter());
 
-    Ok(parsed
-        .node()
+    // reverse here to start with first error when popping
+    errors.reverse();
+    if let Some(err) = errors.pop() {
+        return Err(err);
+    }
+
+    Ok(SyntaxNode::new_root(green)
         .preorder_with_tokens()
         .filter_map(|event| match event {
             WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
@@ -93,7 +98,12 @@ pub fn all_with<'a>(
     sess: &'a SessionInfo,
 ) -> Option<FixResult<'a>> {
     let src = Cow::from(src);
-    let _ = rnix::parse(&src).as_result().ok()?;
+    let (_, errors) = rnix::parser::parse(tokenize(&src).into_iter());
+
+    if !errors.is_empty() {
+        return None;
+    }
+
     let initial = FixResult::empty(src, lints, sess);
     initial.into_iter().last()
 }

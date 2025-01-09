@@ -1,7 +1,7 @@
 use crate::{utils, LintMap};
 
 use lib::{session::SessionInfo, Report};
-use rnix::WalkEvent;
+use rnix::{tokenize, SyntaxNode, WalkEvent};
 use vfs::{FileId, VfsEntry};
 
 #[derive(Debug)]
@@ -13,11 +13,10 @@ pub struct LintResult {
 pub fn lint_with(vfs_entry: VfsEntry, lints: &LintMap, sess: &SessionInfo) -> LintResult {
     let file_id = vfs_entry.file_id;
     let source = vfs_entry.contents;
-    let parsed = rnix::parse(source);
+    let (green, errors) = rnix::parser::parse(tokenize(source).into_iter());
 
-    let error_reports = parsed.errors().into_iter().map(Report::from_parse_err);
-    let reports = parsed
-        .node()
+    let error_reports = errors.into_iter().map(Report::from_parse_err);
+    let reports = SyntaxNode::new_root(green)
         .preorder_with_tokens()
         .filter_map(|event| match event {
             WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {

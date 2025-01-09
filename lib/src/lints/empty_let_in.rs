@@ -1,11 +1,9 @@
 use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
-use rnix::{
-    types::{EntryHolder, LetIn, TypedNode},
-    NodeOrToken, SyntaxElement, SyntaxKind,
-};
+use rnix::{ast::LetIn, NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for `let-in` expressions which create no new bindings.
@@ -38,8 +36,14 @@ impl Rule for EmptyLetIn {
         if_chain! {
             if let NodeOrToken::Node(node) = node;
             if let Some(let_in_expr) = LetIn::cast(node.clone());
-            let entries = let_in_expr.entries();
-            let inherits = let_in_expr.inherits();
+            if let Some(body) = let_in_expr.body();
+            if let rnix::ast::Expr::List(list) = body;
+            let entries = list.items().filter(|item| {
+                rnix::ast::AttrpathValue::cast(item.syntax().clone()).is_some()
+            });
+            let inherits = list.items().filter(|item| {
+                rnix::ast::Inherit::cast(item.syntax().clone()).is_some()
+            });
 
             if entries.count() == 0;
             if inherits.count() == 0;
@@ -57,7 +61,7 @@ impl Rule for EmptyLetIn {
                 Some(if has_comments {
                     self.report().diagnostic(at, message)
                 } else {
-                    self.report().suggest(at, message, Suggestion::new(at, replacement))
+                    self.report().suggest(at, message, Suggestion::new(at, replacement.syntax().clone()))
                 })
             } else {
                 None

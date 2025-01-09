@@ -1,11 +1,10 @@
 use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use rnix::ast::{Attrpath, HasEntry};
+use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
-use rnix::{
-    types::{EntryHolder, Ident, Key, LegacyLet, TokenWrapper, TypedNode},
-    NodeOrToken, SyntaxElement, SyntaxKind,
-};
+use rnix::{ast::LegacyLet, NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for legacy-let syntax that was never formalized.
@@ -50,19 +49,22 @@ impl Rule for ManualInherit {
             if let Some(legacy_let) = LegacyLet::cast(node.clone());
 
             if legacy_let
-                .entries()
-                .any(|kv| matches!(kv.key(), Some(k) if key_is_ident(&k, "body")));
+                .entries().filter_map(|entry| match entry {
+                    rnix::ast::Entry::AttrpathValue(kv) => kv.attrpath(),
+                    _ => None
+                })
+                .any(|key_name|   key_is_ident(&key_name, "body"));
 
             then {
                 let inherits = legacy_let.inherits();
                 let entries = legacy_let.entries();
                 let attrset = make::attrset(inherits, entries, true);
-                let parenthesized = make::parenthesize(attrset.node());
-                let selected = make::select(parenthesized.node(), make::ident("body").node());
+                let parenthesized = make::parenthesize(attrset.syntax());
+                let selected = make::select(parenthesized.syntax(), make::ident("body").syntax());
 
                 let at = node.text_range();
                 let message = "Prefer `rec` over undocumented `let` syntax";
-                let replacement = selected.node().clone();
+                let replacement = selected.syntax().clone();
 
                 Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {
@@ -72,10 +74,10 @@ impl Rule for ManualInherit {
     }
 }
 
-fn key_is_ident(key_path: &Key, ident: &str) -> bool {
-    if let Some(key_node) = key_path.path().next() {
-        if let Some(key) = Ident::cast(key_node) {
-            return key.as_str() == ident;
+fn key_is_ident(key_path: &Attrpath, ident: &str) -> bool {
+    if let Some(key_node) = key_path.attrs().next() {
+        if let rnix::ast::Attr::Ident(key) = key_node {
+            return key.to_string() == ident;
         }
     }
     false

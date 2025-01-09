@@ -3,13 +3,11 @@ use crate::{
     session::{SessionInfo, Version},
     Metadata, Report, Rule, Suggestion,
 };
+use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
-use rnix::{
-    types::{Select, TypedNode},
-    NodeOrToken, SyntaxElement, SyntaxKind,
-};
+use rnix::{ast::Select, NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for `lib.groupBy`.
@@ -45,19 +43,19 @@ impl Rule for FasterGroupBy {
             if sess.version() >=  &lint_version;
             if let NodeOrToken::Node(node) = node;
             if let Some(select_expr) = Select::cast(node.clone());
-            if let Some(select_from) = select_expr.set();
-            if let Some(group_by_attr) = select_expr.index();
+            if let Some(select_from) = select_expr.expr();
+            if let Some(group_by_attr) = select_expr.attrpath();
 
             // a heuristic to lint on nixpkgs.lib.groupBy
             // and lib.groupBy and its variants
-            if select_from.text() != "builtins";
-            if group_by_attr.text() == "groupBy";
+            if select_from.syntax().text() != "builtins";
+            if group_by_attr.syntax().text() == "groupBy";
 
             then {
                 let at = node.text_range();
                 let replacement = {
                     let builtins = make::ident("builtins");
-                    make::select(builtins.node(), &group_by_attr).node().clone()
+                    make::select(builtins.syntax(), group_by_attr.syntax()).syntax().clone()
                 };
                 let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", select_from);
                 Some(

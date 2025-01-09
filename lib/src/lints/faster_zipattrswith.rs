@@ -3,13 +3,11 @@ use crate::{
     session::{SessionInfo, Version},
     Metadata, Report, Rule, Suggestion,
 };
+use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
-use rnix::{
-    types::{Select, TypedNode},
-    NodeOrToken, SyntaxElement, SyntaxKind,
-};
+use rnix::{ast::Select, NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for `lib.zipAttrsWith`.
@@ -45,19 +43,19 @@ impl Rule for FasterZipAttrsWith {
             if sess.version() >= &lint_version;
             if let NodeOrToken::Node(node) = node;
             if let Some(select_expr) = Select::cast(node.clone());
-            if let Some(select_from) = select_expr.set();
-            if let Some(zip_attrs_with) = select_expr.index();
+            if let Some(select_from) = select_expr.expr();
+            if let Some(zip_attrs_with) = select_expr.attrpath();
 
             // a heuristic to lint on nixpkgs.lib.zipAttrsWith
             // and lib.zipAttrsWith and its variants
-            if select_from.text() != "builtins";
-            if zip_attrs_with.text() == "zipAttrsWith";
+            if select_from.syntax().text() != "builtins";
+            if zip_attrs_with.syntax().text() == "zipAttrsWith";
 
             then {
                 let at = node.text_range();
                 let replacement = {
                     let builtins = make::ident("builtins");
-                    make::select(builtins.node(), &zip_attrs_with).node().clone()
+                    make::select(builtins.syntax(), zip_attrs_with.syntax()).syntax().clone()
                 };
                 let message = format!("Prefer `builtins.zipAttrsWith` over `{}.zipAttrsWith`", select_from);
                 Some(
