@@ -75,10 +75,12 @@ impl Rule for ManualInherit {
 }
 
 fn key_is_ident(key_path: &Attrpath, ident: &str) -> bool {
-    if let Some(key_node) = key_path.attrs().next() {
-        if let rnix::ast::Attr::Ident(key) = key_node {
-            return key.to_string() == ident;
-        }
-    }
-    false
+    key_path
+        .attrs()
+        .next()
+        .and_then(|attr| match attr {
+            rnix::ast::Attr::Ident(ident) => Some(ident),
+            _ => None,
+        })
+        .map_or(false, |key| key.to_string() == ident)
 }

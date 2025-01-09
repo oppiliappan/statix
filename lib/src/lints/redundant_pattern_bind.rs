@@ -47,7 +47,7 @@ impl Rule for RedundantPatternBind {
             if let Some(ident) =  pattern.at_token();
             then {
                 let at = node.text_range();
-                let message = format!("This pattern bind is redundant, use `{}` instead", ident.to_string());
+                let message = format!("This pattern bind is redundant, use `{}` instead", ident);
                 let replacement = ident.clone();
                 Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
             } else {

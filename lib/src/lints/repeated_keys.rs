@@ -89,7 +89,7 @@ impl Rule for RepeatedKeys {
                 let mut iter = occurrences.into_iter();
 
                 let (first_annotation, first_subkey) = iter.next().unwrap();
-                let first_message = format!("The key `{}` is first assigned here ...", first_component_ident.to_string());
+                let first_message = format!("The key `{first_component_ident}` is first assigned here ...");
 
                 let (second_annotation, second_subkey) = iter.next().unwrap();
                 let second_message = "... repeated here ...";
@@ -102,7 +102,7 @@ impl Rule for RepeatedKeys {
                         1 => "... and here (`1` occurrence omitted).".to_string(),
                         n => format!("... and here (`{}` occurrences omitted).", n),
                     };
-                    message.push_str(&format!(" Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.", first_component_ident.to_string(), first_subkey, second_subkey, third_subkey));
+                    message.push_str(&format!(" Try `{first_component_ident} = {{ {first_subkey}=...; {second_subkey}=...; {third_subkey}=...; }}` instead."));
                     message
                 };
 
