@@ -6,16 +6,15 @@ use rnix::SyntaxKind;
 pub type LintMap = HashMap<SyntaxKind, Vec<Arc<Box<dyn Lint>>>>;
 
 pub fn lint_map_of(lints: &[Arc<Box<dyn Lint>>]) -> LintMap {
-    let mut map = HashMap::new();
-    for lint in lints.iter() {
-        let matches = lint.match_kind();
-        for m in matches {
-            map.entry(m)
-                .and_modify(|v: &mut Vec<_>| v.push(lint.clone()))
+    lints
+        .iter()
+        .flat_map(|lint| lint.match_kind().into_iter().map(move |m| (m, lint)))
+        .fold(HashMap::new(), |mut hm, (m, lint)| {
+            hm.entry(m)
+                .and_modify(|v| v.push(lint.clone()))
                 .or_insert_with(|| vec![lint.clone()]);
-        }
-    }
-    map
+            hm
+        })
 }
 
 pub fn lint_map() -> LintMap {
