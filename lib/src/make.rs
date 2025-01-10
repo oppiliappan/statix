@@ -1,18 +1,16 @@
-use std::{fmt::Write, iter::IntoIterator};
-
 use rnix::{
     ast::{self, AstNode},
     SyntaxNode,
 };
 
-fn ast_from_text<N: AstNode>(text: &str) -> N {
-    let parsed = crate::parse::ParseResult::parse(text)
+fn ast_from_text<N: AstNode>(text: impl AsRef<str>) -> N {
+    let parsed = crate::parse::ParseResult::parse(text.as_ref())
         .to_result()
         .unwrap_or_else(|errors| {
             panic!(
                 "Failed to make ast node `{}` from text `{}`\n{errors}",
                 std::any::type_name::<N>(),
-                text,
+                text.as_ref(),
                 errors = errors
                     .into_iter()
                     .map(|error| error.to_string())
@@ -21,28 +19,31 @@ fn ast_from_text<N: AstNode>(text: &str) -> N {
             );
         });
 
-    parsed
-        .children()
+    // for inherit it goes ROOT ( ATTRSET (INHERIT)), hence we have to traverse 3 levels at worst
+    // FIXME: just specialize for the structs
+    std::iter::once(parsed.clone())
+        .chain(parsed.clone().children())
+        .chain(parsed.children().flat_map(|child| child.children()))
         .find_map(|child| N::cast(child))
         .unwrap_or_else(|| {
             panic!(
                 "Failed to make ast node `{}` from text `{}`",
                 std::any::type_name::<N>(),
-                text
+                text.as_ref()
             )
         })
 }
 
 pub fn parenthesize(node: &SyntaxNode) -> ast::Paren {
-    ast_from_text(&format!("({})", node))
+    ast_from_text(format!("({node})"))
 }
 
 pub fn quote(node: &SyntaxNode) -> ast::Str {
-    ast_from_text(&format!("\"{}\"", node))
+    ast_from_text(format!("\"{node}\""))
 }
 
 pub fn unary_not(node: &SyntaxNode) -> ast::UnaryOp {
-    ast_from_text(&format!("!{}", node))
+    ast_from_text(format!("!{node}"))
 }
 
 pub fn inherit_stmt<'a>(nodes: impl IntoIterator<Item = &'a ast::Ident>) -> ast::Inherit {
@@ -51,7 +52,7 @@ pub fn inherit_stmt<'a>(nodes: impl IntoIterator<Item = &'a ast::Ident>) -> ast:
         .map(|i| i.to_string())
         .collect::<Vec<_>>()
         .join(" ");
-    ast_from_text(&format!("{{ inherit {}; }}", inherited_idents))
+    ast_from_text(format!("{{ inherit {inherited_idents}; }}"))
 }
 
 pub fn inherit_from_stmt<'a>(
@@ -63,7 +64,7 @@ pub fn inherit_from_stmt<'a>(
         .map(|i| i.to_string())
         .collect::<Vec<_>>()
         .join(" ");
-    ast_from_text(&format!("{{ inherit ({}) {}; }}", from, inherited_idents))
+    ast_from_text(format!("{{ inherit ({from}) {inherited_idents}; }}"))
 }
 
 pub fn attrset(
@@ -71,22 +72,28 @@ pub fn attrset(
     entries: impl IntoIterator<Item = ast::Entry>,
     recursive: bool,
 ) -> ast::AttrSet {
-    let mut buffer = String::new();
+    let rec = recursive.then_some("rec ").unwrap_or_default();
+    let inherits = inherits
+        .into_iter()
+        .map(|inherit| format!("  {inherit}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let entries = entries
+        .into_iter()
+        .map(|inherit| format!("  {inherit}"))
+        .collect::<Vec<_>>()
+        .join("\n");
 
-    writeln!(buffer, "{}{{", if recursive { "rec " } else { "" }).unwrap();
-    for inherit in inherits.into_iter() {
-        writeln!(buffer, "  {inherit}").unwrap();
-    }
-    for entry in entries.into_iter() {
-        writeln!(buffer, "  {entry}").unwrap();
-    }
-    write!(buffer, "}}").unwrap();
-
-    ast_from_text(&buffer)
+    ast_from_text(format!(
+        "{rec}{{
+{inherits}
+{entries}
+}}"
+    ))
 }
 
 pub fn select(set: &SyntaxNode, index: &SyntaxNode) -> ast::Select {
-    ast_from_text(&format!("{}.{}", set, index))
+    ast_from_text(format!("{set}.{index}"))
 }
 
 pub fn ident(text: &str) -> ast::Ident {
@@ -99,9 +106,9 @@ pub fn empty() -> ast::Root {
 
 // TODO: make `op` strongly typed here
 pub fn binary(lhs: &SyntaxNode, op: &str, rhs: &SyntaxNode) -> ast::BinOp {
-    ast_from_text(&format!("{} {} {}", lhs, op, rhs))
+    ast_from_text(format!("{lhs} {op} {rhs}"))
 }
 
 pub fn or_default(set: &SyntaxNode, index: &SyntaxNode, default: &SyntaxNode) -> ast::Select {
-    ast_from_text(&format!("{}.{} or {}", set, index, default))
+    ast_from_text(format!("{set}.{index} or {default}"))
 }
