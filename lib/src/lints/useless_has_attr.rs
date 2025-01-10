@@ -4,7 +4,7 @@ use rowan::ast::AstNode;
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    ast::{IfElse, PatEntry, Select},
+    ast::{HasAttr, IfElse, Select},
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
@@ -40,13 +40,13 @@ impl Rule for UselessHasAttr {
             if let Some(if_else_expr) = IfElse::cast(node.clone());
             if let Some(condition_expr) = if_else_expr.condition();
             if let Some(default_expr) = if_else_expr.else_body();
-            if let Some(cond_bin_expr) = PatEntry::cast(condition_expr.syntax().clone());
+            if let Some(cond_bin_expr) = HasAttr::cast(condition_expr.syntax().clone());
 
             // set ? attr_path
             // ^^^--------------- lhs
             //      ^^^^^^^^^^--- rhs
-            if let Some(set) = cond_bin_expr.ident();
-            if let Some(attr_path) = cond_bin_expr.default();
+            if let Some(set) = cond_bin_expr.expr();
+            if let Some(attr_path) = cond_bin_expr.attrpath();
 
             // check if body of the `if` expression is of the form `set.attr_path`
             if let Some(body_expr) = if_else_expr.body();
