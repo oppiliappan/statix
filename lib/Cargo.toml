@@ -7,7 +7,7 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rnix = { git = "https://github.com/nix-community/rnix-parser.git", branch = "master" }
+rnix = "0.12"
 if_chain = "1.0"
 macros = { path = "../macros" }
 lazy_static = "1.0"
