@@ -48,7 +48,7 @@ impl Rule for ManualInherit {
             if let key_path = key_value_stmt.attrpath()?;
             if let Some(key_node) = key_path.attrs().next();
             // ensure that path has exactly one component
-            if key_path.attrs().next().is_none();
+            if key_path.attrs().count() == 1;
             if let Some(key) = Ident::cast(key_node.syntax().clone());
 
             if let Some(value_node) = key_value_stmt.value();

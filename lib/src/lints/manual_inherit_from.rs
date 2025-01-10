@@ -42,18 +42,19 @@ struct ManualInheritFrom;
 
 impl Rule for ManualInheritFrom {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
+        println!("===");
         if_chain! {
             if let NodeOrToken::Node(node) = node;
             if let Some(key_value_stmt) = AttrpathValue::cast(node.clone());
-            if let mut key_path = key_value_stmt.attrpath()?.attrs();
-            if let Some(key_node) = key_path.next();
+            if let key_path = key_value_stmt.attrpath()?;
+            if let Some(key_node) = key_path.attrs().next();
             // ensure that path has exactly one component
-            if key_path.next().is_none();
+            if key_path.attrs().count() == 1;
             if let Some(key) = Ident::cast(key_node.syntax().clone());
 
             if let Some(value_node) = key_value_stmt.value();
             if let Some(value) = Select::cast(value_node.syntax().clone());
-            if let Some(index_node) = value.expr();
+            if let Some(index_node) = value.attrpath().and_then(|attrs| attrs.attrs().next());
             if let Some(index) = Ident::cast(index_node.syntax().clone());
 
             if key.to_string() == index.to_string();
