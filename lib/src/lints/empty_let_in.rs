@@ -52,7 +52,6 @@ impl Rule for EmptyLetIn {
                 .children_with_tokens()
                 .any(|el| el.kind() == SyntaxKind::TOKEN_COMMENT);
             then {
-            println!("\n\n\n{node}");
                 let at = node.text_range();
                 let replacement = body;
                 let message = "This let-in expression has no entries";
