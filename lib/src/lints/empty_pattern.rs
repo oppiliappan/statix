@@ -55,7 +55,7 @@ impl Rule for EmptyPattern {
             // no patterns within `{ }`
             if pattern.pat_entries().count() == 0;
             // pattern is not bound
-            if pattern.at_token().is_none();
+            if pattern.pat_bind().is_none();
 
             // not a nixos module
             if !is_module(body.syntax());
