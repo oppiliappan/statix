@@ -106,17 +106,17 @@ fn check_let_in(let_in: LetIn) -> Option<Diagnostic> {
 
 fn check_paren(paren: Paren) -> Option<Diagnostic> {
     let paren_expr_range = paren.syntax().text_range();
-    let father_node = paren.syntax().parent()?;
+    let parent_node = paren.syntax().parent()?;
 
     // ensure that we don't lint inside let-in statements
     // we already lint such cases in previous match stmt
-    if AttrpathValue::cast(father_node.clone()).is_some() {
+    if AttrpathValue::cast(parent_node.clone()).is_some() {
         return None;
     };
 
     // ensure that we don't lint inside let-bodies
     // if this primitive is a let-body, we have already linted it
-    if LetIn::cast(father_node).is_some() {
+    if LetIn::cast(parent_node).is_some() {
         return None;
     };
 
