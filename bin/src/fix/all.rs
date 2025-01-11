@@ -32,29 +32,18 @@ fn collect_fixes(
 }
 
 fn reorder(mut reports: Vec<Report>) -> Vec<Report> {
-    use std::collections::VecDeque;
-
     reports.sort_by(|a, b| {
         let a_range = a.range();
         let b_range = b.range();
-        a_range.end().partial_cmp(&b_range.end()).unwrap()
+        // order:
+        // - earlier starts come first
+        // - in case of same start, shorter Reports come first
+        a_range
+            .start()
+            .cmp(&b_range.start())
+            .then_with(|| a_range.end().cmp(&b_range.end()))
     });
-
     reports
-        .into_iter()
-        .fold(VecDeque::new(), |mut deque: VecDeque<Report>, new_elem| {
-            let front = deque.front();
-            let new_range = new_elem.range();
-            if let Some(front_range) = front.map(|f| f.range()) {
-                if new_range.start() > front_range.end() {
-                    deque.push_front(new_elem);
-                }
-            } else {
-                deque.push_front(new_elem);
-            }
-            deque
-        })
-        .into()
 }
 
 impl<'a> Iterator for FixResult<'a> {
