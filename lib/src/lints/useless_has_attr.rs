@@ -1,7 +1,6 @@
 use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     ast::{HasAttr, IfElse, Select},
@@ -35,51 +34,53 @@ struct UselessHasAttr;
 
 impl Rule for UselessHasAttr {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(if_else_expr) = IfElse::cast(node.clone());
-            if let Some(condition_expr) = if_else_expr.condition();
-            if let Some(default_expr) = if_else_expr.else_body();
-            if let Some(cond_bin_expr) = HasAttr::cast(condition_expr.syntax().clone());
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
 
-            // set ? attr_path
-            // ^^^--------------- lhs
-            //      ^^^^^^^^^^--- rhs
-            if let Some(set) = cond_bin_expr.expr();
-            if let Some(attr_path) = cond_bin_expr.attrpath();
+        let if_else_expr = IfElse::cast(node.clone())?;
+        let condition_expr = if_else_expr.condition()?;
+        let default_expr = if_else_expr.else_body()?;
+        let cond_bin_expr = HasAttr::cast(condition_expr.syntax().clone())?;
 
-            // check if body of the `if` expression is of the form `set.attr_path`
-            if let Some(body_expr) = if_else_expr.body();
-            if let Some(body_select_expr) = Select::cast(body_expr.syntax().clone());
-            let expected_body = make::select(set.syntax(), attr_path.syntax());
+        // set ? attr_path
+        // ^^^--------------- lhs
+        //      ^^^^^^^^^^--- rhs
+        let set = cond_bin_expr.expr()?;
+        let attr_path = cond_bin_expr.attrpath()?;
 
-            // text comparison will do for now
-            if body_select_expr.syntax().text() == expected_body.syntax().text();
-            then {
-                let at = node.text_range();
-                // `or` is tightly binding, we need to parenthesize non-literal exprs
-                let default_with_parens = match default_expr {
-                rnix::ast::Expr::List(_) |
-                rnix::ast::Expr::Paren(_) |
-                rnix::ast::Expr::Str(_) |
-                rnix::ast::Expr::AttrSet(_) |
-                rnix::ast::Expr::Ident(_) |
-                rnix::ast::Expr::Select(_)
-                     => default_expr.syntax().clone(),
-                    _ => make::parenthesize(default_expr.syntax()).syntax().clone(),
-                };
-                let replacement = make::or_default(set.syntax(), attr_path.syntax(), &default_with_parens).syntax().clone();
-                let message = format!(
-                    "Consider using `{}` instead of this `if` expression",
-                    replacement
-                );
-                Some(
-                    self.report()
-                        .suggest(at, message, Suggestion::new(at, replacement)),
-                )
-            } else {
-                None
-            }
-        }
+        // check if body of the `if` expression is of the form `set.attr_path`
+        let body_expr = if_else_expr.body()?;
+        let body_select_expr = Select::cast(body_expr.syntax().clone())?;
+
+        let expected_body = make::select(set.syntax(), attr_path.syntax());
+
+        // text comparison will do for now
+        if body_select_expr.syntax().text() != expected_body.syntax().text() {
+            return None;
+        };
+
+        let at = node.text_range();
+        // `or` is tightly binding, we need to parenthesize non-literal exprs
+        let default_with_parens = match default_expr {
+            rnix::ast::Expr::List(_)
+            | rnix::ast::Expr::Paren(_)
+            | rnix::ast::Expr::Str(_)
+            | rnix::ast::Expr::AttrSet(_)
+            | rnix::ast::Expr::Ident(_)
+            | rnix::ast::Expr::Select(_) => default_expr.syntax().clone(),
+            _ => make::parenthesize(default_expr.syntax()).syntax().clone(),
+        };
+        let replacement = make::or_default(set.syntax(), attr_path.syntax(), &default_with_parens)
+            .syntax()
+            .clone();
+        let message = format!(
+            "Consider using `{}` instead of this `if` expression",
+            replacement
+        );
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }

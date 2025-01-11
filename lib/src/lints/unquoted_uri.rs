@@ -1,7 +1,6 @@
 use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{NodeOrToken, SyntaxElement, SyntaxKind};
 
@@ -48,17 +47,17 @@ struct UnquotedUri;
 
 impl Rule for UnquotedUri {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Token(token) = node;
-            if let Some(parent_node) = token.parent();
-            then {
-                let at = token.text_range();
-                let replacement = make::quote(&parent_node).syntax().clone();
-                let message = "Consider quoting this URI expression";
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
-        }
+        let NodeOrToken::Token(token) = node else {
+            return None;
+        };
+        let parent_node = token.parent()?;
+
+        let at = token.text_range();
+        let replacement = make::quote(&parent_node).syntax().clone();
+        let message = "Consider quoting this URI expression";
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
