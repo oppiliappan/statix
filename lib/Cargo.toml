@@ -10,14 +10,9 @@ license = "MIT"
 rnix = "0.12"
 if_chain = "1.0"
 macros = { path = "../macros" }
-lazy_static = "1.0"
 rowan = "0.15.0"
 serde_json = { version = "1.0.68", optional = true }
-
-[dependencies.serde]
-version = "1.0.130"
-features = [ "derive" ]
-optional = true
+serde = { version = "1.0.130", features = [ "derive" ], optional = true }
 
 [features]
 default = []
