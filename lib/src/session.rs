@@ -1,5 +1,8 @@
 use std::{cmp::Ordering, str::FromStr};
 
+/// simplified semver [`Version`]
+// FIXME: replace this with proper Version from semver crate. Is this possible? Does nix apply
+// semver versioning?
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Version {
     major: u16,
@@ -9,8 +12,10 @@ pub struct Version {
 
 impl Ord for Version {
     fn cmp(&self, other: &Self) -> Ordering {
-        let score = |v: &Version| v.major * 100 + v.minor * 10 + v.patch.unwrap_or(0);
-        score(self).cmp(&score(other))
+        self.major
+            .cmp(&other.major)
+            .then_with(|| self.minor.cmp(&other.minor))
+            .then_with(|| self.patch.unwrap_or(0).cmp(&other.patch.unwrap_or(0)))
     }
 }
 
@@ -47,35 +52,54 @@ impl FromStr for Version {
     }
 }
 
-#[non_exhaustive]
+/// Session info for statix.
+///
+/// Some lints only apply after a certain version of nix. This struct is used to keep track of the
+/// nix version
 pub struct SessionInfo {
     nix_version: Version,
 }
 
 impl SessionInfo {
+    /// construct a new [`SessionInfo`] from a [`Version`]
     pub fn from_version(nix_version: Version) -> Self {
         Self { nix_version }
     }
 
+    /// Retrieve the "semver" [`Version`] of this [`SessionInfo`]
     pub fn version(&self) -> &Version {
         &self.nix_version
     }
 }
 
 #[cfg(test)]
-mod tests {
+mod version_tests {
     use super::*;
 
     #[test]
     fn parse_trivial() {
         let v = "1.6.1".parse::<Version>().ok();
-        assert!(v.is_some())
+        assert_eq!(
+            v,
+            Some(Version {
+                major: 1,
+                minor: 6,
+                patch: Some(1)
+            })
+        )
     }
 
     #[test]
     fn parse() {
         let v = "2.4pre20211006_53e4794".parse::<Version>().ok();
-        assert!(v.is_some())
+        assert_eq!(
+            v,
+            Some(Version {
+                major: 2,
+                minor: 4,
+                patch: None
+            })
+        )
     }
 
     #[test]
@@ -89,6 +113,6 @@ mod tests {
     fn compare() {
         let v1 = "1.7".parse::<Version>().ok();
         let v2 = "2.4pre20211006_53e4794".parse::<Version>().ok();
-        assert!(v2 >= v1);
+        assert!(v2 > v1);
     }
 }
