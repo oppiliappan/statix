@@ -18,16 +18,16 @@ fn collect_fixes(
     Ok(parsed
         .preorder_with_tokens()
         .filter_map(|event| match event {
-            WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
-                rules
-                    .iter()
-                    .filter_map(|rule| rule.validate(&child, sess))
-                    .filter(|report| report.total_suggestion_range().is_some())
-                    .collect::<Vec<_>>()
-            }),
+            WalkEvent::Enter(child) => Some(child),
             _ => None,
         })
-        .flatten()
+        .filter_map(|child| lints.get(&child.kind()).map(|rules| (rules, child)))
+        .flat_map(|(rules, child)| {
+            rules
+                .iter()
+                .filter_map(move |rule| rule.validate(&child, sess))
+        })
+        .filter(|report| report.total_suggestion_range().is_some())
         .collect())
 }
 
@@ -50,27 +50,29 @@ impl<'a> Iterator for FixResult<'a> {
     type Item = FixResult<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         let all_reports = collect_fixes(&self.src, self.lints, self.sess).ok()?;
-        if all_reports.is_empty() {
-            return None;
-        }
 
-        let reordered = reorder(all_reports);
-        let fixed = reordered
-            .iter()
-            .map(|r| Fixed {
-                at: r.range(),
-                code: r.code,
-            })
-            .collect::<Vec<_>>();
-        for report in reordered {
-            report.apply(self.src.to_mut());
-        }
+        (!all_reports.is_empty()).then(|| {
+            let fixed = reorder(all_reports)
+                .iter()
+                .inspect(|report| {
+                    // first, apply the change to the source code
+                    report.apply(self.src.to_mut());
+                })
+                .map(|report| {
+                    // after applying fix, collect metadata for final report
+                    Fixed {
+                        at: report.range(),
+                        code: report.code,
+                    }
+                })
+                .collect::<Vec<_>>();
 
-        Some(FixResult {
-            src: self.src.clone(),
-            fixed,
-            lints: self.lints,
-            sess: self.sess,
+            FixResult {
+                src: self.src.clone(),
+                fixed,
+                lints: self.lints,
+                sess: self.sess,
+            }
         })
     }
 }
