@@ -82,5 +82,5 @@ fn key_is_ident(key_path: &Attrpath, ident: &str) -> bool {
             rnix::ast::Attr::Ident(ident) => Some(ident),
             _ => None,
         })
-        .map_or(false, |key| key.to_string() == ident)
+        .is_some_and(|key| key.to_string() == ident)
 }
