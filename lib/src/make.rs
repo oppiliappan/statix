@@ -96,7 +96,7 @@ pub fn select(set: &SyntaxNode, index: &SyntaxNode) -> ast::Select {
     ast_from_text(format!("{set}.{index}"))
 }
 
-pub fn ident(text: &str) -> ast::Ident {
+pub fn ident(text: impl AsRef<str>) -> ast::Ident {
     ast_from_text(text)
 }
 
@@ -105,8 +105,8 @@ pub fn empty() -> ast::Root {
 }
 
 // TODO: make `op` strongly typed here
-pub fn binary(lhs: &SyntaxNode, op: &str, rhs: &SyntaxNode) -> ast::BinOp {
-    ast_from_text(format!("{lhs} {op} {rhs}"))
+pub fn binary(lhs: &SyntaxNode, op: impl AsRef<str>, rhs: &SyntaxNode) -> ast::BinOp {
+    ast_from_text(format!("{lhs} {op} {rhs}", op = op.as_ref()))
 }
 
 pub fn or_default(set: &SyntaxNode, index: &SyntaxNode, default: &SyntaxNode) -> ast::Select {
