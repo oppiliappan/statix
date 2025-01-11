@@ -1,7 +1,6 @@
 use crate::{session::SessionInfo, Diagnostic, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     ast::{AttrpathValue, Entry, Expr, LetIn, Paren},
@@ -47,88 +46,100 @@ struct UselessParens;
 
 impl Rule for UselessParens {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-
-            if let Some(diagnostic) = do_thing(node);
-            then {
-                let mut report = self.report();
-                report.diagnostics.push(diagnostic);
-                Some(report)
-            } else {
-                None
-            }
-        }
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        check_node(node).map(|diagnostic| {
+            let mut report = self.report();
+            report.diagnostics.push(diagnostic);
+            report
+        })
     }
 }
 
-fn do_thing(node: &SyntaxNode) -> Option<Diagnostic> {
-    if let Some(Entry::AttrpathValue(kv)) = Entry::cast(node.clone()) {
-        if_chain! {
-            if let Some(value_node) = kv.value();
-            let value_range = value_node.syntax().text_range();
-            if let Some(value_in_parens) = Paren::cast(value_node.syntax().clone());
-            if let Some(inner) = value_in_parens.expr();
-            then {
-                let at = value_range;
-                let message = "Useless parentheses around value in binding";
-                let replacement = inner;
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
-            } else {
-                None
-            }
-        }
-    } else if let Some(expr) = Expr::cast(node.clone()) {
-        match expr {
-            Expr::LetIn(let_in) => if_chain! {
-                if let Some(body_node) = let_in.body();
-                let body_range = body_node.syntax().text_range();
-                if let Some(body_as_parens) = Paren::cast(body_node.syntax().clone());
-                if let Some(inner) = body_as_parens.expr();
-                then {
-                    let at = body_range;
-                    let message = "Useless parentheses around body of `let` expression";
-                    let replacement = inner;
-                    Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
-                } else {
-                    None
-                }
-            },
-            Expr::Paren(paren_expr) => if_chain! {
-                let paren_expr_range = paren_expr.syntax().text_range();
-                if let Some(father_node) = paren_expr.syntax().parent();
-
-                // ensure that we don't lint inside let-in statements
-                // we already lint such cases in previous match stmt
-                if AttrpathValue::cast(father_node.clone()).is_none();
-
-                // ensure that we don't lint inside let-bodies
-                // if this primitive is a let-body, we have already linted it
-                if LetIn::cast(father_node).is_none();
-
-                if let Some(inner_node) = paren_expr.expr();
-                if let Some(parsed_inner) = Expr::cast(inner_node.syntax().clone());
-                if matches!(
-                    parsed_inner,
-                    Expr::List(_)
-                    | Expr::Paren(_)
-                    | Expr::Str(_)
-                    | Expr::AttrSet(_)
-                    | Expr::Select(_)
-                    | Expr::Ident(_)
-                );
-                then {
-                    let at = paren_expr_range;
-                    let message = "Useless parentheses around primitive expression";
-                    let replacement = parsed_inner.syntax().clone();
-                    Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement)))
-                } else {
-                    None
-                }
-            },
+fn check_node(node: &SyntaxNode) -> Option<Diagnostic> {
+    Entry::cast(node.clone())
+        .and_then(|entry| match entry {
+            Entry::AttrpathValue(attrpath_value) => check_attrpathvalue(attrpath_value),
             _ => None,
-        }
-    } else {
-        None
-    }
+        })
+        .or_else(|| {
+            Expr::cast(node.clone()).and_then(|expr| match expr {
+                Expr::LetIn(let_in) => check_let_in(let_in),
+                Expr::Paren(paren) => check_paren(paren),
+                _ => None,
+            })
+        })
+}
+
+fn check_attrpathvalue(attrpath_value: AttrpathValue) -> Option<Diagnostic> {
+    let value_node = attrpath_value.value()?;
+    let value_range = value_node.syntax().text_range();
+    let value_in_parens = Paren::cast(value_node.syntax().clone())?;
+    let inner = value_in_parens.expr()?;
+
+    let at = value_range;
+    let message = "Useless parentheses around value in binding";
+    let replacement = inner;
+    Some(Diagnostic::suggest(
+        at,
+        message,
+        Suggestion::new(at, replacement.syntax().clone()),
+    ))
+}
+
+fn check_let_in(let_in: LetIn) -> Option<Diagnostic> {
+    let body_node = let_in.body()?;
+    let body_range = body_node.syntax().text_range();
+    let body_as_parens = Paren::cast(body_node.syntax().clone())?;
+    let inner = body_as_parens.expr()?;
+
+    let at = body_range;
+    let message = "Useless parentheses around body of `let` expression";
+    let replacement = inner;
+    Some(Diagnostic::suggest(
+        at,
+        message,
+        Suggestion::new(at, replacement.syntax().clone()),
+    ))
+}
+
+fn check_paren(paren: Paren) -> Option<Diagnostic> {
+    let paren_expr_range = paren.syntax().text_range();
+    let father_node = paren.syntax().parent()?;
+
+    // ensure that we don't lint inside let-in statements
+    // we already lint such cases in previous match stmt
+    if AttrpathValue::cast(father_node.clone()).is_some() {
+        return None;
+    };
+
+    // ensure that we don't lint inside let-bodies
+    // if this primitive is a let-body, we have already linted it
+    if LetIn::cast(father_node).is_some() {
+        return None;
+    };
+
+    let inner_node = paren.expr()?;
+    let parsed_inner = Expr::cast(inner_node.syntax().clone())?;
+    if !matches!(
+        parsed_inner,
+        Expr::List(_)
+            | Expr::Paren(_)
+            | Expr::Str(_)
+            | Expr::AttrSet(_)
+            | Expr::Select(_)
+            | Expr::Ident(_)
+    ) {
+        return None;
+    };
+
+    let at = paren_expr_range;
+    let message = "Useless parentheses around primitive expression";
+    let replacement = parsed_inner.syntax().clone();
+    Some(Diagnostic::suggest(
+        at,
+        message,
+        Suggestion::new(at, replacement),
+    ))
 }
