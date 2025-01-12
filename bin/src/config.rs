@@ -42,7 +42,7 @@ pub enum SubCommand {
 #[derive(Parser, Debug)]
 pub struct Check {
     /// File or directory to run check on
-    #[clap(default_value = ".", parse(from_os_str))]
+    #[clap(default_value = ".")]
     target: PathBuf,
 
     /// Globs of file patterns to skip
@@ -56,7 +56,7 @@ pub struct Check {
     /// Output format.
     #[cfg_attr(feature = "json", doc = "Supported values: stderr, errfmt, json")]
     #[cfg_attr(not(feature = "json"), doc = "Supported values: stderr, errfmt")]
-    #[clap(short = 'o', long, default_value_t, parse(try_from_str))]
+    #[clap(short = 'o', long, default_value_t)]
     pub format: OutFormat,
 
     /// Path to statix.toml or its parent directory
@@ -91,7 +91,7 @@ impl Check {
 #[derive(Parser, Debug)]
 pub struct Fix {
     /// File or directory to run fix on
-    #[clap(default_value = ".", parse(from_os_str))]
+    #[clap(default_value = ".")]
     target: PathBuf,
 
     /// Globs of file patterns to skip
@@ -156,11 +156,10 @@ impl Fix {
 #[derive(Parser, Debug)]
 pub struct Single {
     /// File to run single-fix on
-    #[clap(parse(from_os_str))]
     pub target: Option<PathBuf>,
 
     /// Position to attempt a fix at
-    #[clap(short, long, parse(try_from_str = parse_line_col))]
+    #[clap(short, long, value_parser = parse_line_col)]
     pub position: (usize, usize),
 
     /// Do not fix files in place, display a diff instead
@@ -207,7 +206,7 @@ impl Single {
 #[derive(Parser, Debug)]
 pub struct Explain {
     /// Warning code to explain
-    #[clap(parse(try_from_str = parse_warning_code))]
+    #[clap(value_parser = parse_warning_code)]
     pub target: u32,
 }
 
