@@ -2,7 +2,6 @@ use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rnix::ast::HasEntry;
 use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     ast::{AttrSet, Lambda, Pattern},
@@ -44,31 +43,36 @@ struct EmptyPattern;
 
 impl Rule for EmptyPattern {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(lambda_expr) = Lambda::cast(node.clone());
-            if let Some(arg) = lambda_expr.param();
-            if let Some(body) = lambda_expr.body();
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let lambda_expr = Lambda::cast(node.clone())?;
+        let arg = lambda_expr.param()?;
+        let body = lambda_expr.body()?;
 
-            if let Some(pattern) = Pattern::cast(arg.syntax().clone());
+        let pattern = Pattern::cast(arg.syntax().clone())?;
 
-            // no patterns within `{ }`
-            if pattern.pat_entries().count() == 0;
-            // pattern is not bound
-            if pattern.pat_bind().is_none();
+        // no patterns within `{ }`
+        if pattern.pat_entries().count() != 0 {
+            return None;
+        };
+        // pattern is not bound
+        if pattern.pat_bind().is_some() {
+            return None;
+        };
 
-            // not a nixos module
-            if !is_module(body.syntax());
+        // not a nixos module
+        if is_module(body.syntax()) {
+            return None;
+        };
 
-            then {
-                let at = pattern.syntax().text_range();
-                let message = "This pattern is empty, use `_` instead";
-                let replacement = make::ident("_").syntax().clone();
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
-        }
+        let at = pattern.syntax().text_range();
+        let message = "This pattern is empty, use `_` instead";
+        let replacement = make::ident("_").syntax().clone();
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
 

@@ -1,7 +1,6 @@
 use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     ast::{BinOp, BinOpKind, Ident},
@@ -37,73 +36,84 @@ struct BoolComparison;
 
 impl Rule for BoolComparison {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(bin_expr) = BinOp::cast(node.clone());
-            if let Some(lhs) = bin_expr.lhs();
-            if let Some(rhs) = bin_expr.rhs();
-            if let Some(op) = bin_expr.operator();
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let bin_expr = BinOp::cast(node.clone())?;
+        let lhs = bin_expr.lhs()?;
+        let rhs = bin_expr.rhs()?;
+        let op = bin_expr.operator()?;
 
-            if let BinOpKind::Equal | BinOpKind::NotEqual = op;
-            let (non_bool_side, bool_side) = if boolean_ident(lhs.syntax()).is_some() {
-                (rhs, lhs)
-            } else if boolean_ident(rhs.syntax()).is_some() {
-                (lhs, rhs)
-            } else {
-                return None
-            };
-            then {
-                let at = node.text_range();
-                let replacement = {
-                    match (boolean_ident(bool_side.syntax()).unwrap(), op == BinOpKind::Equal) {
-                        (NixBoolean::True, true) | (NixBoolean::False, false) => {
-                            // `a == true`, `a != false` replace with just `a`
-                            non_bool_side.clone()
-                        },
-                        (NixBoolean::True, false) | (NixBoolean::False, true) => {
-                            // `a != true`, `a == false` replace with `!a`
-                            let unary_op = match non_bool_side.syntax().kind() {
-                                SyntaxKind::NODE_APPLY
-                                    | SyntaxKind::NODE_PAREN
-                                    | SyntaxKind::NODE_IDENT => {
-                                    // do not parenthsize the replacement
-                                    make::unary_not(non_bool_side.syntax())
-                                },
-                                SyntaxKind::NODE_BIN_OP => {
-                                    let inner = BinOp::cast(non_bool_side.syntax().clone()).unwrap();
-                                    // `!a ? b`, no paren required
-                                    if inner.operator()? == BinOpKind::Or {
-                                        make::unary_not(non_bool_side.syntax())
-                                    } else {
-                                        let parens = make::parenthesize(non_bool_side.syntax());
-                                        make::unary_not(parens.syntax())
-                                    }
-                                },
-                                _ => {
-                                    let parens = make::parenthesize(non_bool_side.syntax());
-                                    make::unary_not(parens.syntax())
-                                }
-                            };
-                            rnix::ast::Expr::UnaryOp(unary_op)
-                        },
-                    }
-                };
-                let message = format!(
-                    "Comparing `{}` with boolean literal `{}`",
-                    non_bool_side,
-                    bool_side
-                );
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
-            } else {
-                None
+        let (BinOpKind::Equal | BinOpKind::NotEqual) = op else {
+            return None;
+        };
+
+        let (non_bool_side, bool_side) = boolean_ident(lhs.syntax())
+            .map(|bool_side| (&rhs, bool_side))
+            .or_else(|| boolean_ident(rhs.syntax()).map(|bool_side| (&lhs, bool_side)))?;
+
+        let at = node.text_range();
+        let replacement = {
+            match (bool_side, op == BinOpKind::Equal) {
+                (NixBoolean::True, true) | (NixBoolean::False, false) => {
+                    // `a == true`, `a != false` replace with just `a`
+                    non_bool_side.clone()
+                }
+                (NixBoolean::True, false) | (NixBoolean::False, true) => {
+                    // `a != true`, `a == false` replace with `!a`
+                    let unary_op = match non_bool_side.syntax().kind() {
+                        SyntaxKind::NODE_APPLY
+                        | SyntaxKind::NODE_PAREN
+                        | SyntaxKind::NODE_IDENT => {
+                            // do not parenthsize the replacement
+                            make::unary_not(non_bool_side.syntax())
+                        }
+                        SyntaxKind::NODE_BIN_OP => {
+                            let inner = BinOp::cast(non_bool_side.syntax().clone()).unwrap();
+                            // `!a ? b`, no paren required
+                            if inner.operator()? == BinOpKind::Or {
+                                make::unary_not(non_bool_side.syntax())
+                            } else {
+                                let parens = make::parenthesize(non_bool_side.syntax());
+                                make::unary_not(parens.syntax())
+                            }
+                        }
+                        _ => {
+                            let parens = make::parenthesize(non_bool_side.syntax());
+                            make::unary_not(parens.syntax())
+                        }
+                    };
+                    rnix::ast::Expr::UnaryOp(unary_op)
+                }
             }
-        }
+        };
+        let message = format!("Comparing `{non_bool_side}` with boolean literal `{bool_side}`",);
+        Some(self.report().suggest(
+            at,
+            message,
+            Suggestion::new(at, replacement.syntax().clone()),
+        ))
     }
 }
 
+#[derive(Clone, Copy)]
 enum NixBoolean {
     True,
     False,
+}
+
+impl std::fmt::Display for NixBoolean {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            if matches!(self, Self::True) {
+                "true"
+            } else {
+                "false"
+            }
+        )
+    }
 }
 
 // not entirely accurate, underhanded nix programmers might write `true = false`

@@ -2,7 +2,6 @@ use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rnix::ast::{Attrpath, HasEntry};
 use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{ast::LegacyLet, NodeOrToken, SyntaxElement, SyntaxKind};
 
@@ -44,33 +43,36 @@ struct LegacyLetSyntax;
 
 impl Rule for LegacyLetSyntax {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(legacy_let) = LegacyLet::cast(node.clone());
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let legacy_let = LegacyLet::cast(node.clone())?;
 
-            if legacy_let
-                .entries().filter_map(|entry| match entry {
-                    rnix::ast::Entry::AttrpathValue(kv) => kv.attrpath(),
-                    _ => None
-                })
-                .any(|key_name|   key_is_ident(&key_name, "body"));
+        if !legacy_let
+            .entries()
+            .filter_map(|entry| match entry {
+                rnix::ast::Entry::AttrpathValue(kv) => kv.attrpath(),
+                _ => None,
+            })
+            .any(|key_name| key_is_ident(&key_name, "body"))
+        {
+            return None;
+        };
 
-            then {
-                let inherits = legacy_let.inherits();
-                let entries = legacy_let.entries();
-                let attrset = make::attrset(inherits, entries, true);
-                let parenthesized = make::parenthesize(attrset.syntax());
-                let selected = make::select(parenthesized.syntax(), make::ident("body").syntax());
+        let inherits = legacy_let.inherits();
+        let entries = legacy_let.entries();
+        let attrset = make::attrset(inherits, entries, true);
+        let parenthesized = make::parenthesize(attrset.syntax());
+        let selected = make::select(parenthesized.syntax(), make::ident("body").syntax());
 
-                let at = node.text_range();
-                let message = "Prefer `rec` over undocumented `let` syntax";
-                let replacement = selected.syntax().clone();
+        let at = node.text_range();
+        let message = "Prefer `rec` over undocumented `let` syntax";
+        let replacement = selected.syntax().clone();
 
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
-        }
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
 

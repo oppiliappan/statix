@@ -1,7 +1,6 @@
 use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     ast::{Apply, Ident, Lambda, Param},
@@ -44,43 +43,47 @@ struct EtaReduction;
 
 impl Rule for EtaReduction {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(lambda_expr) = Lambda::cast(node.clone());
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let lambda_expr = Lambda::cast(node.clone())?;
 
-            if let Some(arg_node) = lambda_expr.param();
-            if let Some(arg) = match arg_node {
+        let arg_node = lambda_expr.param()?;
+        let arg = {
+            let ident = match arg_node {
                 Param::IdentParam(ident) => ident.ident(),
-                _ => None
+                _ => None,
             };
+            ident?
+        };
 
-            if let Some(body_node) = lambda_expr.body();
-            if let Some(body) = Apply::cast(body_node.syntax().clone());
+        let body_node = lambda_expr.body()?;
+        let body = Apply::cast(body_node.syntax().clone())?;
 
-            if let Some(value_node) = body.argument();
-            if let Some(value) = Ident::cast(value_node.syntax().clone());
+        let value_node = body.argument()?;
+        let value = Ident::cast(value_node.syntax().clone())?;
 
-            if arg.to_string() == value.to_string();
+        if arg.to_string() != value.to_string() {
+            return None;
+        };
 
-            if let Some(lambda_node) = body.lambda();
-            if !mentions_ident(&arg, lambda_node.syntax());
+        let lambda_node = body.lambda()?;
+        if mentions_ident(&arg, lambda_node.syntax()) {
+            return None;
+        };
+
         // lambda body should be no more than a single Ident to
         // retain code readability
-        if let Some(_) = Ident::cast(lambda_node.syntax().clone());
+        Ident::cast(lambda_node.syntax().clone())?;
 
-            then {
-                let at = node.text_range();
-                let replacement = body.lambda()?;
-                let message =
-                    format!(
-                        "Found eta-reduction: `{}`",
-                        replacement.syntax().text()
-                    );
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
-            } else {
-                None
-            }
-        }
+        let at = node.text_range();
+        let replacement = body.lambda()?;
+        let message = format!("Found eta-reduction: `{}`", replacement.syntax().text());
+        Some(self.report().suggest(
+            at,
+            message,
+            Suggestion::new(at, replacement.syntax().clone()),
+        ))
     }
 }
 

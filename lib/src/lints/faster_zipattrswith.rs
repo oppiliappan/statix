@@ -5,7 +5,6 @@ use crate::{
 };
 use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{ast::Select, NodeOrToken, SyntaxElement, SyntaxKind};
 
@@ -39,38 +38,54 @@ struct FasterZipAttrsWith;
 impl Rule for FasterZipAttrsWith {
     fn validate(&self, node: &SyntaxElement, sess: &SessionInfo) -> Option<Report> {
         let lint_version = "2.6".parse::<Version>().unwrap();
-        if_chain! {
-            if sess.version() >= &lint_version;
-            if let NodeOrToken::Node(node) = node;
-            if let Some(select_expr) = Select::cast(node.clone());
-            if let Some(select_from) = select_expr.expr();
-            if let Some(zip_attrs_with) = select_expr.attrpath();
+        if sess.version() < &lint_version {
+            return None;
+        };
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let select_expr = Select::cast(node.clone())?;
+        let select_from = select_expr.expr()?;
+        let zip_attrs_with = select_expr.attrpath()?;
 
-            let select_from_text = select_from.syntax().text().to_string();
-            let zip_prefix = zip_attrs_with.attrs()
-                    .take(zip_attrs_with.attrs().count() - 1)
-                    .map(|attr| attr.to_string())
-                    .collect::<Vec<_>>();
-            let zip_from = std::iter::once(select_from_text).chain(zip_prefix).collect::<Vec<_>>().join(".");
-            // a heuristic to lint on nixpkgs.lib.zipAttrsWith
-            // and lib.zipAttrsWith and its variants
-            if zip_from != "builtins";
-            if zip_attrs_with.syntax().text().to_string().ends_with("zipAttrsWith");
+        let select_from_text = select_from.syntax().text().to_string();
+        let zip_prefix = zip_attrs_with
+            .attrs()
+            .take(zip_attrs_with.attrs().count() - 1)
+            .map(|attr| attr.to_string())
+            .collect::<Vec<_>>();
+        let zip_from = std::iter::once(select_from_text)
+            .chain(zip_prefix)
+            .collect::<Vec<_>>()
+            .join(".");
+        // a heuristic to lint on nixpkgs.lib.zipAttrsWith
+        // and lib.zipAttrsWith and its variants
+        if zip_from == "builtins" {
+            return None;
+        };
+        if !zip_attrs_with
+            .syntax()
+            .text()
+            .to_string()
+            .ends_with("zipAttrsWith")
+        {
+            return None;
+        };
 
-            then {
-                let at = node.text_range();
-                let replacement = {
-                    let builtins = make::ident("builtins");
-                    make::select(builtins.syntax(), zip_attrs_with.syntax()).syntax().clone()
-                };
-                let message = format!("Prefer `builtins.zipAttrsWith` over `{}.zipAttrsWith`", zip_from);
-                Some(
-                    self.report()
-                        .suggest(at, message, Suggestion::new(at, replacement)),
-                )
-            } else {
-                None
-            }
-        }
+        let at = node.text_range();
+        let replacement = {
+            let builtins = make::ident("builtins");
+            make::select(builtins.syntax(), zip_attrs_with.syntax())
+                .syntax()
+                .clone()
+        };
+        let message = format!(
+            "Prefer `builtins.zipAttrsWith` over `{}.zipAttrsWith`",
+            zip_from
+        );
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
