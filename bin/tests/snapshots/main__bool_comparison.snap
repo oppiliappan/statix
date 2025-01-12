@@ -1,62 +1,60 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W01] Warning: Unnecessary comparison with boolean
    ╭─[data/bool_comparison.nix:3:4]
    │
  3 │   (a == true)
-   ·    ────┬────  
-   ·        ╰────── Comparing a with boolean literal true
+   │    ────┬────  
+   │        ╰────── Comparing a with boolean literal true
 ───╯
 [W01] Warning: Unnecessary comparison with boolean
    ╭─[data/bool_comparison.nix:4:4]
    │
  4 │   (b == true)
-   ·    ────┬────  
-   ·        ╰────── Comparing b with boolean literal true
+   │    ────┬────  
+   │        ╰────── Comparing b with boolean literal true
 ───╯
 [W01] Warning: Unnecessary comparison with boolean
    ╭─[data/bool_comparison.nix:5:4]
    │
  5 │   (true == c)
-   ·    ────┬────  
-   ·        ╰────── Comparing c with boolean literal true
+   │    ────┬────  
+   │        ╰────── Comparing c with boolean literal true
 ───╯
 [W01] Warning: Unnecessary comparison with boolean
    ╭─[data/bool_comparison.nix:6:4]
    │
  6 │   (true == d)
-   ·    ────┬────  
-   ·        ╰────── Comparing d with boolean literal true
+   │    ────┬────  
+   │        ╰────── Comparing d with boolean literal true
 ───╯
 [W01] Warning: Unnecessary comparison with boolean
    ╭─[data/bool_comparison.nix:9:4]
    │
  9 │   (e != true)
-   ·    ────┬────  
-   ·        ╰────── Comparing e with boolean literal true
+   │    ────┬────  
+   │        ╰────── Comparing e with boolean literal true
 ───╯
 [W01] Warning: Unnecessary comparison with boolean
     ╭─[data/bool_comparison.nix:10:4]
     │
  10 │   (f != false)
-    ·    ─────┬────  
-    ·         ╰────── Comparing f with boolean literal false
+    │    ─────┬────  
+    │         ╰────── Comparing f with boolean literal false
 ────╯
 [W01] Warning: Unnecessary comparison with boolean
     ╭─[data/bool_comparison.nix:11:4]
     │
  11 │   (true != g)
-    ·    ────┬────  
-    ·        ╰────── Comparing g with boolean literal true
+    │    ────┬────  
+    │        ╰────── Comparing g with boolean literal true
 ────╯
 [W01] Warning: Unnecessary comparison with boolean
     ╭─[data/bool_comparison.nix:12:4]
     │
  12 │   (false != h)
-    ·    ─────┬────  
-    ·         ╰────── Comparing h with boolean literal false
+    │    ─────┬────  
+    │         ╰────── Comparing h with boolean literal false
 ────╯
-

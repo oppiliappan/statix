@@ -1,20 +1,18 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W04] Warning: Assignment instead of inherit from
    ╭─[data/manual_inherit_from.nix:5:3]
    │
  5 │   b = a.b;
-   ·   ────┬───  
-   ·       ╰───── This assignment is better written with inherit
+   │   ────┬───  
+   │       ╰───── This assignment is better written with inherit
 ───╯
 [W04] Warning: Assignment instead of inherit from
    ╭─[data/manual_inherit_from.nix:6:3]
    │
  6 │   c = a.c;
-   ·   ────┬───  
-   ·       ╰───── This assignment is better written with inherit
+   │   ────┬───  
+   │       ╰───── This assignment is better written with inherit
 ───╯
-

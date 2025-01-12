@@ -1,17 +1,17 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W06] Warning: These let-in expressions are collapsible
    ╭─[data/collapsible_let_in.nix:1:1]
    │
  1 │ ╭───▶ let
+   ┆ ┆     
  5 │ │ ╭─▶   let
+   ┆ ┆ ┆   
  9 │ │ ├─▶   a + b + c + d
-   · │ │                 │   
-   · │ ╰───────────────────── This let in expression is nested
-   · │                   │   
-   · ╰───────────────────┴─── This let in expression contains a nested let in expression
+   │ │ │                 │   
+   │ │ ╰───────────────────── This let in expression is nested
+   │ │                   │   
+   │ ╰───────────────────┴─── This let in expression contains a nested let in expression
 ───╯
-

@@ -1,20 +1,18 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W10] Warning: Found empty pattern in function argument
    ╭─[data/empty_pattern.nix:3:4]
    │
  3 │   ({ ... }: 42)
-   ·    ───┬───  
-   ·       ╰───── This pattern is empty, use _ instead
+   │    ───┬───  
+   │       ╰───── This pattern is empty, use _ instead
 ───╯
 [W11] Warning: Found redundant pattern bind in function argument
    ╭─[data/empty_pattern.nix:7:4]
    │
  7 │   ({ ... } @ inputs: inputs)
-   ·    ────────┬───────  
-   ·            ╰───────── This pattern bind is redundant, use inputs instead
+   │    ────────┬───────  
+   │            ╰───────── This pattern bind is redundant, use inputs instead
 ───╯
-

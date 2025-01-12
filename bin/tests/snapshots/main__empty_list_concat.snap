@@ -6,34 +6,34 @@ expression: "& out"
    ╭─[data/empty_list_concat.nix:6:4]
    │
  6 │   ([] ++ [1 2 3])
-   ·    ──────┬──────  
-   ·          ╰──────── Concatenation with the empty list, [], is a no-op
+   │    ──────┬──────  
+   │          ╰──────── Concatenation with the empty list, [], is a no-op
 ───╯
 [W23] Warning: Unnecessary concatenation with empty list
    ╭─[data/empty_list_concat.nix:9:4]
    │
  9 │   ([1 2 3] ++ [])
-   ·    ──────┬──────  
-   ·          ╰──────── Concatenation with the empty list, [], is a no-op
+   │    ──────┬──────  
+   │          ╰──────── Concatenation with the empty list, [], is a no-op
 ───╯
 [W23] Warning: Unnecessary concatenation with empty list
     ╭─[data/empty_list_concat.nix:12:4]
     │
  12 │   ([] ++ [])
-    ·    ────┬───  
-    ·        ╰───── Concatenation with the empty list, [], is a no-op
+    │    ────┬───  
+    │        ╰───── Concatenation with the empty list, [], is a no-op
 ────╯
 [W23] Warning: Unnecessary concatenation with empty list
     ╭─[data/empty_list_concat.nix:15:4]
     │
  15 │   ([] ++ [] ++ [])
-    ·    ───────┬──────  
-    ·           ╰──────── Concatenation with the empty list, [], is a no-op
+    │    ───────┬──────  
+    │           ╰──────── Concatenation with the empty list, [], is a no-op
 ────╯
 [W23] Warning: Unnecessary concatenation with empty list
     ╭─[data/empty_list_concat.nix:15:10]
     │
  15 │   ([] ++ [] ++ [])
-    ·          ────┬───  
-    ·              ╰───── Concatenation with the empty list, [], is a no-op
+    │          ────┬───  
+    │              ╰───── Concatenation with the empty list, [], is a no-op
 ────╯
