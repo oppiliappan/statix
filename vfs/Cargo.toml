@@ -5,5 +5,5 @@ edition = "2018"
 license = "MIT"
 
 [dependencies]
-indexmap = "1.6.2"
+indexmap = "2.7.0"
 rayon = "1.5.1"
