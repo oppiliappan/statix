@@ -1,11 +1,8 @@
 use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
-use rnix::{
-    types::{LetIn, TypedNode},
-    NodeOrToken, SyntaxElement, SyntaxKind, TextRange,
-};
+use rnix::{ast::LetIn, NodeOrToken, SyntaxElement, SyntaxKind, TextRange};
 use rowan::Direction;
 
 /// ## What it does
@@ -46,42 +43,45 @@ struct CollapsibleLetIn;
 
 impl Rule for CollapsibleLetIn {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(let_in_expr) = LetIn::cast(node.clone());
-            if let Some(body) = let_in_expr.body();
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let let_in_expr = LetIn::cast(node.clone())?;
+        let body = let_in_expr.body()?;
 
-            if LetIn::cast(body.clone()).is_some();
-            then {
-                let first_annotation = node.text_range();
-                let first_message = "This `let in` expression contains a nested `let in` expression";
+        LetIn::cast(body.syntax().clone())?;
 
-                let second_annotation = body.text_range();
-                let second_message = "This `let in` expression is nested";
+        let first_annotation = node.text_range();
+        let first_message = "This `let in` expression contains a nested `let in` expression";
 
-                let replacement_at = {
-                    let start = body
-                        .siblings_with_tokens(Direction::Prev)
-                        .find(|elem| elem.kind() == SyntaxKind::TOKEN_IN)?
-                        .text_range()
-                        .start();
-                    let end = body
-                        .descendants_with_tokens()
-                        .find(|elem| elem.kind() == SyntaxKind::TOKEN_LET)?
-                        .text_range()
-                        .end();
-                    TextRange::new(start, end)
-                };
-                let replacement = make::empty().node().clone();
+        let second_annotation = body.syntax().text_range();
+        let second_message = "This `let in` expression is nested";
 
-                Some(
-                    self.report()
-                        .diagnostic(first_annotation, first_message)
-                        .suggest(second_annotation, second_message, Suggestion::new(replacement_at, replacement))
-                )
-            } else {
-                None
-            }
-        }
+        let replacement_at = {
+            let start = body
+                .syntax()
+                .siblings_with_tokens(Direction::Prev)
+                .find(|elem| elem.kind() == SyntaxKind::TOKEN_IN)?
+                .text_range()
+                .start();
+            let end = body
+                .syntax()
+                .descendants_with_tokens()
+                .find(|elem| elem.kind() == SyntaxKind::TOKEN_LET)?
+                .text_range()
+                .end();
+            TextRange::new(start, end)
+        };
+        let replacement = make::empty().syntax().clone();
+
+        Some(
+            self.report()
+                .diagnostic(first_annotation, first_message)
+                .suggest(
+                    second_annotation,
+                    second_message,
+                    Suggestion::new(replacement_at, replacement),
+                ),
+        )
     }
 }

@@ -1,7 +1,5 @@
 use std::borrow::Cow;
 
-use crate::LintMap;
-
 use lib::session::SessionInfo;
 use rnix::TextRange;
 
@@ -10,6 +8,8 @@ use all::all_with;
 
 mod single;
 use single::single;
+
+use crate::utils::LintMap;
 
 type Source<'a> = Cow<'a, str>;
 

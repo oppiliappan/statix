@@ -1,22 +1,22 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W02] Warning: Useless let-in expression
    ╭─[data/empty_let_in.nix:3:5]
    │
  3 │ ╭─▶     let
+   ┆ ┆   
  5 │ ├─▶     null
-   · │              
-   · ╰────────────── This let-in expression has no entries
+   │ │              
+   │ ╰────────────── This let-in expression has no entries
 ───╯
 [W02] Warning: Useless let-in expression
     ╭─[data/empty_let_in.nix:8:5]
     │
   8 │ ╭─▶     let
+    ┆ ┆   
  12 │ ├─▶     null
-    · │              
-    · ╰────────────── This let-in expression has no entries
+    │ │              
+    │ ╰────────────── This let-in expression has no entries
 ────╯
-

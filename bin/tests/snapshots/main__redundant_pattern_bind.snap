@@ -1,13 +1,11 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W11] Warning: Found redundant pattern bind in function argument
    ╭─[data/redundant_pattern_bind.nix:1:1]
    │
  1 │ { ... }  @ inputs: null
-   · ────────┬────────  
-   ·         ╰────────── This pattern bind is redundant, use inputs instead
+   │ ────────┬────────  
+   │         ╰────────── This pattern bind is redundant, use inputs instead
 ───╯
-

@@ -5,7 +5,11 @@ use std::{
     str::FromStr,
 };
 
-use crate::{dirs, err::ConfigErr, utils, LintMap};
+use crate::{
+    dirs,
+    err::ConfigErr,
+    utils::{self, LintMap},
+};
 
 use clap::Parser;
 use lib::{session::Version, LINTS};
@@ -38,7 +42,7 @@ pub enum SubCommand {
 #[derive(Parser, Debug)]
 pub struct Check {
     /// File or directory to run check on
-    #[clap(default_value = ".", parse(from_os_str))]
+    #[clap(default_value = ".")]
     target: PathBuf,
 
     /// Globs of file patterns to skip
@@ -52,7 +56,7 @@ pub struct Check {
     /// Output format.
     #[cfg_attr(feature = "json", doc = "Supported values: stderr, errfmt, json")]
     #[cfg_attr(not(feature = "json"), doc = "Supported values: stderr, errfmt")]
-    #[clap(short = 'o', long, default_value_t, parse(try_from_str))]
+    #[clap(short = 'o', long, default_value_t)]
     pub format: OutFormat,
 
     /// Path to statix.toml or its parent directory
@@ -87,7 +91,7 @@ impl Check {
 #[derive(Parser, Debug)]
 pub struct Fix {
     /// File or directory to run fix on
-    #[clap(default_value = ".", parse(from_os_str))]
+    #[clap(default_value = ".")]
     target: PathBuf,
 
     /// Globs of file patterns to skip
@@ -152,11 +156,10 @@ impl Fix {
 #[derive(Parser, Debug)]
 pub struct Single {
     /// File to run single-fix on
-    #[clap(parse(from_os_str))]
     pub target: Option<PathBuf>,
 
     /// Position to attempt a fix at
-    #[clap(short, long, parse(try_from_str = parse_line_col))]
+    #[clap(short, long, value_parser = parse_line_col)]
     pub position: (usize, usize),
 
     /// Do not fix files in place, display a diff instead
@@ -203,7 +206,7 @@ impl Single {
 #[derive(Parser, Debug)]
 pub struct Explain {
     /// Warning code to explain
-    #[clap(parse(try_from_str = parse_warning_code))]
+    #[clap(value_parser = parse_warning_code)]
     pub target: u32,
 }
 
@@ -213,18 +216,13 @@ pub struct Dump {}
 #[derive(Parser, Debug)]
 pub struct List {}
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub enum OutFormat {
     #[cfg(feature = "json")]
     Json,
     Errfmt,
+    #[default]
     StdErr,
-}
-
-impl Default for OutFormat {
-    fn default() -> Self {
-        OutFormat::StdErr
-    }
 }
 
 impl fmt::Display for OutFormat {
@@ -288,6 +286,7 @@ impl ConfFile {
         let config_file = fs::read_to_string(path).map_err(ConfigErr::InvalidPath)?;
         toml::de::from_str(&config_file).map_err(ConfigErr::ConfFileParse)
     }
+
     pub fn discover<P: AsRef<Path>>(path: P) -> Result<Self, ConfigErr> {
         let cannonical_path = fs::canonicalize(path.as_ref()).map_err(ConfigErr::InvalidPath)?;
         for p in cannonical_path.ancestors() {
@@ -302,6 +301,7 @@ impl ConfFile {
         }
         Ok(Self::default())
     }
+
     pub fn dump(&self) -> String {
         let ideal_config = {
             let disabled = vec![];
@@ -315,16 +315,17 @@ impl ConfFile {
         };
         toml::ser::to_string_pretty(&ideal_config).unwrap()
     }
+
     pub fn lints(&self) -> LintMap {
         utils::lint_map_of(
-            (*LINTS)
+            &LINTS
                 .iter()
                 .filter(|l| !self.disabled.iter().any(|check| check == l.name()))
                 .cloned()
-                .collect::<Vec<_>>()
-                .as_slice(),
+                .collect::<Vec<_>>(),
         )
     }
+
     pub fn version(&self) -> Result<Version, ConfigErr> {
         if let Some(v) = &self.nix_version {
             v.parse::<Version>()

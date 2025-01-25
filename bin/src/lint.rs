@@ -1,4 +1,4 @@
-use crate::{utils, LintMap};
+use crate::utils::{self, LintMap};
 
 use lib::{session::SessionInfo, Report};
 use rnix::WalkEvent;
@@ -13,22 +13,21 @@ pub struct LintResult {
 pub fn lint_with(vfs_entry: VfsEntry, lints: &LintMap, sess: &SessionInfo) -> LintResult {
     let file_id = vfs_entry.file_id;
     let source = vfs_entry.contents;
-    let parsed = rnix::parse(source);
+    let (parsed, errors) = lib::parse::ParseResult::parse(source).to_tuple();
 
-    let error_reports = parsed.errors().into_iter().map(Report::from_parse_err);
+    let error_reports = errors.into_iter().map(Report::from_parse_err);
     let reports = parsed
-        .node()
         .preorder_with_tokens()
         .filter_map(|event| match event {
-            WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
-                rules
-                    .iter()
-                    .filter_map(|rule| rule.validate(&child, sess))
-                    .collect::<Vec<_>>()
-            }),
+            WalkEvent::Enter(child) => Some(child),
             _ => None,
         })
-        .flatten()
+        .filter_map(|child| lints.get(&child.kind()).map(|rules| (rules, child)))
+        .flat_map(|(rules, child)| {
+            rules
+                .iter()
+                .filter_map(move |rule| rule.validate(&child, sess))
+        })
         .chain(error_reports)
         .collect();
 
@@ -61,10 +60,9 @@ pub mod main {
         let vfs = check_config.vfs(conf_file.ignore.as_slice())?;
 
         let mut stdout = io::stdout();
-        let lint = |vfs_entry| lint_with(vfs_entry, &lints, &session);
         let results = vfs
             .par_iter()
-            .map(lint)
+            .map(|vfs_entry| lint_with(vfs_entry, &lints, &session))
             .filter(|lr| !lr.reports.is_empty())
             .collect::<Vec<_>>();
 

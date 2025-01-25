@@ -1,21 +1,28 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{ItemStruct, Lit, Meta, MetaNameValue};
+use syn::{parse::Parse, ItemStruct, Lit};
 
 pub fn generate_explain_impl(struct_item: &ItemStruct) -> TokenStream2 {
     let struct_name = &struct_item.ident;
     let explain = struct_item
         .attrs
         .iter()
-        .filter_map(|attr| match attr.parse_meta().ok() {
-            Some(Meta::NameValue(MetaNameValue {
-                path,
-                lit: Lit::Str(str_lit),
-                ..
-            })) if path.is_ident("doc") => Some(str_lit.value()),
+        .filter(|attr| {
+            attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("doc") {
+                    Ok(())
+                } else {
+                    Err(meta.error("unregognized meta attributes..."))
+                }
+            })
+            .is_ok()
+        })
+        .filter_map(|attr| attr.parse_args_with(syn::Lit::parse).ok())
+        .filter_map(|lit| match lit {
+            Lit::Str(lit_str) => Some(lit_str.value()),
             _ => None,
         })
-        .map(|s| s.strip_prefix(' ').unwrap_or(&s).to_owned())
+        .map(|s| s.trim_start().to_owned())
         .collect::<Vec<_>>()
         .join("\n");
     quote! {

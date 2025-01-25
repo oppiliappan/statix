@@ -1,9 +1,10 @@
 use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use rnix::ast::HasEntry;
+use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{AttrSet, EntryHolder, Lambda, Pattern, TypedNode},
+    ast::{AttrSet, Lambda, Pattern},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
@@ -42,45 +43,46 @@ struct EmptyPattern;
 
 impl Rule for EmptyPattern {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(lambda_expr) = Lambda::cast(node.clone());
-            if let Some(arg) = lambda_expr.arg();
-            if let Some(body) = lambda_expr.body();
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let lambda_expr = Lambda::cast(node.clone())?;
+        let arg = lambda_expr.param()?;
+        let body = lambda_expr.body()?;
 
-            if let Some(pattern) = Pattern::cast(arg);
+        let pattern = Pattern::cast(arg.syntax().clone())?;
 
-            // no patterns within `{ }`
-            if pattern.entries().count() == 0;
-            // pattern is not bound
-            if pattern.at().is_none();
+        // no patterns within `{ }`
+        if pattern.pat_entries().count() != 0 {
+            return None;
+        };
+        // pattern is not bound
+        if pattern.pat_bind().is_some() {
+            return None;
+        };
 
-            // not a nixos module
-            if !is_module(&body);
+        // not a nixos module
+        if is_module(body.syntax()) {
+            return None;
+        };
 
-            then {
-                let at = pattern.node().text_range();
-                let message = "This pattern is empty, use `_` instead";
-                let replacement = make::ident("_").node().clone();
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
-        }
+        let at = pattern.syntax().text_range();
+        let message = "This pattern is empty, use `_` instead";
+        let replacement = make::ident("_").syntax().clone();
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
 
 fn is_module(body: &SyntaxNode) -> bool {
-    if_chain! {
-        if let Some(attr_set) = AttrSet::cast(body.clone());
-        if attr_set
-            .entries()
-            .filter_map(|e| e.key())
-            .any(|k| k.node().to_string() == "imports");
-        then {
-            true
-        } else {
-            false
-        }
-    }
+    AttrSet::cast(body.clone())
+        .into_iter()
+        .flat_map(|attr_set| attr_set.entries())
+        .filter_map(|entry| match entry {
+            rnix::ast::Entry::AttrpathValue(attrpath_value) => attrpath_value.attrpath(),
+            _ => None,
+        })
+        .any(|k| k.to_string() == "imports")
 }

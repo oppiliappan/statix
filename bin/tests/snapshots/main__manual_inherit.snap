@@ -1,13 +1,11 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W03] Warning: Assignment instead of inherit
    ╭─[data/manual_inherit.nix:7:3]
    │
  7 │   a = a;
-   ·   ───┬──  
-   ·      ╰──── This assignment is better written with inherit
+   │   ───┬──  
+   │      ╰──── This assignment is better written with inherit
 ───╯
-

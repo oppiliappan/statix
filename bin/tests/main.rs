@@ -39,7 +39,7 @@ mod util {
                     buffer.write(&r, &vfs, OutFormat::StdErr).unwrap();
                 });
 
-                let stripped = strip_ansi_escapes::strip(&buffer).unwrap();
+                let stripped = strip_ansi_escapes::strip(&buffer);
                 let out =  std::str::from_utf8(&stripped).unwrap();
                 insta::assert_snapshot!(&out);
             }

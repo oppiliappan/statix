@@ -29,11 +29,7 @@ pub fn lint(attr: TokenStream, item: TokenStream) -> TokenStream {
     let explain_impl = generate_explain_impl(&struct_item);
 
     (quote! {
-        #struct_item
-
-        ::lazy_static::lazy_static! {
-            pub static ref LINT: Box<dyn crate::Lint> = #struct_name::new();
-        }
+        pub(crate) struct #struct_name;
 
         #self_impl
         #meta_impl

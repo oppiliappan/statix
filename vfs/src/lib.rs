@@ -48,6 +48,9 @@ impl ReadOnlyVfs {
     pub fn len(&self) -> usize {
         self.data.len()
     }
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
     pub fn file_path(&self, file_id: FileId) -> &Path {
         self.interner.lookup(file_id).unwrap()
     }

@@ -1,13 +1,11 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W12] Warning: Found unquoted URI expression
    ╭─[data/unquoted_uri.nix:1:1]
    │
  1 │ github:nerdypepper/statix
-   · ────────────┬────────────  
-   ·             ╰────────────── Consider quoting this URI expression
+   │ ────────────┬────────────  
+   │             ╰────────────── Consider quoting this URI expression
 ───╯
-

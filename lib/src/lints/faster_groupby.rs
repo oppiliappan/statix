@@ -3,13 +3,10 @@ use crate::{
     session::{SessionInfo, Version},
     Metadata, Report, Rule, Suggestion,
 };
+use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
-use rnix::{
-    types::{Select, TypedNode},
-    NodeOrToken, SyntaxElement, SyntaxKind,
-};
+use rnix::{ast::Select, NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for `lib.groupBy`.
@@ -41,32 +38,53 @@ struct FasterGroupBy;
 impl Rule for FasterGroupBy {
     fn validate(&self, node: &SyntaxElement, sess: &SessionInfo) -> Option<Report> {
         let lint_version = "2.5".parse::<Version>().unwrap();
-        if_chain! {
-            if sess.version() >=  &lint_version;
-            if let NodeOrToken::Node(node) = node;
-            if let Some(select_expr) = Select::cast(node.clone());
-            if let Some(select_from) = select_expr.set();
-            if let Some(group_by_attr) = select_expr.index();
 
-            // a heuristic to lint on nixpkgs.lib.groupBy
-            // and lib.groupBy and its variants
-            if select_from.text() != "builtins";
-            if group_by_attr.text() == "groupBy";
+        if sess.version() < &lint_version {
+            return None;
+        };
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let select_expr = Select::cast(node.clone())?;
+        let select_from = select_expr.expr()?;
+        let group_by_attr = select_expr.attrpath()?;
 
-            then {
-                let at = node.text_range();
-                let replacement = {
-                    let builtins = make::ident("builtins");
-                    make::select(builtins.node(), &group_by_attr).node().clone()
-                };
-                let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", select_from);
-                Some(
-                    self.report()
-                        .suggest(at, message, Suggestion::new(at, replacement)),
-                )
-            } else {
-                None
-            }
-        }
+        let select_from_text = select_from.syntax().text().to_string();
+        let group_by_prefix = group_by_attr
+            .attrs()
+            .take(group_by_attr.attrs().count() - 1)
+            .map(|attr| attr.to_string())
+            .collect::<Vec<_>>();
+        let group_by_from = std::iter::once(select_from_text)
+            .chain(group_by_prefix)
+            .collect::<Vec<_>>()
+            .join(".");
+
+        // a heuristic to lint on nixpkgs.lib.groupBy
+        // and lib.groupBy and its variants
+        if group_by_from == "builtins" {
+            return None;
+        };
+        if !group_by_attr
+            .syntax()
+            .text()
+            .to_string()
+            .ends_with("groupBy")
+        {
+            return None;
+        };
+
+        let at = node.text_range();
+        let replacement = {
+            let builtins = make::ident("builtins");
+            make::select(builtins.syntax(), group_by_attr.syntax())
+                .syntax()
+                .clone()
+        };
+        let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", group_by_from);
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }

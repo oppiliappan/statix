@@ -1,9 +1,9 @@
 use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use rowan::ast::AstNode;
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Ident, KeyValue, Select, TokenWrapper, TypedNode},
+    ast::{AttrpathValue, Ident, Select},
     NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
@@ -35,39 +35,44 @@ use rnix::{
     name = "manual_inherit_from",
     note = "Assignment instead of inherit from",
     code = 4,
-    match_with = SyntaxKind::NODE_KEY_VALUE
+    match_with = SyntaxKind::NODE_ATTRPATH_VALUE
 )]
-struct ManualInherit;
+struct ManualInheritFrom;
 
-impl Rule for ManualInherit {
+impl Rule for ManualInheritFrom {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(key_value_stmt) = KeyValue::cast(node.clone());
-            if let mut key_path = key_value_stmt.key()?.path();
-            if let Some(key_node) = key_path.next();
-            // ensure that path has exactly one component
-            if key_path.next().is_none();
-            if let Some(key) = Ident::cast(key_node);
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let key_value_stmt = AttrpathValue::cast(node.clone())?;
+        let key_path = key_value_stmt.attrpath()?;
+        let key_node = key_path.attrs().next()?;
+        // ensure that path has exactly one component
+        if key_path.attrs().count() != 1 {
+            return None;
+        };
+        let key = Ident::cast(key_node.syntax().clone())?;
 
-            if let Some(value_node) = key_value_stmt.value();
-            if let Some(value) = Select::cast(value_node);
-            if let Some(index_node) = value.index();
-            if let Some(index) = Ident::cast(index_node);
+        let value_node = key_value_stmt.value()?;
+        let value = Select::cast(value_node.syntax().clone())?;
+        let index_node = value.attrpath().and_then(|attrs| attrs.attrs().next())?;
+        let index = Ident::cast(index_node.syntax().clone())?;
 
-            if key.as_str() == index.as_str();
+        if key.to_string() != index.to_string() {
+            return None;
+        };
 
-            then {
-                let at = node.text_range();
-                let replacement = {
-                    let set = value.set()?;
-                    make::inherit_from_stmt(set, &[key]).node().clone()
-                };
-                let message = "This assignment is better written with `inherit`";
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
-        }
+        let at = node.text_range();
+        let replacement = {
+            let set = value.attrpath()?;
+            make::inherit_from_stmt(set.syntax().clone(), &[key])
+                .syntax()
+                .clone()
+        };
+        let message = "This assignment is better written with `inherit`";
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
