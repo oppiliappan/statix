@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use lib::{Lint, LINTS};
 use rnix::SyntaxKind;
 
+#[allow(clippy::borrowed_box)]
 pub fn lint_map_of(
     lints: &[&'static Box<dyn Lint>],
 ) -> HashMap<SyntaxKind, Vec<&'static Box<dyn Lint>>> {
@@ -19,6 +20,7 @@ pub fn lint_map_of(
     map
 }
 
+#[allow(clippy::borrowed_box)]
 pub fn lint_map() -> HashMap<SyntaxKind, Vec<&'static Box<dyn Lint>>> {
     lint_map_of(&LINTS)
 }

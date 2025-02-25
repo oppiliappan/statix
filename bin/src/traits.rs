@@ -80,7 +80,7 @@ fn write_stderr<T: Write>(
                 |cli_report, diagnostic| {
                     cli_report.with_label(
                         Label::new((src_id, range(diagnostic.at)))
-                            .with_message(&colorize(&diagnostic.message))
+                            .with_message(colorize(&diagnostic.message))
                             .with_color(Color::Magenta),
                     )
                 },

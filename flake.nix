@@ -34,8 +34,15 @@
           let
             pname = "statix";
             packageMeta = (lib.importTOML ./bin/Cargo.toml).package;
+            toolchain = (rustChannel final).withComponents [
+                "cargo"
+                "rustc"
+                "rust-std"
+                "clippy"
+            ];
             rustPlatform = makeRustPlatform {
-              inherit (rustChannel final) cargo rustc;
+                cargo = toolchain;
+                rustc = toolchain;
             };
           in
           rustPlatform.buildRustPackage {
@@ -54,6 +61,10 @@
               homepage = "https://git.peppe.rs/languages/statix/about";
               license = licenses.mit;
             };
+
+            checkPhase = ''
+              cargo clippy
+            '';
           };
 
         statix-vim =
