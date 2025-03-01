@@ -34,16 +34,10 @@
           let
             pname = "statix";
             packageMeta = (lib.importTOML ./bin/Cargo.toml).package;
-            toolchain = (rustChannel final).withComponents [
-                "cargo"
-                "rustc"
-                "rust-std"
-                "clippy"
-            ];
             rustPlatform = makeRustPlatform {
-                cargo = toolchain;
-                rustc = toolchain;
+              inherit (rustChannel final) cargo rustc;
             };
+            clippy = (rustChannel final).clippy;
           in
           rustPlatform.buildRustPackage {
             inherit pname;
@@ -62,8 +56,11 @@
               license = licenses.mit;
             };
 
+            nativeCheckInputs = [ clippy ];
+
             checkPhase = ''
               cargo clippy
+              cargo test
             '';
           };
 
