@@ -58,9 +58,8 @@
 
             nativeCheckInputs = [ clippy ];
 
-            checkPhase = ''
+            postCheck = ''
               cargo clippy
-              cargo test
             '';
           };
 
