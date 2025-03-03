@@ -59,7 +59,9 @@
             nativeCheckInputs = [ clippy ];
 
             postCheck = ''
+              echo "Starting postCheck"
               cargo clippy
+              echo "Finished postCheck"
             '';
           };
 
