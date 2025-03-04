@@ -213,18 +213,13 @@ pub struct Dump {}
 #[derive(Parser, Debug)]
 pub struct List {}
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub enum OutFormat {
     #[cfg(feature = "json")]
     Json,
     Errfmt,
+    #[default]
     StdErr,
-}
-
-impl Default for OutFormat {
-    fn default() -> Self {
-        OutFormat::StdErr
-    }
 }
 
 impl fmt::Display for OutFormat {

@@ -37,6 +37,7 @@
             rustPlatform = makeRustPlatform {
               inherit (rustChannel final) cargo rustc;
             };
+            clippy = (rustChannel final).clippy;
           in
           rustPlatform.buildRustPackage {
             inherit pname;
@@ -54,6 +55,14 @@
               homepage = "https://git.peppe.rs/languages/statix/about";
               license = licenses.mit;
             };
+
+            nativeCheckInputs = [ clippy ];
+
+            postCheck = ''
+              echo "Starting postCheck"
+              cargo clippy
+              echo "Finished postCheck"
+            '';
           };
 
         statix-vim =
