@@ -64,7 +64,7 @@ impl Rule for ManualInheritFrom {
 
         let at = node.text_range();
         let replacement = {
-            let set = value.attrpath()?;
+            let set = value.expr()?;
             make::inherit_from_stmt(set.syntax().clone(), &[key])
                 .syntax()
                 .clone()
