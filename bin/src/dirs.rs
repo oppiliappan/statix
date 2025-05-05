@@ -77,11 +77,9 @@ impl Iterator for Walker {
 
 pub fn build_ignore_set<P: AsRef<Path>>(
     ignore: &[String],
-    target: P,
+    gitignore_path: P,
     unrestricted: bool,
 ) -> Result<Gitignore, IgnoreError> {
-    let gitignore_path = target.as_ref().join(".gitignore");
-
     // Looks like GitignoreBuilder::new does not source globs
     // within gitignore_path by default, we have to enforce that
     // using GitignoreBuilder::add. Probably a bug in the ignore

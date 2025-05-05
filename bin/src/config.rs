@@ -37,11 +37,15 @@ pub enum SubCommand {
 
 #[derive(Parser, Debug)]
 pub struct Check {
-    /// File or directory to run check on
+    /// Files or directories to run check on
+    ///
+    /// If exactly one directory is specified, this will recursively
+    /// check any nix files in it, except for any ignored files.
     #[clap(default_value = ".", parse(from_os_str))]
-    target: PathBuf,
+    targets: Vec<PathBuf>,
 
-    /// Globs of file patterns to skip
+    /// Globs of file patterns to skip; ignored if more than one file
+    /// is specified.
     #[clap(short, long)]
     ignore: Vec<String>,
 
@@ -77,9 +81,39 @@ impl Check {
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         } else {
             let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
-            let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
-            let files = dirs::walk_nix_files(ignore, &self.target)?;
-            Ok(vfs(&files.collect::<Vec<_>>()))
+
+            // TODO: A more modern `clap` may be able to handle this
+            // without falling back to a destructure-then-restructure
+            // with the help of a `ValueEnum`.
+            //
+            // There are definitely less clear ways of expressing this
+            // that avoid the deep copy, but this should not be
+            // particularly expensive compared to the actual work.
+            let files = match &self.targets[..] {
+                [target] if target.is_dir() => {
+                    // If we only have one target, and it is a
+                    // directory, "do what I mean", that is, just run
+                    // statix on everything but respect the
+                    // `.gitignore` file and `--ignore` flags.
+                    //
+                    // We specifically don't follow this behavior if
+                    // the user specifies exactly one file, because
+                    // ignoring the only file we specify doesn't
+                    // really make sense, and it makes integrating
+                    // with third party scripting easier.
+                    let gitignore_path = target.join(".gitignore");
+                    let ignore =
+                        dirs::build_ignore_set(&all_ignores, &gitignore_path, self.unrestricted)?;
+                    dirs::walk_nix_files(ignore, target)?.collect()
+                }
+                targets @ [..] => {
+                    // Otherwise, assume the user specified exactly those
+                    // paths they want to check
+                    targets.to_vec()
+                }
+            };
+
+            Ok(vfs(&files))
         }
     }
 }
