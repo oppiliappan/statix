@@ -10,14 +10,15 @@ let
   g = (1 + 2);
   h = ({ inherit i; });
 
-  # binary exprs
+  # binary exprs with superflous parens
   # TODO: we could implement associativity check to remove more redundant parens in the future
-  f = let id = x: x; in
+  f =
+    let id = x: x; in
     (id [3])
     ++ (id [1] ++ [2])
   ;
 
-  # binary exprs
+  # binary exprs with necessary parens
   u =
     (1 + 1)
     * (2 + 2)
