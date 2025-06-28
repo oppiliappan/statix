@@ -4,9 +4,9 @@ expression: "& out"
 
 ---
 [W08] Warning: These parentheses can be omitted
-    ╭─[data/useless_parens.nix:30:3]
+    ╭─[data/useless_parens.nix:41:3]
     │
- 30 │   (null)
+ 41 │   (null)
     ·   ───┬──  
     ·      ╰──── Useless parentheses around body of let expression
 ────╯
@@ -51,5 +51,24 @@ expression: "& out"
  17 │     (id [3])
     ·     ────┬───  
     ·         ╰───── Useless parentheses in operand of binary operator
+────╯
+[W08] Warning: These parentheses can be omitted
+    ╭─[data/useless_parens.nix:33:7]
+    │
+ 33 │ ╭─▶     + (lib.optionalString true ''
+ 35 │ ├─▶     '')
+    · │             
+    · ╰───────────── Useless parentheses in operand of binary operator
+────╯
+[W08] Warning: These parentheses can be omitted
+    ╭─[data/useless_parens.nix:29:5]
+    │
+ 29 │         (builtins.readFile ./x.txt)
+    ·         ─────────────┬─────────────  
+    ·                      ╰─────────────── Useless parentheses in operand of binary operator
+ 30 │ ╭─▶     + (lib.optionalString true ''
+ 32 │ ├─▶     '')
+    · │             
+    · ╰───────────── Useless parentheses in operand of binary operator
 ────╯
 

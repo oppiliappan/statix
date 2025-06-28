@@ -24,6 +24,17 @@ let
     * (2 + 2)
     ;
 
+  # string concat
+  s =
+    (builtins.readFile ./x.txt)
+    + (lib.optionalString true ''
+      foo
+    '')
+    + (lib.optionalString true ''
+      bar
+    '')
+    ;
+
   # TODO: function args etc.
 in
   # parens around let body

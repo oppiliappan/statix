@@ -115,7 +115,8 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Vec<Diagnostic>> {
                 }
             };
 
-            let diagnostics = vec![bin_op.lhs(), bin_op.rhs()]
+            // Fix rhs then lhs otherwise the position will drift
+            let diagnostics = vec![bin_op.rhs(), bin_op.lhs()]
                 .into_iter()
                 .flatten()
                 .filter_map(maybe_diagnostic)
