@@ -10,7 +10,20 @@ let
   g = (1 + 2);
   h = ({ inherit i; });
 
-  # TODO: binary exprs, function args etc.
+  # binary exprs
+  # TODO: we could implement associativity check to remove more redundant parens in the future
+  f = let id = x: x; in
+    (id [3])
+    ++ (id [1] ++ [2])
+  ;
+
+  # binary exprs
+  u =
+    (1 + 1)
+    * (2 + 2)
+    ;
+
+  # TODO: function args etc.
 in
   # parens around let body
   (null)

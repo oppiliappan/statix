@@ -3,8 +3,8 @@ use crate::{session::SessionInfo, Diagnostic, Metadata, Report, Rule, Suggestion
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{KeyValue, LetIn, Paren, ParsedType, TypedNode, Wrapper},
-    NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{Apply, KeyValue, LetIn, Paren, ParsedType, TypedNode, Wrapper},
+    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
 /// ## What it does
@@ -40,6 +40,7 @@ use rnix::{
         SyntaxKind::NODE_KEY_VALUE,
         SyntaxKind::NODE_PAREN,
         SyntaxKind::NODE_LET_IN,
+        SyntaxKind::NODE_BIN_OP,
     ]
 )]
 struct UselessParens;
@@ -50,10 +51,10 @@ impl Rule for UselessParens {
             if let NodeOrToken::Node(node) = node;
             if let Some(parsed_type_node) = ParsedType::cast(node.clone());
 
-            if let Some(diagnostic) = do_thing(parsed_type_node);
+            if let Some(mut diagnostic) = do_thing(parsed_type_node);
             then {
                 let mut report = self.report();
-                report.diagnostics.push(diagnostic);
+                report.diagnostics.append(&mut diagnostic);
                 Some(report)
             } else {
                 None
@@ -62,7 +63,7 @@ impl Rule for UselessParens {
     }
 }
 
-fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
+fn do_thing(parsed_type_node: ParsedType) -> Option<Vec<Diagnostic>> {
     match parsed_type_node {
         ParsedType::KeyValue(kv) => if_chain! {
             if let Some(value_node) = kv.value();
@@ -73,7 +74,7 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
                 let at = value_range;
                 let message = "Useless parentheses around value in binding";
                 let replacement = inner;
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement)))
+                Some(vec![Diagnostic::suggest(at, message, Suggestion::new(at, replacement))])
             } else {
                 None
             }
@@ -87,11 +88,45 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
                 let at = body_range;
                 let message = "Useless parentheses around body of `let` expression";
                 let replacement = inner;
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement)))
+                Some(vec![Diagnostic::suggest(at, message, Suggestion::new(at, replacement))])
             } else {
                 None
             }
         },
+        ParsedType::BinOp(bin_op) => {
+            let maybe_diagnostic = |node: SyntaxNode| -> Option<Diagnostic> {
+                if_chain! {
+                    let range = node.text_range();
+                    if let Some(as_parens) = Paren::cast(node);
+                    if let Some(inner) = as_parens.inner();
+
+                    // TODO:
+                    // it would be nice to compare operator precedence
+                    // currently we only check if inner is function
+                    if Apply::cast(inner.clone()).is_some();
+                    then {
+                        let at = range;
+                        let message = "Useless parentheses in operand of binary operator";
+                        let replacement = inner;
+                        Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement)))
+                    } else {
+                        None
+                    }
+                }
+            };
+
+            let diagnostics = vec![bin_op.lhs(), bin_op.rhs()]
+                .into_iter()
+                .flatten()
+                .filter_map(maybe_diagnostic)
+                .collect::<Vec<_>>();
+
+            if diagnostics.len() > 0 {
+                Some(diagnostics)
+            } else {
+                None
+            }
+        }
         ParsedType::Paren(paren_expr) => if_chain! {
             let paren_expr_range = paren_expr.node().text_range();
             if let Some(father_node) = paren_expr.node().parent();
@@ -119,7 +154,7 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
                 let at = paren_expr_range;
                 let message = "Useless parentheses around primitive expression";
                 let replacement = parsed_inner.node().clone();
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement)))
+                Some(vec![Diagnostic::suggest(at, message, Suggestion::new(at, replacement))])
             } else {
                 None
             }

@@ -1,12 +1,12 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
+expression: "& out"
 
 ---
 [W08] Warning: These parentheses can be omitted
-    ╭─[data/useless_parens.nix:16:3]
+    ╭─[data/useless_parens.nix:28:3]
     │
- 16 │   (null)
+ 28 │   (null)
     ·   ───┬──  
     ·      ╰──── Useless parentheses around body of let expression
 ────╯
@@ -44,5 +44,12 @@ expression: "&out"
  11 │   h = ({ inherit i; });
     ·       ────────┬───────  
     ·               ╰───────── Useless parentheses around value in binding
+────╯
+[W08] Warning: These parentheses can be omitted
+    ╭─[data/useless_parens.nix:15:5]
+    │
+ 15 │     (id [3])
+    ·     ────┬───  
+    ·         ╰───── Useless parentheses in operand of binary operator
 ────╯
 
