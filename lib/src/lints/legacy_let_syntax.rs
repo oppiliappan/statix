@@ -1,10 +1,9 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{EntryHolder, Ident, Key, LegacyLet, TokenWrapper, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{EntryHolder, Ident, Key, LegacyLet, TokenWrapper, TypedNode},
 };
 
 /// ## What it does
@@ -45,29 +44,28 @@ struct ManualInherit;
 
 impl Rule for ManualInherit {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(legacy_let) = LegacyLet::cast(node.clone());
-
-            if legacy_let
+        if let NodeOrToken::Node(node) = node
+            && let Some(legacy_let) = LegacyLet::cast(node.clone())
+            && legacy_let
                 .entries()
-                .any(|kv| matches!(kv.key(), Some(k) if key_is_ident(&k, "body")));
+                .any(|kv| matches!(kv.key(), Some(k) if key_is_ident(&k, "body")))
+        {
+            let inherits = legacy_let.inherits();
+            let entries = legacy_let.entries();
+            let attrset = make::attrset(inherits, entries, true);
+            let parenthesized = make::parenthesize(attrset.node());
+            let selected = make::select(parenthesized.node(), make::ident("body").node());
 
-            then {
-                let inherits = legacy_let.inherits();
-                let entries = legacy_let.entries();
-                let attrset = make::attrset(inherits, entries, true);
-                let parenthesized = make::parenthesize(attrset.node());
-                let selected = make::select(parenthesized.node(), make::ident("body").node());
+            let at = node.text_range();
+            let message = "Prefer `rec` over undocumented `let` syntax";
+            let replacement = selected.node().clone();
 
-                let at = node.text_range();
-                let message = "Prefer `rec` over undocumented `let` syntax";
-                let replacement = selected.node().clone();
-
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
+            Some(
+                self.report()
+                    .suggest(at, message, Suggestion::new(at, replacement)),
+            )
+        } else {
+            None
         }
     }
 }

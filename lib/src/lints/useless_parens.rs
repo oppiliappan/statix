@@ -1,10 +1,9 @@
-use crate::{session::SessionInfo, Diagnostic, Metadata, Report, Rule, Suggestion};
+use crate::{Diagnostic, Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{KeyValue, LetIn, Paren, ParsedType, TypedNode, Wrapper},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{KeyValue, LetIn, Paren, ParsedType, TypedNode, Wrapper},
 };
 
 /// ## What it does
@@ -46,67 +45,71 @@ struct UselessParens;
 
 impl Rule for UselessParens {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(parsed_type_node) = ParsedType::cast(node.clone());
-
-            if let Some(diagnostic) = do_thing(parsed_type_node);
-            then {
-                let mut report = self.report();
-                report.diagnostics.push(diagnostic);
-                Some(report)
-            } else {
-                None
-            }
+        if let NodeOrToken::Node(node) = node
+            && let Some(parsed_type_node) = ParsedType::cast(node.clone())
+            && let Some(diagnostic) = do_thing(parsed_type_node)
+        {
+            let mut report = self.report();
+            report.diagnostics.push(diagnostic);
+            Some(report)
+        } else {
+            None
         }
     }
 }
 
 fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
     match parsed_type_node {
-        ParsedType::KeyValue(kv) => if_chain! {
-            if let Some(value_node) = kv.value();
-            let value_range = value_node.text_range();
-            if let Some(value_in_parens) = Paren::cast(value_node);
-            if let Some(inner) = value_in_parens.inner();
-            then {
+        ParsedType::KeyValue(kv) => {
+            if let Some(value_node) = kv.value()
+                && let value_range = value_node.text_range()
+                && let Some(value_in_parens) = Paren::cast(value_node)
+                && let Some(inner) = value_in_parens.inner()
+            {
                 let at = value_range;
                 let message = "Useless parentheses around value in binding";
                 let replacement = inner;
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement)))
+                Some(Diagnostic::suggest(
+                    at,
+                    message,
+                    Suggestion::new(at, replacement),
+                ))
             } else {
                 None
             }
-        },
-        ParsedType::LetIn(let_in) => if_chain! {
-            if let Some(body_node) = let_in.body();
-            let body_range = body_node.text_range();
-            if let Some(body_as_parens) = Paren::cast(body_node);
-            if let Some(inner) = body_as_parens.inner();
-            then {
+        }
+        ParsedType::LetIn(let_in) => {
+            if let Some(body_node) = let_in.body()
+                && let body_range = body_node.text_range()
+                && let Some(body_as_parens) = Paren::cast(body_node)
+                && let Some(inner) = body_as_parens.inner()
+            {
                 let at = body_range;
                 let message = "Useless parentheses around body of `let` expression";
                 let replacement = inner;
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement)))
+                Some(Diagnostic::suggest(
+                    at,
+                    message,
+                    Suggestion::new(at, replacement),
+                ))
             } else {
                 None
             }
-        },
-        ParsedType::Paren(paren_expr) => if_chain! {
+        }
+        ParsedType::Paren(paren_expr) => {
             let paren_expr_range = paren_expr.node().text_range();
-            if let Some(father_node) = paren_expr.node().parent();
-
+            if let Some(father_node) = paren_expr.node().parent()
             // ensure that we don't lint inside let-in statements
             // we already lint such cases in previous match stmt
-            if KeyValue::cast(father_node.clone()).is_none();
+            && KeyValue::cast(father_node.clone()).is_none()
 
             // ensure that we don't lint inside let-bodies
             // if this primitive is a let-body, we have already linted it
-            if LetIn::cast(father_node).is_none();
+            && LetIn::cast(father_node).is_none()
 
-            if let Some(inner_node) = paren_expr.inner();
-            if let Some(parsed_inner) = ParsedType::cast(inner_node);
-            if matches!(
+            && let Some(inner_node) = paren_expr.inner()
+            && let Some(parsed_inner) = ParsedType::cast(inner_node)
+            && matches!(
                 parsed_inner,
                 ParsedType::List(_)
                 | ParsedType::Paren(_)
@@ -114,16 +117,19 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
                 | ParsedType::AttrSet(_)
                 | ParsedType::Select(_)
                 | ParsedType::Ident(_)
-            );
-            then {
+            ) {
                 let at = paren_expr_range;
                 let message = "Useless parentheses around primitive expression";
                 let replacement = parsed_inner.node().clone();
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement)))
+                Some(Diagnostic::suggest(
+                    at,
+                    message,
+                    Suggestion::new(at, replacement),
+                ))
             } else {
                 None
             }
-        },
+        }
         _ => None,
     }
 }
