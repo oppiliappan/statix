@@ -1,10 +1,9 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule};
+use crate::{Metadata, Report, Rule, session::SessionInfo};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Apply, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{Apply, TypedNode},
 };
 
 /// ## What it does
@@ -42,18 +41,19 @@ static ALLOWED_PATHS: &[&str; 2] = &["builtins.toPath", "toPath"];
 
 impl Rule for DeprecatedIsNull {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(apply) = Apply::cast(node.clone());
-            let lambda_path = apply.lambda()?.to_string();
-            if ALLOWED_PATHS.iter().any(|&p| p == lambda_path.as_str());
-            then {
-                let at = node.text_range();
-                let message = format!("`{}` is deprecated, see `:doc builtins.toPath` within the REPL for more", lambda_path);
-                Some(self.report().diagnostic(at, message))
-            } else {
-                None
-            }
+        if let NodeOrToken::Node(node) = node
+            && let Some(apply) = Apply::cast(node.clone())
+            && let lambda_path = apply.lambda()?.to_string()
+            && ALLOWED_PATHS.iter().any(|&p| p == lambda_path.as_str())
+        {
+            let at = node.text_range();
+            let message = format!(
+                "`{}` is deprecated, see `:doc builtins.toPath` within the REPL for more",
+                lambda_path
+            );
+            Some(self.report().diagnostic(at, message))
+        } else {
+            None
         }
     }
 }

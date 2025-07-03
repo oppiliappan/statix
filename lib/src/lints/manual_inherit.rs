@@ -1,10 +1,9 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Ident, KeyValue, TokenWrapper, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{Ident, KeyValue, TokenWrapper, TypedNode},
 };
 
 /// ## What it does
@@ -41,28 +40,28 @@ struct ManualInherit;
 
 impl Rule for ManualInherit {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(key_value_stmt) = KeyValue::cast(node.clone());
-            if let mut key_path = key_value_stmt.key()?.path();
-            if let Some(key_node) = key_path.next();
+        if let NodeOrToken::Node(node) = node
+            && let Some(key_value_stmt) = KeyValue::cast(node.clone())
+            && let mut key_path = key_value_stmt.key()?.path()
+            && let Some(key_node) = key_path.next()
             // ensure that path has exactly one component
-            if key_path.next().is_none();
-            if let Some(key) = Ident::cast(key_node);
+            && key_path.next().is_none()
+            && let Some(key) = Ident::cast(key_node)
 
-            if let Some(value_node) = key_value_stmt.value();
-            if let Some(value) = Ident::cast(value_node);
+            && let Some(value_node) = key_value_stmt.value()
+            && let Some(value) = Ident::cast(value_node)
 
-            if key.as_str() == value.as_str();
-
-            then {
-                let at = node.text_range();
-                let replacement = make::inherit_stmt(&[key]).node().clone();
-                let message = "This assignment is better written with `inherit`";
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
+            && key.as_str() == value.as_str()
+        {
+            let at = node.text_range();
+            let replacement = make::inherit_stmt(&[key]).node().clone();
+            let message = "This assignment is better written with `inherit`";
+            Some(
+                self.report()
+                    .suggest(at, message, Suggestion::new(at, replacement)),
+            )
+        } else {
+            None
         }
     }
 }

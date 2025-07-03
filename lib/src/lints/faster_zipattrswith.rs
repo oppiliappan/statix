@@ -1,14 +1,12 @@
 use crate::{
-    make,
+    Metadata, Report, Rule, Suggestion, make,
     session::{SessionInfo, Version},
-    Metadata, Report, Rule, Suggestion,
 };
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Select, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{Select, TypedNode},
 };
 
 /// ## What it does
@@ -41,32 +39,34 @@ struct FasterZipAttrsWith;
 impl Rule for FasterZipAttrsWith {
     fn validate(&self, node: &SyntaxElement, sess: &SessionInfo) -> Option<Report> {
         let lint_version = "2.6".parse::<Version>().unwrap();
-        if_chain! {
-            if sess.version() >= &lint_version;
-            if let NodeOrToken::Node(node) = node;
-            if let Some(select_expr) = Select::cast(node.clone());
-            if let Some(select_from) = select_expr.set();
-            if let Some(zip_attrs_with) = select_expr.index();
+        if sess.version() >= &lint_version
+            && let NodeOrToken::Node(node) = node
+            && let Some(select_expr) = Select::cast(node.clone())
+            && let Some(select_from) = select_expr.set()
+            && let Some(zip_attrs_with) = select_expr.index()
 
             // a heuristic to lint on nixpkgs.lib.zipAttrsWith
             // and lib.zipAttrsWith and its variants
-            if select_from.text() != "builtins";
-            if zip_attrs_with.text() == "zipAttrsWith";
-
-            then {
-                let at = node.text_range();
-                let replacement = {
-                    let builtins = make::ident("builtins");
-                    make::select(builtins.node(), &zip_attrs_with).node().clone()
-                };
-                let message = format!("Prefer `builtins.zipAttrsWith` over `{}.zipAttrsWith`", select_from);
-                Some(
-                    self.report()
-                        .suggest(at, message, Suggestion::new(at, replacement)),
-                )
-            } else {
-                None
-            }
+            && select_from.text() != "builtins"
+            && zip_attrs_with.text() == "zipAttrsWith"
+        {
+            let at = node.text_range();
+            let replacement = {
+                let builtins = make::ident("builtins");
+                make::select(builtins.node(), &zip_attrs_with)
+                    .node()
+                    .clone()
+            };
+            let message = format!(
+                "Prefer `builtins.zipAttrsWith` over `{}.zipAttrsWith`",
+                select_from
+            );
+            Some(
+                self.report()
+                    .suggest(at, message, Suggestion::new(at, replacement)),
+            )
+        } else {
+            None
         }
     }
 }

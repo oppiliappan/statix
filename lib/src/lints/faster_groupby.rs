@@ -1,14 +1,12 @@
 use crate::{
-    make,
+    Metadata, Report, Rule, Suggestion, make,
     session::{SessionInfo, Version},
-    Metadata, Report, Rule, Suggestion,
 };
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Select, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{Select, TypedNode},
 };
 
 /// ## What it does
@@ -41,32 +39,28 @@ struct FasterGroupBy;
 impl Rule for FasterGroupBy {
     fn validate(&self, node: &SyntaxElement, sess: &SessionInfo) -> Option<Report> {
         let lint_version = "2.5".parse::<Version>().unwrap();
-        if_chain! {
-            if sess.version() >=  &lint_version;
-            if let NodeOrToken::Node(node) = node;
-            if let Some(select_expr) = Select::cast(node.clone());
-            if let Some(select_from) = select_expr.set();
-            if let Some(group_by_attr) = select_expr.index();
-
+        if sess.version() >=  &lint_version
+            && let NodeOrToken::Node(node) = node
+            && let Some(select_expr) = Select::cast(node.clone())
+            && let Some(select_from) = select_expr.set()
+            && let Some(group_by_attr) = select_expr.index()
             // a heuristic to lint on nixpkgs.lib.groupBy
             // and lib.groupBy and its variants
-            if select_from.text() != "builtins";
-            if group_by_attr.text() == "groupBy";
-
-            then {
-                let at = node.text_range();
-                let replacement = {
-                    let builtins = make::ident("builtins");
-                    make::select(builtins.node(), &group_by_attr).node().clone()
-                };
-                let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", select_from);
-                Some(
-                    self.report()
-                        .suggest(at, message, Suggestion::new(at, replacement)),
-                )
-            } else {
-                None
-            }
+            && select_from.text() != "builtins"
+            && group_by_attr.text() == "groupBy"
+        {
+            let at = node.text_range();
+            let replacement = {
+                let builtins = make::ident("builtins");
+                make::select(builtins.node(), &group_by_attr).node().clone()
+            };
+            let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", select_from);
+            Some(
+                self.report()
+                    .suggest(at, message, Suggestion::new(at, replacement)),
+            )
+        } else {
+            None
         }
     }
 }
