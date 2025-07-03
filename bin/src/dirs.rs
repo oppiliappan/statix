@@ -7,8 +7,8 @@ use std::{
 use crate::dirs;
 
 use ignore::{
-    gitignore::{Gitignore, GitignoreBuilder},
     Error as IgnoreError, Match,
+    gitignore::{Gitignore, GitignoreBuilder},
 };
 
 #[derive(Debug)]

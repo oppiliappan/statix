@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use lib::{Lint, LINTS};
+use lib::{LINTS, Lint};
 use rnix::SyntaxKind;
 
 #[allow(clippy::borrowed_box)]

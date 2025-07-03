@@ -1,11 +1,11 @@
 use std::borrow::Cow;
 
-use lib::{session::SessionInfo, Report};
-use rnix::{parser::ParseError as RnixParseErr, WalkEvent};
+use lib::{Report, session::SessionInfo};
+use rnix::{WalkEvent, parser::ParseError as RnixParseErr};
 
 use crate::{
-    fix::{FixResult, Fixed},
     LintMap,
+    fix::{FixResult, Fixed},
 };
 
 fn collect_fixes(
