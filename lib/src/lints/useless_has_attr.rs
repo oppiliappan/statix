@@ -1,10 +1,11 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{BinOp, BinOpKind, IfElse, Select, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    ast::{HasAttr, IfElse, Select},
 };
 
 /// ## What it does
@@ -39,42 +40,41 @@ impl Rule for UselessHasAttr {
             if let Some(if_else_expr) = IfElse::cast(node.clone());
             if let Some(condition_expr) = if_else_expr.condition();
             if let Some(default_expr) = if_else_expr.else_body();
-            if let Some(cond_bin_expr) = BinOp::cast(condition_expr);
-            if let Some(BinOpKind::IsSet) = cond_bin_expr.operator();
+            if let Some(cond_bin_expr) = HasAttr::cast(condition_expr.syntax().clone());
 
             // set ? attr_path
             // ^^^--------------- lhs
             //      ^^^^^^^^^^--- rhs
-            if let Some(set) = cond_bin_expr.lhs();
-            if let Some(attr_path) = cond_bin_expr.rhs();
+            if let Some(set) = cond_bin_expr.expr();
+            if let Some(attr_path) = cond_bin_expr.attrpath();
 
             // check if body of the `if` expression is of the form `set.attr_path`
             if let Some(body_expr) = if_else_expr.body();
-            if let Some(body_select_expr) = Select::cast(body_expr);
-            let expected_body = make::select(&set, &attr_path);
+            if let Some(body_select_expr) = Select::cast(body_expr.syntax().clone());
+            let expected_body = make::select(&set.syntax(), &attr_path.syntax());
 
             // text comparison will do for now
-            if body_select_expr.node().text() == expected_body.node().text();
+            if body_select_expr.syntax().text() == expected_body.syntax().text();
             then {
                 let at = node.text_range();
                 // `or` is tightly binding, we need to parenthesize non-literal exprs
-                let default_with_parens = match default_expr.kind() {
-                    SyntaxKind::NODE_LIST
-                    | SyntaxKind::NODE_PAREN
-                    | SyntaxKind::NODE_STRING
-                    | SyntaxKind::NODE_ATTR_SET
-                    | SyntaxKind::NODE_IDENT
-                    | SyntaxKind::NODE_SELECT => default_expr,
-                    _ => make::parenthesize(&default_expr).node().clone(),
+                let default_with_parens = match default_expr {
+                    rnix::ast::Expr::List(_)
+                    | rnix::ast::Expr::Paren(_)
+                    | rnix::ast::Expr::Str(_)
+                    | rnix::ast::Expr::AttrSet(_)
+                    | rnix::ast::Expr::Ident(_)
+                    | rnix::ast::Expr::Select(_) => default_expr.syntax().clone(),
+                    _ => make::parenthesize(default_expr.syntax()).syntax().clone(),
                 };
-                let replacement = make::or_default(&set, &attr_path, &default_with_parens).node().clone();
+                let replacement = make::or_default(&set.syntax(), &attr_path.syntax(), &default_with_parens);
                 let message = format!(
                     "Consider using `{}` instead of this `if` expression",
                     replacement
                 );
                 Some(
                     self.report()
-                        .suggest(at, message, Suggestion::new(at, replacement)),
+                        .suggest(at, message, Suggestion::new(at, replacement.syntax().clone())),
                 )
             } else {
                 None

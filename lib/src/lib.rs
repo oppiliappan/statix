@@ -1,19 +1,20 @@
 #![recursion_limit = "1024"]
 mod lints;
 mod make;
+mod parse;
 pub mod session;
 mod utils;
 
 pub use lints::LINTS;
 use session::SessionInfo;
 
-use rnix::{parser::ParseError, SyntaxElement, SyntaxKind, TextRange};
+use rnix::{SyntaxElement, SyntaxKind, TextRange, parser::ParseError};
 use std::{convert::Into, default::Default};
 
 #[cfg(feature = "json-out")]
 use serde::{
-    ser::{SerializeStruct, Serializer},
     Serialize,
+    ser::{SerializeStruct, Serializer},
 };
 
 #[derive(Debug)]

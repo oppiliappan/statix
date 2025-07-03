@@ -1,10 +1,11 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{BinOp, BinOpKind, Paren, TypedNode, UnaryOp, UnaryOpKind, Wrapper},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    ast::{BinOp, BinOpKind, Paren, UnaryOp, UnaryOpKind},
 };
 
 /// ## What it does
@@ -36,11 +37,11 @@ impl Rule for BoolSimplification {
         if_chain! {
             if let NodeOrToken::Node(node) = node;
             if let Some(unary_expr) = UnaryOp::cast(node.clone());
-            if unary_expr.operator() == UnaryOpKind::Invert;
-            if let Some(value_expr) = unary_expr.value();
-            if let Some(paren_expr) = Paren::cast(value_expr);
-            if let Some(inner_expr) = paren_expr.inner();
-            if let Some(bin_expr) = BinOp::cast(inner_expr);
+            if unary_expr.operator().is_some_and(|op| op == UnaryOpKind::Invert);
+            if let Some(value_expr) = unary_expr.expr();
+            if let Some(paren_expr) = Paren::cast(value_expr.syntax().clone());
+            if let Some(inner_expr) = paren_expr.expr();
+            if let Some(bin_expr) = BinOp::cast(inner_expr.syntax().clone());
             if let Some(BinOpKind::Equal) = bin_expr.operator();
             then {
                 let at = node.text_range();
@@ -48,10 +49,10 @@ impl Rule for BoolSimplification {
 
                 let lhs = bin_expr.lhs()?;
                 let rhs = bin_expr.rhs()?;
-                let replacement = make::binary(&lhs, "!=", &rhs).node().clone();
+                let replacement = make::binary(&lhs.syntax(), "!=", &rhs.syntax());
                 Some(
                     self.report()
-                        .suggest(at, message, Suggestion::new(at, replacement)),
+                        .suggest(at, message, Suggestion::new(at, replacement.syntax().clone())),
                 )
             } else {
                 None
