@@ -5,10 +5,10 @@ use std::{
     str::FromStr,
 };
 
-use crate::{dirs, err::ConfigErr, utils, LintMap};
+use crate::{LintMap, dirs, err::ConfigErr, utils};
 
 use clap::Parser;
-use lib::{session::Version, LINTS};
+use lib::{LINTS, session::Version};
 use serde::{Deserialize, Serialize};
 use vfs::ReadOnlyVfs;
 

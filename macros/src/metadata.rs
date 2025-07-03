@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
 use syn::{
+    Expr, ExprArray, Ident, Lit, Path, Token,
     parse::{Parse, ParseStream, Result},
     punctuated::Punctuated,
-    Expr, ExprArray, Ident, Lit, Path, Token,
 };
 
 struct KeyValue {
