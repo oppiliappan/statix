@@ -1,7 +1,7 @@
 #![recursion_limit = "1024"]
 mod lints;
 mod make;
-mod parse;
+pub mod parse;
 pub mod session;
 mod utils;
 
