@@ -84,8 +84,7 @@ impl Rule for BoolComparison {
                 }
             };
             let message = format!(
-                "Comparing `{}` with boolean literal `{}`",
-                non_bool_side, bool_side
+                "Comparing `{non_bool_side}` with boolean literal `{bool_side}`"
             );
             Some(
                 self.report()

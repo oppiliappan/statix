@@ -54,7 +54,7 @@ impl Rule for FasterGroupBy {
                 let builtins = make::ident("builtins");
                 make::select(builtins.node(), &group_by_attr).node().clone()
             };
-            let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", select_from);
+            let message = format!("Prefer `builtins.groupBy` over `{select_from}.groupBy`");
             Some(
                 self.report()
                     .suggest(at, message, Suggestion::new(at, replacement)),

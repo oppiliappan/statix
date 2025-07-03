@@ -69,8 +69,7 @@ impl Rule for UselessHasAttr {
                 .node()
                 .clone();
             let message = format!(
-                "Consider using `{}` instead of this `if` expression",
-                replacement
+                "Consider using `{replacement}` instead of this `if` expression"
             );
             Some(
                 self.report()

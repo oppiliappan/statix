@@ -44,12 +44,11 @@ impl Rule for DeprecatedIsNull {
         if let NodeOrToken::Node(node) = node
             && let Some(apply) = Apply::cast(node.clone())
             && let lambda_path = apply.lambda()?.to_string()
-            && ALLOWED_PATHS.iter().any(|&p| p == lambda_path.as_str())
+            && ALLOWED_PATHS.contains(&lambda_path.as_str())
         {
             let at = node.text_range();
             let message = format!(
-                "`{}` is deprecated, see `:doc builtins.toPath` within the REPL for more",
-                lambda_path
+                "`{lambda_path}` is deprecated, see `:doc builtins.toPath` within the REPL for more"
             );
             Some(self.report().diagnostic(at, message))
         } else {

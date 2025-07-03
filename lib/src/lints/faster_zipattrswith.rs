@@ -58,8 +58,7 @@ impl Rule for FasterZipAttrsWith {
                     .clone()
             };
             let message = format!(
-                "Prefer `builtins.zipAttrsWith` over `{}.zipAttrsWith`",
-                select_from
+                "Prefer `builtins.zipAttrsWith` over `{select_from}.zipAttrsWith`"
             );
             Some(
                 self.report()
