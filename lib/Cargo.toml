@@ -8,7 +8,6 @@ license = "MIT"
 
 [dependencies]
 rnix = "0.10.2"
-if_chain = "1.0"
 macros = { path = "../macros" }
 lazy_static = "1.0"
 rowan = "0.12.5"
