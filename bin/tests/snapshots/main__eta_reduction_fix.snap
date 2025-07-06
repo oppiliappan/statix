@@ -1,0 +1,16 @@
+---
+source: bin/tests/main.rs
+expression: "& stdout"
+---
+--- tests/data/eta_reduction.nix
++++ tests/data/eta_reduction.nix [fixed]
+@@ -7,9 +7,9 @@
+     val = 2;
+   };
+ in
+ [
+-  (map (x: double x) xs)
++  (map double xs)
+ 
+   # don't lint on non-free exprs
+   (map (f: f.double f.val) [ f ])

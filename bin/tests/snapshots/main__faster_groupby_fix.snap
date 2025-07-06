@@ -1,0 +1,19 @@
+---
+source: bin/tests/main.rs
+expression: "& stdout"
+---
+--- tests/data/faster_groupby.nix
++++ tests/data/faster_groupby.nix [fixed]
+@@ -1,10 +1,10 @@
+ {
+   # trivial case
+-  _ = lib.groupBy (x: if x > 2 then "big" else "small") [ 1 2 3 4 5 ];
++  _ = builtins.groupBy (x: if x > 2 then "big" else "small") [ 1 2 3 4 5 ];
+ 
+   # offer lint heuristically on this too
+-  _ = nixpkgs.lib.groupBy (x: if x > 2 then "big" else "small") [ 1 2 3 4 5 ];
++  _ = builtins.groupBy (x: if x > 2 then "big" else "small") [ 1 2 3 4 5 ];
+ 
+   # do not lint on `builtins`
+   _ = builtins.groupBy (x: x.name) [
+     { name = "foo"; idx = 1; }

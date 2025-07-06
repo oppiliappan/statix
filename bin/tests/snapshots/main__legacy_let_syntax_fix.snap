@@ -1,0 +1,14 @@
+---
+source: bin/tests/main.rs
+expression: "& stdout"
+---
+--- tests/data/legacy_let_syntax.nix
++++ tests/data/legacy_let_syntax.nix [fixed]
+@@ -1,5 +1,5 @@
+-let {
++rec {
+   body = x + y;
+   x = "hello,";
+   y = " world!";
+-}
++}.body
