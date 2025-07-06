@@ -1,7 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W14] Warning: Found empty inherit statement
    ╭─[data/empty_inherit.nix:2:3]
@@ -10,4 +9,3 @@ expression: "&out"
    ·   ────┬───  
    ·       ╰───── Remove this empty inherit statement
 ───╯
-

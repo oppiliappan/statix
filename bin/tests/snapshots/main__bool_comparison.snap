@@ -1,7 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W01] Warning: Unnecessary comparison with boolean
    ╭─[data/bool_comparison.nix:3:4]
@@ -59,4 +58,3 @@ expression: "&out"
     ·    ─────┬────  
     ·         ╰────── Comparing h with boolean literal false
 ────╯
-

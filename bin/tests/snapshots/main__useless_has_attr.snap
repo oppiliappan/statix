@@ -1,7 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W19] Warning: This `if` expression can be simplified with `or`
    ╭─[data/useless_has_attr.nix:3:4]
@@ -38,4 +37,3 @@ expression: "&out"
    ·    ─────────────┬────────────  
    ·                 ╰────────────── Consider using x.a or b.c instead of this if expression
 ───╯
-

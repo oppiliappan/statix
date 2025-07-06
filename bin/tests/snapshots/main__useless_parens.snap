@@ -1,7 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W08] Warning: These parentheses can be omitted
     ╭─[data/useless_parens.nix:16:3]
@@ -45,4 +44,3 @@ expression: "&out"
     ·       ────────┬───────  
     ·               ╰───────── Useless parentheses around value in binding
 ────╯
-

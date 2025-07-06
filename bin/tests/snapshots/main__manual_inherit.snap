@@ -1,7 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W03] Warning: Assignment instead of inherit
    ╭─[data/manual_inherit.nix:7:3]
@@ -10,4 +9,3 @@ expression: "&out"
    ·   ───┬──  
    ·      ╰──── This assignment is better written with inherit
 ───╯
-

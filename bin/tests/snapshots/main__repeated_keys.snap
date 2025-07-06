@@ -1,7 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W20] Warning: Avoid repeated keys in attribute sets
     ╭─[data/repeated_keys.nix:16:5]
@@ -29,4 +28,3 @@ expression: "&out"
     ·     ──────┬─────  
     ·           ╰─────── ... and here (2 occurrences omitted). Try foo = { baz.bar1=...; baz.bar2=...; baz.bar3=...; } instead.
 ────╯
-

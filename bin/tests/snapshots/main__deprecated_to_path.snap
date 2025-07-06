@@ -1,7 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
-
+expression: "& out"
 ---
 [W17] Warning: Found usage of deprecated builtin toPath
    ╭─[data/deprecated_to_path.nix:2:4]
@@ -31,4 +30,3 @@ expression: "&out"
    ·    ──────────────┬─────────────  
    ·                  ╰─────────────── builtins.toPath is deprecated, see :doc builtins.toPath within the REPL for more
 ───╯
-
