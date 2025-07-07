@@ -1,10 +1,11 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Ident, KeyValue, TokenWrapper, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    ast::{AttrpathValue, Ident},
 };
 
 /// ## What it does
@@ -35,7 +36,7 @@ use rnix::{
     name = "manual_inherit",
     note = "Assignment instead of inherit",
     code = 3,
-    match_with = SyntaxKind::NODE_KEY_VALUE
+    match_with = SyntaxKind::NODE_ATTRPATH_VALUE
 )]
 struct ManualInherit;
 
@@ -43,23 +44,24 @@ impl Rule for ManualInherit {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if_chain! {
             if let NodeOrToken::Node(node) = node;
-            if let Some(key_value_stmt) = KeyValue::cast(node.clone());
-            if let mut key_path = key_value_stmt.key()?.path();
-            if let Some(key_node) = key_path.next();
+            if let Some(key_value_stmt) = AttrpathValue::cast(node.clone());
+            if let key_path = key_value_stmt.attrpath()?;
+            let mut key_path_iter = key_path.attrs();
+            if let Some(key_node) = key_path_iter.next();
             // ensure that path has exactly one component
-            if key_path.next().is_none();
-            if let Some(key) = Ident::cast(key_node);
+            if key_path_iter.next().is_none();
+            if let Some(key) = Ident::cast(key_node.syntax().clone());
 
             if let Some(value_node) = key_value_stmt.value();
-            if let Some(value) = Ident::cast(value_node);
+            if let Some(value) = Ident::cast(value_node.syntax().clone());
 
-            if key.as_str() == value.as_str();
+            if key.to_string() == value.to_string();
 
             then {
                 let at = node.text_range();
-                let replacement = make::inherit_stmt(&[key]).node().clone();
+                let replacement = make::inherit_stmt(&[key]);
                 let message = "This assignment is better written with `inherit`";
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
             } else {
                 None
             }

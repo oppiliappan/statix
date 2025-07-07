@@ -1,22 +1,21 @@
 use std::borrow::Cow;
 
-use lib::{session::SessionInfo, Report};
-use rnix::{parser::ParseError as RnixParseErr, WalkEvent};
+use lib::{Report, session::SessionInfo};
+use rnix::{WalkEvent, parser::ParseError as RnixParseErr};
 
 use crate::{
-    fix::{FixResult, Fixed},
     LintMap,
+    fix::{FixResult, Fixed},
 };
 
 fn collect_fixes(
     source: &str,
     lints: &LintMap,
     sess: &SessionInfo,
-) -> Result<Vec<Report>, RnixParseErr> {
-    let parsed = rnix::parse(source).as_result()?;
+) -> Result<Vec<Report>, Vec<RnixParseErr>> {
+    let parsed = lib::parse::ParseResult::parse(source).to_result()?;
 
     Ok(parsed
-        .node()
         .preorder_with_tokens()
         .filter_map(|event| match event {
             WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
@@ -93,7 +92,7 @@ pub fn all_with<'a>(
     sess: &'a SessionInfo,
 ) -> Option<FixResult<'a>> {
     let src = Cow::from(src);
-    let _ = rnix::parse(&src).as_result().ok()?;
+    let _ = lib::parse::ParseResult::parse(&src).to_result().ok()?;
     let initial = FixResult::empty(src, lints, sess);
     initial.into_iter().last()
 }

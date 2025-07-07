@@ -1,10 +1,11 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
+use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Apply, Ident, Lambda, TokenWrapper, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
+    ast::{Apply, Ident, IdentParam, Lambda, Param},
 };
 
 /// ## What it does
@@ -47,22 +48,22 @@ impl Rule for EtaReduction {
             if let NodeOrToken::Node(node) = node;
             if let Some(lambda_expr) = Lambda::cast(node.clone());
 
-            if let Some(arg_node) = lambda_expr.arg();
-            if let Some(arg) = Ident::cast(arg_node);
+            if let Some(arg_node) = lambda_expr.param();
+            if let Param::IdentParam(arg) = arg_node;
 
             if let Some(body_node) = lambda_expr.body();
-            if let Some(body) = Apply::cast(body_node);
+            if let Some(body) = Apply::cast(body_node.syntax().clone());
 
-            if let Some(value_node) = body.value();
-            if let Some(value) = Ident::cast(value_node);
+            if let Some(value_node) = body.argument();
+            if let Some(value) = Ident::cast(value_node.syntax().clone());
 
-            if arg.as_str() == value.as_str();
+            if arg.to_string() == value.to_string();
 
             if let Some(lambda_node) = body.lambda();
-            if !mentions_ident(&arg, &lambda_node);
-	    // lambda body should be no more than a single Ident to
-	    // retain code readability
-	    if let Some(_) = Ident::cast(lambda_node);
+            if !mentions_ident(&arg, &lambda_node.syntax());
+        // lambda body should be no more than a single Ident to
+        // retain code readability
+        if let Some(_) = Ident::cast(lambda_node.syntax().clone());
 
             then {
                 let at = node.text_range();
@@ -70,9 +71,9 @@ impl Rule for EtaReduction {
                 let message =
                     format!(
                         "Found eta-reduction: `{}`",
-                        replacement.text()
+                        replacement.syntax().text()
                     );
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
             } else {
                 None
             }
@@ -80,9 +81,9 @@ impl Rule for EtaReduction {
     }
 }
 
-fn mentions_ident(ident: &Ident, node: &SyntaxNode) -> bool {
+fn mentions_ident(ident: &IdentParam, node: &SyntaxNode) -> bool {
     if let Some(node_ident) = Ident::cast(node.clone()) {
-        node_ident.as_str() == ident.as_str()
+        node_ident.to_string() == ident.to_string()
     } else {
         node.children().any(|child| mentions_ident(ident, &child))
     }

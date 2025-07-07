@@ -20,7 +20,7 @@ clap = "3.0.0-beta.4"
 ignore = "0.4.18"
 lib = { path = "../lib" }
 rayon = "1.5.1"
-rnix = "0.10.2"
+rnix = "0.12.0"
 similar = "2.1.0"
 thiserror = "1.0.30"
 toml = "0.5.8"
