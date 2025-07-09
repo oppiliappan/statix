@@ -106,10 +106,9 @@ enum NixBoolean {
 
 // not entirely accurate, underhanded nix programmers might write `true = false`
 fn boolean_ident(node: &SyntaxNode) -> Option<NixBoolean> {
-    Ident::cast(node.clone())
-        .and_then(|ident_expr| match ident_expr.as_str() {
-            "true" => Some(NixBoolean::True),
-            "false" => Some(NixBoolean::False),
-            _ => None,
-        })
+    Ident::cast(node.clone()).and_then(|ident_expr| match ident_expr.as_str() {
+        "true" => Some(NixBoolean::True),
+        "false" => Some(NixBoolean::False),
+        _ => None,
+    })
 }
