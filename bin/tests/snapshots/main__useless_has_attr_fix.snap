@@ -1,0 +1,22 @@
+---
+source: bin/tests/main.rs
+expression: "& stdout"
+---
+--- tests/data/useless_has_attr.nix
++++ tests/data/useless_has_attr.nix [fixed]
+@@ -1,10 +1,10 @@
+ [
+   # trivial
+-  (if x ? a then x.a else default)
+-  (if x.a ? b then x.a.b else default)
+-  (if x ? a.b then x.a.b else default)
++  (x.a or default)
++  (x.a.b or default)
++  (x.a.b or default)
+ 
+   # complex body
+-  (if x ? a then x.a else if b then c else d)
+-  (if x ? a then x.a else b.c)
++  (x.a or (if b then c else d))
++  (x.a or b.c)
+ ]

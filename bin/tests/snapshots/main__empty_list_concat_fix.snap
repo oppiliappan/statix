@@ -1,0 +1,27 @@
+---
+source: bin/tests/main.rs
+expression: "& stdout"
+---
+--- tests/data/empty_list_concat.nix
++++ tests/data/empty_list_concat.nix [fixed]
+@@ -2,15 +2,15 @@
+   # no match
+   ([1 2] ++ [3 4])
+ 
+   # unnecessary left
+-  ([] ++ [1 2 3])
++  [1 2 3]
+ 
+   # unnecessary right
+-  ([1 2 3] ++ [])
++  [1 2 3]
+ 
+   # collapses to a single array
+-  ([] ++ [])
++  []
+ 
+   # multiple empties
+-  ([] ++ [] ++ [])
++  []
+ ]
+\ No newline at end of file

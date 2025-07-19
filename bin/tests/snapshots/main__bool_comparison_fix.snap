@@ -1,0 +1,28 @@
+---
+source: bin/tests/main.rs
+expression: "& stdout"
+---
+--- tests/data/bool_comparison.nix
++++ tests/data/bool_comparison.nix [fixed]
+@@ -1,13 +1,13 @@
+ [
+   # trivial
+-  (a == true)
+-  (b == true)
+-  (true == c)
+-  (true == d)
++  a
++  b
++  c
++  d
+ 
+   # not equals
+-  (e != true)
+-  (f != false)
+-  (true != g)
+-  (false != h)
++  (!e)
++  f
++  (!g)
++  h
+ ]
