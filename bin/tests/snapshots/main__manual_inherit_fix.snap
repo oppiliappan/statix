@@ -1,0 +1,17 @@
+---
+source: bin/tests/main.rs
+expression: "& stdout"
+---
+--- tests/data/manual_inherit.nix
++++ tests/data/manual_inherit.nix [fixed]
+@@ -3,9 +3,9 @@
+   y = "y";
+ in
+ {
+   # trivial
+-  a = a;
++  inherit a;
+ 
+   # don't lint
+   x.y = y;
+ }

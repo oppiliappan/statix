@@ -1,0 +1,14 @@
+---
+source: bin/tests/main.rs
+expression: "& stdout"
+---
+--- tests/data/bool_simplification.nix
++++ tests/data/bool_simplification.nix [fixed]
+@@ -1,6 +1,6 @@
+ let
+-  _ = !(a == b);
++  _ = a != b;
+   # do not match here
+   _ = !(a != b);
+   _ = a != b;
+ in
