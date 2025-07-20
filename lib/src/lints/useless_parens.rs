@@ -1,10 +1,10 @@
-use crate::{session::SessionInfo, Diagnostic, Metadata, Report, Rule, Suggestion};
+use crate::{Diagnostic, Metadata, Report, Rule, Suggestion, session::SessionInfo};
 use rowan::ast::AstNode;
 
 use macros::lint;
 use rnix::{
-    ast::{AttrpathValue, Entry, Expr, LetIn, Paren},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
+    ast::{AttrpathValue, Entry, Expr, LetIn, Paren},
 };
 
 /// ## What it does
@@ -71,7 +71,7 @@ fn do_thing(node: &SyntaxNode) -> Option<Diagnostic> {
             Some(Diagnostic::suggest(
                 at,
                 message,
-                Suggestion::new(at, replacement.syntax().clone()),
+                Suggestion::new(at, Some(replacement.syntax().clone())),
             ))
         }
         (_, Some(Expr::LetIn(let_in))) => {
@@ -85,7 +85,7 @@ fn do_thing(node: &SyntaxNode) -> Option<Diagnostic> {
             Some(Diagnostic::suggest(
                 at,
                 message,
-                Suggestion::new(at, replacement.syntax().clone()),
+                Suggestion::new(at, Some(replacement.syntax().clone())),
             ))
         }
         (_, Some(Expr::Paren(paren_expr))) => {
@@ -120,7 +120,7 @@ fn do_thing(node: &SyntaxNode) -> Option<Diagnostic> {
             Some(Diagnostic::suggest(
                 at,
                 message,
-                Suggestion::new(at, replacement.syntax().clone()),
+                Suggestion::new(at, Some(replacement.syntax().clone())),
             ))
         }
         _ => None,

@@ -1,10 +1,10 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use rowan::ast::AstNode;
 
 use macros::lint;
 use rnix::{
-    ast::{Expr, HasAttr, IfElse, Select},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    ast::{Expr, HasAttr, IfElse, Select},
 };
 
 /// ## What it does
@@ -71,7 +71,7 @@ impl Rule for UselessHasAttr {
             Some(self.report().suggest(
                 at,
                 message,
-                Suggestion::new(at, replacement.syntax().clone()),
+                Suggestion::new(at, Some(replacement.syntax().clone())),
             ))
         } else {
             None

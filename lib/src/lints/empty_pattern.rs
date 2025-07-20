@@ -1,9 +1,9 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 
 use macros::lint;
 use rnix::{
-    ast::{AttrSet, HasEntry, Lambda, Pattern},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
+    ast::{AttrSet, HasEntry, Lambda, Pattern},
 };
 use rowan::ast::AstNode;
 
@@ -59,7 +59,7 @@ impl Rule for EmptyPattern {
             let replacement = make::ident("_").syntax().clone();
             Some(
                 self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
+                    .suggest(at, message, Suggestion::new(at, Some(replacement))),
             )
         } else {
             None

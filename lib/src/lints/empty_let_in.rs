@@ -1,9 +1,9 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
 use macros::lint;
 use rnix::{
-    ast::{HasEntry, LetIn},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    ast::{HasEntry, LetIn},
 };
 use rowan::ast::AstNode;
 
@@ -57,7 +57,7 @@ impl Rule for EmptyLetIn {
                 self.report().suggest(
                     at,
                     message,
-                    Suggestion::new(at, replacement.syntax().clone()),
+                    Suggestion::new(at, Some(replacement.syntax().clone())),
                 )
             })
         } else {

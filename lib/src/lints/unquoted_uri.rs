@@ -1,4 +1,4 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use rowan::ast::AstNode;
 
 use macros::lint;
@@ -55,7 +55,7 @@ impl Rule for UnquotedUri {
             Some(self.report().suggest(
                 at,
                 message,
-                Suggestion::new(at, replacement.syntax().clone()),
+                Suggestion::new(at, Some(replacement.syntax().clone())),
             ))
         } else {
             None

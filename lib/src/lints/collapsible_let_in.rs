@@ -1,8 +1,8 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
 use macros::lint;
-use rnix::{ast::LetIn, NodeOrToken, SyntaxElement, SyntaxKind, TextRange};
-use rowan::{ast::AstNode, Direction};
+use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, TextRange, ast::LetIn};
+use rowan::{Direction, ast::AstNode};
 
 /// ## What it does
 /// Checks for `let-in` expressions whose body is another `let-in`
@@ -68,7 +68,6 @@ impl Rule for CollapsibleLetIn {
                     .end();
                 TextRange::new(start, end)
             };
-            let replacement = make::empty();
 
             Some(
                 self.report()
@@ -76,7 +75,7 @@ impl Rule for CollapsibleLetIn {
                     .suggest(
                         second_annotation,
                         second_message,
-                        Suggestion::new(replacement_at, replacement.syntax().clone()),
+                        Suggestion::new(replacement_at, None::<SyntaxElement>),
                     ),
             )
         } else {

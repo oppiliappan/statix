@@ -1,9 +1,9 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 
 use macros::lint;
 use rnix::{
-    ast::{BinOp, BinOpKind, Expr, Ident},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
+    ast::{BinOp, BinOpKind, Expr, Ident},
 };
 use rowan::ast::AstNode;
 
@@ -87,7 +87,7 @@ impl Rule for BoolComparison {
             Some(self.report().suggest(
                 at,
                 message,
-                Suggestion::new(at, replacement.syntax().clone()),
+                Suggestion::new(at, Some(replacement.syntax().clone())),
             ))
         } else {
             None

@@ -1,7 +1,7 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
 use macros::lint;
-use rnix::{ast::Pattern, NodeOrToken, SyntaxElement, SyntaxKind};
+use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Pattern};
 use rowan::ast::AstNode;
 
 /// ## What it does
@@ -50,7 +50,7 @@ impl Rule for RedundantPatternBind {
             let replacement = ident.syntax().clone();
             Some(
                 self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
+                    .suggest(at, message, Suggestion::new(at, Some(replacement))),
             )
         } else {
             None

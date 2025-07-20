@@ -8,13 +8,13 @@ mod utils;
 pub use lints::LINTS;
 use session::SessionInfo;
 
-use rnix::{parser::ParseError, SyntaxElement, SyntaxKind, TextRange};
+use rnix::{SyntaxElement, SyntaxKind, TextRange, parser::ParseError};
 use std::{convert::Into, default::Default};
 
 #[cfg(feature = "json-out")]
 use serde::{
-    ser::{SerializeStruct, Serializer},
     Serialize,
+    ser::{SerializeStruct, Serializer},
 };
 
 #[derive(Debug, Default)]
@@ -185,22 +185,28 @@ impl Serialize for Diagnostic {
 #[derive(Debug)]
 pub struct Suggestion {
     pub at: TextRange,
-    pub fix: SyntaxElement,
+    /// fixes are optional, the `None` value means that the fix is to replace the [`TextRange`]
+    /// `at` with an empty `SyntaxElement`, which is effectively the same as just deleting that
+    /// range of the code
+    pub fix: Option<SyntaxElement>,
 }
 
 impl Suggestion {
     /// Construct a suggestion.
-    pub fn new<E: Into<SyntaxElement>>(at: TextRange, fix: E) -> Self {
+    pub fn new<E: Into<SyntaxElement>>(at: TextRange, fix: Option<E>) -> Self {
         Self {
             at,
-            fix: fix.into(),
+            fix: fix.map(|e| e.into()),
         }
     }
     /// Apply a suggestion to a source file
     pub fn apply(&self, src: &mut String) {
         let start = usize::from(self.at.start());
         let end = usize::from(self.at.end());
-        src.replace_range(start..end, &self.fix.to_string());
+        src.replace_range(
+            start..end,
+            &self.fix.as_ref().map(|f| f.to_string()).unwrap_or_default(),
+        )
     }
 }
 

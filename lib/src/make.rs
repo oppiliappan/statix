@@ -75,21 +75,14 @@ pub fn attrset(
     recursive: bool,
 ) -> ast::AttrSet {
     let rec = recursive.then_some("rec ").unwrap_or_default();
-    let inherits = inherits
-        .into_iter()
-        .map(|inherit| format!("  {inherit}"))
-        .collect::<Vec<_>>()
-        .join("\n");
-    let entries = entries
-        .into_iter()
-        .map(|inherit| format!("  {inherit}"))
-        .collect::<Vec<_>>()
-        .join("\n");
+    let inherits = inherits.into_iter().map(|inherit| format!("  {inherit}"));
+    let entries = entries.into_iter().map(|inherit| format!("  {inherit}"));
+
+    let inherits_and_entries = inherits.chain(entries).collect::<Vec<_>>().join("\n");
 
     ast_from_text(format!(
         "{rec}{{
-{inherits}
-{entries}
+{inherits_and_entries}
 }}"
     ))
 }
@@ -100,10 +93,6 @@ pub fn select(set: &SyntaxNode, index: &SyntaxNode) -> ast::Select {
 
 pub fn ident(text: impl AsRef<str>) -> ast::Ident {
     ast_from_text(text)
-}
-
-pub fn empty() -> ast::Root {
-    ast::Root::parse("{}").ok().unwrap()
 }
 
 // TODO: make `op` strongly typed here

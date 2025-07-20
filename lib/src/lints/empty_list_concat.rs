@@ -1,9 +1,9 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
 use macros::lint;
 use rnix::{
-    ast::{BinOp, BinOpKind, List},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
+    ast::{BinOp, BinOpKind, List},
 };
 use rowan::ast::AstNode;
 
@@ -43,15 +43,17 @@ impl Rule for EmptyListConcat {
             let at = node.text_range();
             let message = "Concatenation with the empty list, `[]`, is a no-op";
             if is_empty_array(lhs.syntax()) {
-                Some(
-                    self.report()
-                        .suggest(at, message, Suggestion::new(at, rhs.syntax().clone())),
-                )
+                Some(self.report().suggest(
+                    at,
+                    message,
+                    Suggestion::new(at, Some(rhs.syntax().clone())),
+                ))
             } else if is_empty_array(rhs.syntax()) {
-                Some(
-                    self.report()
-                        .suggest(at, message, Suggestion::new(at, lhs.syntax().clone())),
-                )
+                Some(self.report().suggest(
+                    at,
+                    message,
+                    Suggestion::new(at, Some(lhs.syntax().clone())),
+                ))
             } else {
                 None
             }

@@ -1,9 +1,9 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
 use macros::lint;
 use rnix::{
-    ast::{Apply, Ident, IdentParam, Lambda, Param},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
+    ast::{Apply, Ident, IdentParam, Lambda, Param},
 };
 use rowan::ast::AstNode;
 
@@ -64,7 +64,7 @@ impl Rule for EtaReduction {
             Some(self.report().suggest(
                 at,
                 message,
-                Suggestion::new(at, replacement.syntax().clone()),
+                Suggestion::new(at, Some(replacement.syntax().clone())),
             ))
         } else {
             None

@@ -1,9 +1,9 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 
 use macros::lint;
 use rnix::{
-    ast::{AttrpathValue, Ident},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    ast::{AttrpathValue, Ident},
 };
 use rowan::ast::AstNode;
 
@@ -60,7 +60,7 @@ impl Rule for ManualInherit {
             Some(self.report().suggest(
                 at,
                 message,
-                Suggestion::new(at, replacement.syntax().clone()),
+                Suggestion::new(at, Some(replacement.syntax().clone())),
             ))
         } else {
             None
