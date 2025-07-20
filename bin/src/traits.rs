@@ -212,7 +212,7 @@ mod json {
                         message: &d.message,
                         suggestion: d.suggestion.as_ref().map(|s| JsonSuggestion {
                             at: JsonSpan::from_textrange(s.at, src),
-                            fix: s.fix.to_string(),
+                            fix: s.fix.as_ref().map(|f| f.to_string()).unwrap_or_default(),
                         }),
                     })
                     .collect::<Vec<_>>();

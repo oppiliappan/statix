@@ -224,7 +224,7 @@ impl Serialize for Suggestion {
             let end = usize::from(self.at.end());
             (start, end)
         };
-        let fix = self.fix.to_string();
+        let fix = self.fix.as_ref().map(|f| f.to_string()).unwrap_or_default();
         s.serialize_field("at", &at)?;
         s.serialize_field("fix", &fix)?;
         s.end()
