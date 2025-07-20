@@ -1,9 +1,9 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
-use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Dynamic};
+use rnix::{ast::Dynamic, NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for antiquote/splice expressions that are not quoted.

@@ -1,6 +1,6 @@
 use std::{borrow::Cow, convert::TryFrom};
 
-use lib::{Report, session::SessionInfo};
+use lib::{session::SessionInfo, Report};
 use rnix::{TextSize, WalkEvent};
 
 use crate::{err::SingleFixErr, fix::Source, utils};

@@ -1,11 +1,11 @@
-use crate::{Metadata, Report, Rule, session::SessionInfo};
+use crate::{session::SessionInfo, Metadata, Report, Rule};
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind,
     ast::{AttrSet, AttrpathValue, HasEntry, Ident},
+    NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
 /// ## What it does

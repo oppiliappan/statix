@@ -1,6 +1,6 @@
-use crate::{LintMap, utils};
+use crate::{utils, LintMap};
 
-use lib::{Report, session::SessionInfo};
+use lib::{session::SessionInfo, Report};
 use rnix::WalkEvent;
 use vfs::{FileId, VfsEntry};
 
