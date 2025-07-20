@@ -1,8 +1,8 @@
 use std::iter::IntoIterator;
 
 use rnix::{
-    ast::{self, AstNode},
     SyntaxNode,
+    ast::{self, AstNode},
 };
 
 fn ast_from_text<N: AstNode>(text: impl AsRef<str>) -> N {

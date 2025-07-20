@@ -1,10 +1,10 @@
 [package]
-authors           = ["Akshay <nerdy@peppe.rs>"]
-description       = "Lints and suggestions for the Nix programming language"
+authors = ["Akshay <nerdy@peppe.rs>"]
+description = "Lints and suggestions for the Nix programming language"
 edition.workspace = true
 license.workspace = true
-name              = "statix"
-version           = "0.5.8"
+name = "statix"
+version = "0.5.8"
 
 [lib]
 name = "statix"
@@ -15,22 +15,22 @@ name = "statix"
 path = "src/main.rs"
 
 [dependencies]
-ariadne.workspace   = true
-clap.workspace      = true
-ignore.workspace    = true
-lib.workspace       = true
-rayon.workspace     = true
-rnix.workspace      = true
-serde.workspace     = true
-serde_json          = { optional = true, workspace = true }
-similar.workspace   = true
+ariadne.workspace = true
+clap.workspace = true
+ignore.workspace = true
+lib.workspace = true
+rayon.workspace = true
+rnix.workspace = true
+serde.workspace = true
+serde_json = { optional = true, workspace = true }
+similar.workspace = true
 thiserror.workspace = true
-toml.workspace      = true
-vfs.workspace       = true
+toml.workspace = true
+vfs.workspace = true
 
 [dev-dependencies]
-insta.workspace              = true
-paste.workspace              = true
+insta.workspace = true
+paste.workspace = true
 strip-ansi-escapes.workspace = true
 
 [features]

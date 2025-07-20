@@ -1,9 +1,9 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule};
+use crate::{Metadata, Report, Rule, session::SessionInfo};
 
 use macros::lint;
 use rnix::{
-    ast::{AttrSet, AttrpathValue, HasEntry, Ident},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    ast::{AttrSet, AttrpathValue, HasEntry, Ident},
 };
 use rowan::ast::AstNode;
 

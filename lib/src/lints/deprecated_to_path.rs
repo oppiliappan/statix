@@ -1,7 +1,7 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule};
+use crate::{Metadata, Report, Rule, session::SessionInfo};
 
 use macros::lint;
-use rnix::{ast::Apply, NodeOrToken, SyntaxElement, SyntaxKind};
+use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Apply};
 use rowan::ast::AstNode;
 
 /// ## What it does
