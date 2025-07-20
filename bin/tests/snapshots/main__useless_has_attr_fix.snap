@@ -10,13 +10,13 @@ expression: "& stdout"
 -  (if x ? a then x.a else default)
 -  (if x.a ? b then x.a.b else default)
 -  (if x ? a.b then x.a.b else default)
-+  (x.a or default)
-+  (x.a.b or default)
-+  (x.a.b or default)
++  x.a or default
++  x.a.b or default
++  x.a.b or default
  
    # complex body
 -  (if x ? a then x.a else if b then c else d)
 -  (if x ? a then x.a else b.c)
-+  (x.a or (if b then c else d))
-+  (x.a or b.c)
++  x.a or (if b then c else d)
++  x.a or b.c
  ]
