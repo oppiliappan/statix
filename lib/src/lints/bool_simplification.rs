@@ -1,11 +1,11 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind,
     ast::{BinOp, BinOpKind, Paren, UnaryOp, UnaryOpKind},
+    NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
 /// ## What it does
@@ -52,7 +52,7 @@ impl Rule for BoolSimplification {
                 let replacement = make::binary(&lhs.syntax(), "!=", &rhs.syntax());
                 Some(
                     self.report()
-                        .suggest(at, message, Suggestion::new(at, replacement.syntax().clone())),
+                        .suggest(at, message, Suggestion::new(at, Some(replacement.syntax().clone()))),
                 )
             } else {
                 None

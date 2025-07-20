@@ -1,11 +1,11 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind,
     ast::{HasEntry, LegacyLet},
+    NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
 /// ## What it does
@@ -69,7 +69,7 @@ impl Rule for ManualInherit {
                 let message = "Prefer `rec` over undocumented `let` syntax";
                 let replacement = selected.syntax().clone();
 
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
+                Some(self.report().suggest(at, message, Suggestion::new(at, Some(replacement))))
             } else {
                 None
             }

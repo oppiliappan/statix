@@ -1,11 +1,11 @@
-use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
+use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
     ast::{Apply, Ident, IdentParam, Lambda, Param},
+    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
 /// ## What it does
@@ -73,7 +73,7 @@ impl Rule for EtaReduction {
                         "Found eta-reduction: `{}`",
                         replacement.syntax().text()
                     );
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
+                Some(self.report().suggest(at, message, Suggestion::new(at, Some(replacement.syntax().clone()))))
             } else {
                 None
             }

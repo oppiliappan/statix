@@ -1,12 +1,13 @@
 use crate::{
-    Metadata, Report, Rule, Suggestion, make,
+    make,
     session::{SessionInfo, Version},
+    Metadata, Report, Rule, Suggestion,
 };
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
-use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Select};
+use rnix::{ast::Select, NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for `lib.groupBy`.
@@ -73,7 +74,7 @@ impl Rule for FasterGroupBy {
                 let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", group_by_from);
                 Some(
                     self.report()
-                        .suggest(at, message, Suggestion::new(at, replacement.syntax().clone())),
+                        .suggest(at, message, Suggestion::new(at, Some(replacement.syntax().clone()))),
                 )
             } else {
                 None

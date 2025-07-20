@@ -1,11 +1,11 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind,
     ast::{AttrpathValue, Ident},
+    NodeOrToken, SyntaxElement, SyntaxKind,
 };
 
 /// ## What it does
@@ -61,7 +61,7 @@ impl Rule for ManualInherit {
                 let at = node.text_range();
                 let replacement = make::inherit_stmt(&[key]);
                 let message = "This assignment is better written with `inherit`";
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
+                Some(self.report().suggest(at, message, Suggestion::new(at, Some(replacement.syntax().clone()))))
             } else {
                 None
             }

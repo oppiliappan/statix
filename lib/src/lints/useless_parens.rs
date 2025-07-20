@@ -1,11 +1,11 @@
-use crate::{Diagnostic, Metadata, Report, Rule, Suggestion, session::SessionInfo};
+use crate::{session::SessionInfo, Diagnostic, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
     ast::{AttrpathValue, Entry, Expr, LetIn, Paren},
+    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
 /// ## What it does
@@ -72,7 +72,7 @@ fn do_thing(node: &SyntaxNode) -> Option<Diagnostic> {
                 let at = value_range;
                 let message = "Useless parentheses around value in binding";
                 let replacement = inner;
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
+                Some(Diagnostic::suggest(at, message, Suggestion::new(at, Some(replacement.syntax().clone()))))
             } else {
                 None
             }
@@ -86,7 +86,7 @@ fn do_thing(node: &SyntaxNode) -> Option<Diagnostic> {
                 let at = body_range;
                 let message = "Useless parentheses around body of `let` expression";
                 let replacement = inner;
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
+                Some(Diagnostic::suggest(at, message, Suggestion::new(at, Some(replacement.syntax().clone()))))
             } else {
                 None
             }
@@ -118,7 +118,7 @@ fn do_thing(node: &SyntaxNode) -> Option<Diagnostic> {
                 let at = paren_expr_range;
                 let message = "Useless parentheses around primitive expression";
                 let replacement = parsed_inner;
-                Some(Diagnostic::suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
+                Some(Diagnostic::suggest(at, message, Suggestion::new(at, Some(replacement.syntax().clone()))))
             } else {
                 None
             }

@@ -1,9 +1,9 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
-use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, TextRange, ast::LetIn};
+use rnix::{ast::LetIn, NodeOrToken, SyntaxElement, SyntaxKind, TextRange};
 use rowan::Direction;
 
 /// ## What it does
@@ -70,12 +70,11 @@ impl Rule for CollapsibleLetIn {
                         .end();
                     TextRange::new(start, end)
                 };
-                let replacement = make::empty();
 
                 Some(
                     self.report()
                         .diagnostic(first_annotation, first_message)
-                        .suggest(second_annotation, second_message, Suggestion::new(replacement_at, replacement.syntax().clone()))
+                        .suggest(second_annotation, second_message, Suggestion::new(replacement_at, None::<SyntaxElement>))
                 )
             } else {
                 None

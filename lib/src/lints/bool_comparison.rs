@@ -1,11 +1,11 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
     ast::{BinOp, BinOpKind, Ident},
+    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
 };
 
 /// ## What it does
@@ -88,7 +88,7 @@ impl Rule for BoolComparison {
                     non_bool_side,
                     bool_side
                 );
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement.syntax().clone())))
+                Some(self.report().suggest(at, message, Suggestion::new(at, Some(replacement.syntax().clone()))))
             } else {
                 None
             }
