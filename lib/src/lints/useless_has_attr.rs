@@ -51,7 +51,7 @@ impl Rule for UselessHasAttr {
             // check if body of the `if` expression is of the form `set.attr_path`
             if let Some(body_expr) = if_else_expr.body();
             if let Some(body_select_expr) = Select::cast(body_expr.syntax().clone());
-            let expected_body = make::select(&set.syntax(), &attr_path.syntax());
+            let expected_body = make::select(set.syntax(), attr_path.syntax());
 
             // text comparison will do for now
             if body_select_expr.syntax().text() == expected_body.syntax().text();
@@ -67,7 +67,7 @@ impl Rule for UselessHasAttr {
                     | rnix::ast::Expr::Select(_) => default_expr.syntax().clone(),
                     _ => make::parenthesize(default_expr.syntax()).syntax().clone(),
                 };
-                let replacement = make::or_default(&set.syntax(), &attr_path.syntax(), &default_with_parens);
+                let replacement = make::or_default(set.syntax(), attr_path.syntax(), &default_with_parens);
                 let message = format!(
                     "Consider using `{}` instead of this `if` expression",
                     replacement

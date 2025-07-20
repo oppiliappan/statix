@@ -60,7 +60,7 @@ impl Rule for EtaReduction {
             if arg.to_string() == value.to_string();
 
             if let Some(lambda_node) = body.lambda();
-            if !mentions_ident(&arg, &lambda_node.syntax());
+            if !mentions_ident(&arg, lambda_node.syntax());
         // lambda body should be no more than a single Ident to
         // retain code readability
         if let Some(_) = Ident::cast(lambda_node.syntax().clone());

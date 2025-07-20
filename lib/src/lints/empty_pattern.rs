@@ -57,7 +57,7 @@ impl Rule for EmptyPattern {
             if pattern.pat_bind().is_none();
 
             // not a nixos module
-            if !is_module(&body.syntax());
+            if !is_module(body.syntax());
 
             then {
                 let at = pattern.syntax().text_range();

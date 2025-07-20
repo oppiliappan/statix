@@ -68,7 +68,7 @@ impl Rule for FasterZipAttrsWith {
                 let at = node.text_range();
                 let replacement = {
                     let builtins = make::ident("builtins");
-                    make::select(builtins.syntax(), &zip_attrs_with.syntax())
+                    make::select(builtins.syntax(), zip_attrs_with.syntax())
                 };
                 let message = format!("Prefer `builtins.zipAttrsWith` over `{}.zipAttrsWith`", zip_from);
                 Some(

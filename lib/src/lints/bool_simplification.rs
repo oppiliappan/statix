@@ -49,7 +49,7 @@ impl Rule for BoolSimplification {
 
                 let lhs = bin_expr.lhs()?;
                 let rhs = bin_expr.rhs()?;
-                let replacement = make::binary(&lhs.syntax(), "!=", &rhs.syntax());
+                let replacement = make::binary(lhs.syntax(), "!=", rhs.syntax());
                 Some(
                     self.report()
                         .suggest(at, message, Suggestion::new(at, Some(replacement.syntax().clone()))),

@@ -69,7 +69,7 @@ impl Rule for FasterGroupBy {
                 let at = node.text_range();
                 let replacement = {
                     let builtins = make::ident("builtins");
-                    make::select(builtins.syntax(), &group_by_attr.syntax())
+                    make::select(builtins.syntax(), group_by_attr.syntax())
                 };
                 let message = format!("Prefer `builtins.groupBy` over `{}.groupBy`", group_by_from);
                 Some(
