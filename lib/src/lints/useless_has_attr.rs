@@ -69,8 +69,7 @@ impl Rule for UselessHasAttr {
                 };
                 let replacement = make::or_default(set.syntax(), attr_path.syntax(), &default_with_parens);
                 let message = format!(
-                    "Consider using `{}` instead of this `if` expression",
-                    replacement
+                    "Consider using `{replacement}` instead of this `if` expression"
                 );
                 Some(
                     self.report()

@@ -74,7 +74,11 @@ pub fn attrset(
     entries: impl IntoIterator<Item = ast::Entry>,
     recursive: bool,
 ) -> ast::AttrSet {
-    let rec = recursive.then_some("rec ").unwrap_or_default();
+    let rec = if recursive {
+        "rec "
+    } else {
+        Default::default()
+    };
     let inherits = inherits.into_iter().map(|inherit| format!("  {inherit}"));
     let entries = entries.into_iter().map(|inherit| format!("  {inherit}"));
 
