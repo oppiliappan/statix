@@ -44,8 +44,7 @@ impl Rule for RedundantPatternBind {
         {
             let at = node.text_range();
             let message = format!(
-                "This pattern bind is redundant, use `{}` instead",
-                ident.to_string()
+                "This pattern bind is redundant, use `{ident}` instead"
             );
             let replacement = ident.syntax().clone();
             Some(

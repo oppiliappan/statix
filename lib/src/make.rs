@@ -51,19 +51,19 @@ pub fn unary_not(node: &SyntaxNode) -> ast::UnaryOp {
 pub fn inherit_stmt<'a>(nodes: impl IntoIterator<Item = &'a ast::Ident>) -> ast::Inherit {
     let inherited_idents = nodes
         .into_iter()
-        .map(|i| i.to_string())
+        .map(std::string::ToString::to_string)
         .collect::<Vec<_>>()
         .join(" ");
     ast_from_text(format!("{{ inherit {inherited_idents}; }}"))
 }
 
 pub fn inherit_from_stmt<'a>(
-    from: SyntaxNode,
+    from: &SyntaxNode,
     nodes: impl IntoIterator<Item = &'a ast::Ident>,
 ) -> ast::Inherit {
     let inherited_idents = nodes
         .into_iter()
-        .map(|i| i.to_string())
+        .map(std::string::ToString::to_string)
         .collect::<Vec<_>>()
         .join(" ");
     ast_from_text(format!("{{ inherit ({from}) {inherited_idents}; }}"))
@@ -74,7 +74,11 @@ pub fn attrset(
     entries: impl IntoIterator<Item = ast::Entry>,
     recursive: bool,
 ) -> ast::AttrSet {
-    let rec = recursive.then_some("rec ").unwrap_or_default();
+    let rec = if recursive {
+        "rec "
+    } else {
+        Default::default()
+    };
     let inherits = inherits.into_iter().map(|inherit| format!("  {inherit}"));
     let entries = entries.into_iter().map(|inherit| format!("  {inherit}"));
 

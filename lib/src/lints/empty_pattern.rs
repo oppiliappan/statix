@@ -73,7 +73,7 @@ fn is_module(body: &SyntaxNode) -> bool {
         .flat_map(|attr_set| attr_set.entries())
         .filter_map(|entry| match entry {
             rnix::ast::Entry::AttrpathValue(attrpath_value) => attrpath_value.attrpath(),
-            _ => None,
+            rnix::ast::Entry::Inherit(_) => None,
         })
         .any(|k| k.to_string() == "imports")
 }

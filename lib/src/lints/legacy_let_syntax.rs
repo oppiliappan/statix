@@ -51,7 +51,7 @@ impl Rule for ManualInherit {
                 .entries()
                 .filter_map(|entry| match entry {
                     rnix::ast::Entry::AttrpathValue(kv) => kv.attrpath(),
-                    _ => None,
+                    rnix::ast::Entry::Inherit(_) => None,
                 })
                 .any(|key_name| key_is_ident(&key_name, "body"))
         {

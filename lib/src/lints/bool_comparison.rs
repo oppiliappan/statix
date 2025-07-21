@@ -70,10 +70,6 @@ impl Rule for BoolComparison {
                                 // do not parenthsize the replacement
                                 make::unary_not(non_bool_side.syntax())
                             }
-                            SyntaxKind::NODE_BIN_OP => {
-                                let parens = make::parenthesize(non_bool_side.syntax());
-                                make::unary_not(parens.syntax())
-                            }
                             _ => {
                                 let parens = make::parenthesize(non_bool_side.syntax());
                                 make::unary_not(parens.syntax())

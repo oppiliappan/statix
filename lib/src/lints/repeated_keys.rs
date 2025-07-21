@@ -1,4 +1,5 @@
 use crate::{Metadata, Report, Rule, session::SessionInfo};
+use std::fmt::Write;
 
 use macros::lint;
 use rnix::{
@@ -61,7 +62,7 @@ impl Rule for RepeatedKeys {
                 .entries()
                 .filter_map(|entry| match entry {
                     rnix::ast::Entry::AttrpathValue(attr) => Some(attr),
-                    _ => None,
+                    rnix::ast::Entry::Inherit(_) => None,
                 })
                 .filter_map(|kv_scrutinee| {
                     let scrutinee_key = kv_scrutinee.attrpath()?;
@@ -90,10 +91,8 @@ impl Rule for RepeatedKeys {
             let mut iter = occurrences.into_iter();
 
             let (first_annotation, first_subkey) = iter.next().unwrap();
-            let first_message = format!(
-                "The key `{}` is first assigned here ...",
-                first_component_ident.to_string()
-            );
+            let first_message =
+                format!("The key `{first_component_ident}` is first assigned here ...");
 
             let (second_annotation, second_subkey) = iter.next().unwrap();
             let second_message = "... repeated here ...";
@@ -106,13 +105,15 @@ impl Rule for RepeatedKeys {
                     1 => "... and here (`1` occurrence omitted).".to_string(),
                     n => format!("... and here (`{n}` occurrences omitted)."),
                 };
-                message.push_str(&format!(
+                write!(
+                    message,
                     " Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.",
-                    first_component_ident.to_string(),
+                    first_component_ident,
                     first_subkey.split_once('.')?.1,
                     second_subkey.split_once('.')?.1,
                     third_subkey.split_once('.')?.1
-                ));
+                )
+                .unwrap();
                 message
             };
 
