@@ -81,6 +81,10 @@ statix check /path/to/dir -i .direnv
 # run statix in "unrestricted" mode, to disable that
 statix check /path/to/dir -u
 
+# non-recursively check files specified on the command line
+# ignores are not applied when used like this
+statix check /path/to/dir/*.nix
+
 # see `statix -h` for a full list of options
 ```
 
