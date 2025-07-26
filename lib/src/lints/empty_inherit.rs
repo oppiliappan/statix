@@ -1,11 +1,9 @@
-use crate::{make, session::SessionInfo, utils, Metadata, Report, Rule, Suggestion};
+use crate::{session::SessionInfo, utils, Metadata, Report, Rule, Suggestion};
+use rowan::ast::AstNode;
 
 use if_chain::if_chain;
 use macros::lint;
-use rnix::{
-    types::{Inherit, TypedNode},
-    NodeOrToken, SyntaxElement, SyntaxKind,
-};
+use rnix::{ast::Inherit, NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for empty inherit statements.
@@ -34,16 +32,15 @@ impl Rule for EmptyInherit {
             if let NodeOrToken::Node(node) = node;
             if let Some(inherit_stmt) = Inherit::cast(node.clone());
             if inherit_stmt.from().is_none();
-            if inherit_stmt.idents().count() == 0;
+            if inherit_stmt.attrs().count() == 0;
             then {
                 let at = node.text_range();
-                let replacement = make::empty().node().clone();
                 let replacement_at = utils::with_preceeding_whitespace(node);
                 let message = "Remove this empty `inherit` statement";
                 Some(
                     self
                     .report()
-                    .suggest(at, message, Suggestion::new(replacement_at, replacement))
+                    .suggest(at, message, Suggestion::new(replacement_at, None::<SyntaxElement>))
                 )
             } else {
                 None
