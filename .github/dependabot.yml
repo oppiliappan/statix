@@ -2,13 +2,6 @@
   "updates": [
     {
       "directory": "/",
-      "package-ecosystem": "cargo",
-      "schedule": {
-        "interval": "daily"
-      }
-    },
-    {
-      "directory": "/",
       "groups": {
         "everything": {
           "patterns": [

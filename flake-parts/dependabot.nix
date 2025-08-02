@@ -16,11 +16,6 @@ in
                   package-ecosystem = "cargo";
                   directory = "/";
                   schedule.interval = "daily";
-                }
-                {
-                  package-ecosystem = "cargo";
-                  directory = "/";
-                  schedule.interval = "daily";
                   groups.everything.patterns = [ "*" ];
                 }
               ];
