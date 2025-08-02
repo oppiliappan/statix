@@ -35,6 +35,7 @@
           ./docs/flake-part.nix
           ./flake-parts/cachix.nix
           ./flake-parts/ci.nix
+          ./flake-parts/dependabot.nix
           ./flake-parts/dev-shell.nix
           ./flake-parts/files.nix
           ./flake-parts/fmt.nix
