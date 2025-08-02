@@ -17,6 +17,10 @@ in
                   directory = "/";
                   schedule.interval = "daily";
                   groups.everything.patterns = [ "*" ];
+                  commit-message = {
+                    prefix = "chore";
+                    include = "scope";
+                  };
                 }
               ];
             };
