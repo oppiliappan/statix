@@ -101,10 +101,9 @@ impl std::fmt::Display for NixBoolean {
         write!(
             f,
             "{}",
-            if matches!(self, Self::True) {
-                "true"
-            } else {
-                "false"
+            match self {
+                Self::True => "true",
+                Self::False => "false",
             }
         )
     }
