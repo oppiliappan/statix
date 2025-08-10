@@ -14,11 +14,20 @@
             priority = 2;
           };
           prettier.enable = true;
-          # https://github.com/pappasam/toml-sort/issues/62
-          # toml-sort = {
-          #   enable = true;
-          #   all = true;
-          # };
+          taplo = {
+            enable = true;
+            priority = 1;
+            settings = {
+              formatting = {
+                align_entries = true; # Align entries vertically. Entries that have table headers, comments, or blank lines between them are not aligned.
+                reorder_keys = true; # Alphabetically reorder keys that are not separated by blank lines.
+                reorder_arrays = true; # Alphabetically reorder array values that are not separated by blank lines.
+                reorder_inline_tables = true; # Alphabetically reorder inline tables.
+                indent_tables = true; # Indent subtables if they come in order.
+                indent_entries = true; # Indent entries under tables.
+              };
+            };
+          };
           statix = {
             enable = true;
             priority = 1;
