@@ -23,8 +23,6 @@
                 reorder_keys = true; # Alphabetically reorder keys that are not separated by blank lines.
                 reorder_arrays = true; # Alphabetically reorder array values that are not separated by blank lines.
                 reorder_inline_tables = true; # Alphabetically reorder inline tables.
-                indent_tables = true; # Indent subtables if they come in order.
-                indent_entries = true; # Indent entries under tables.
               };
             };
           };

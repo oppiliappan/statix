@@ -1,9 +1,9 @@
 [package]
-name = "vfs"
-version = "0.0.0"
 edition = "2018"
 license = "MIT"
+name    = "vfs"
+version = "0.0.0"
 
 [dependencies]
 indexmap = "1.6.2"
-rayon = "1.5.1"
+rayon    = "1.5.1"
