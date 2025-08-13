@@ -39,7 +39,7 @@ pub enum SubCommand {
 pub struct Check {
     /// File or directory to run check on
     #[clap(default_value = ".", parse(from_os_str))]
-    target: PathBuf,
+    target: Vec<PathBuf>,
 
     /// Globs of file patterns to skip
     #[clap(short, long)]
@@ -88,7 +88,7 @@ impl Check {
 pub struct Fix {
     /// File or directory to run fix on
     #[clap(default_value = ".", parse(from_os_str))]
-    target: PathBuf,
+    target: Vec<PathBuf>,
 
     /// Globs of file patterns to skip
     #[clap(short, long)]

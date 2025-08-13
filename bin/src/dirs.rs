@@ -19,26 +19,29 @@ pub struct Walker {
 }
 
 impl Walker {
-    pub fn new<P: AsRef<Path>>(target: P, ignore: Gitignore) -> io::Result<Self> {
-        let target = target.as_ref().to_path_buf();
-        if !target.exists() {
-            Err(Error::new(
-                ErrorKind::NotFound,
-                format!("file not found: {}", target.display()),
-            ))
-        } else if target.is_dir() {
-            Ok(Self {
-                dirs: vec![target],
-                files: vec![],
-                ignore,
-            })
-        } else {
-            Ok(Self {
-                dirs: vec![],
-                files: vec![target],
-                ignore,
-            })
+    pub fn new<P: AsRef<Path>>(targets: &[P], ignore: Gitignore) -> io::Result<Self> {
+        let mut dirs = Vec::new();
+        let mut files = Vec::new();
+
+        for target in targets {
+            let target_path = target.as_ref().to_path_buf();
+            if !target_path.exists() {
+                return Err(Error::new(
+                    ErrorKind::NotFound,
+                    format!("file not found: {}", target_path.display()),
+                ));
+            } else if target_path.is_dir() {
+                dirs.push(target_path);
+            } else {
+                files.push(target_path);
+            }
         }
+
+        Ok(Self {
+            dirs,
+            files,
+            ignore,
+        })
     }
 }
 
@@ -77,10 +80,23 @@ impl Iterator for Walker {
 
 pub fn build_ignore_set<P: AsRef<Path>>(
     ignore: &[String],
-    target: P,
+    targets: &[P],
     unrestricted: bool,
 ) -> Result<Gitignore, IgnoreError> {
-    let gitignore_path = target.as_ref().join(".gitignore");
+    let mut gitignore_path = PathBuf::new();
+
+    // Loop through targets and look for .gitignore file if target is a directory
+    for target in targets {
+        if !target.as_ref().is_dir() {
+            continue;
+        }
+
+        let path = target.as_ref().join(".gitignore");
+        if path.exists() {
+            gitignore_path = path;
+            break;
+        }
+    }
 
     // Looks like GitignoreBuilder::new does not source globs
     // within gitignore_path by default, we have to enforce that
@@ -106,8 +122,8 @@ pub fn build_ignore_set<P: AsRef<Path>>(
 
 pub fn walk_nix_files<P: AsRef<Path>>(
     ignore: Gitignore,
-    target: P,
+    targets: &[P],
 ) -> Result<impl Iterator<Item = PathBuf>, io::Error> {
-    let walker = dirs::Walker::new(target, ignore)?;
+    let walker = dirs::Walker::new(targets, ignore)?;
     Ok(walker.filter(|path: &PathBuf| matches!(path.extension(), Some(e) if e == "nix")))
 }
