@@ -198,7 +198,7 @@ impl Suggestion {
     pub fn apply(&self, src: &mut String) {
         let start = usize::from(self.at.start());
         let end = usize::from(self.at.end());
-        src.replace_range(start..end, &self.fix.to_string())
+        src.replace_range(start..end, &self.fix.to_string());
     }
 }
 

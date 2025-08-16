@@ -83,7 +83,7 @@ pub mod main {
                     let src = fix_result
                         .map(|r| r.src)
                         .unwrap_or(Cow::Borrowed(entry.contents));
-                    println!("{}", &src)
+                    println!("{}", &src);
                 }
                 (FixOut::Write, Some(fix_result)) => {
                     let path = entry.file_path;
@@ -131,7 +131,7 @@ pub mod main {
                 let src = single_result
                     .map(|r| r.src)
                     .unwrap_or(Cow::Borrowed(original_src));
-                println!("{}", &src)
+                println!("{}", &src);
             }
             (FixOut::Write, Ok(single_result)) => {
                 let path = entry.file_path;

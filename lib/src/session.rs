@@ -69,13 +69,13 @@ mod tests {
     #[test]
     fn parse_trivial() {
         let v = "1.6.1".parse::<Version>().ok();
-        assert!(v.is_some())
+        assert!(v.is_some());
     }
 
     #[test]
     fn parse() {
         let v = "2.4pre20211006_53e4794".parse::<Version>().ok();
-        assert!(v.is_some())
+        assert!(v.is_some());
     }
 
     #[test]
