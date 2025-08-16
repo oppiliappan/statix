@@ -3,7 +3,7 @@
 members = ["bin", "lib", "macros", "vfs"]
 
 [workspace.package]
-edition = "2018"
+edition = "2024"
 license = "MIT"
 
 [workspace.dependencies]
