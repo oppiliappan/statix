@@ -369,7 +369,7 @@ fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
 
 fn vfs(files: &[PathBuf]) -> vfs::ReadOnlyVfs {
     let mut vfs = ReadOnlyVfs::default();
-    for file in files.iter() {
+    for file in files {
         if let Ok(data) = fs::read_to_string(file) {
             let _id = vfs.alloc_file_id(file);
             vfs.set_file_contents(file, data.as_bytes());

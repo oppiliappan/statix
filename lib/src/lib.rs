@@ -99,7 +99,7 @@ impl Report {
     }
     /// Apply all diagnostics. Assumption: diagnostics do not overlap
     pub fn apply(&self, src: &mut String) {
-        for d in self.diagnostics.iter() {
+        for d in &self.diagnostics {
             d.apply(src);
         }
     }

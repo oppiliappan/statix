@@ -8,7 +8,7 @@ pub fn lint_map_of(
     lints: &[&'static Box<dyn Lint>],
 ) -> HashMap<SyntaxKind, Vec<&'static Box<dyn Lint>>> {
     let mut map = HashMap::new();
-    for lint in lints.iter() {
+    for lint in lints {
         let lint = *lint;
         let matches = lint.match_kind();
         for m in matches {
