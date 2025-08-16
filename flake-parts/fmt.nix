@@ -11,11 +11,15 @@
         programs = {
           nixfmt.enable = true;
           prettier.enable = true;
-          # https://github.com/pappasam/toml-sort/issues/62
-          # toml-sort = {
-          #   enable = true;
-          #   all = true;
-          # };
+          taplo = {
+            enable = true;
+            settings.formatting = {
+              reorder_keys = true;
+              reorder_arrays = true;
+              reorder_inline_tables = true;
+              allowed_blank_lines = 1;
+            };
+          };
         };
         settings.on-unmatched = "fatal";
       };

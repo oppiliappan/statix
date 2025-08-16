@@ -1,11 +1,6 @@
 [workspace]
 
-members = [
-    "bin",
-    "lib",
-    "macros",
-    "vfs",
-]
+members = ["bin", "lib", "macros", "vfs"]
 
 [workspace.lints.clippy]
 pedantic = { level = "deny", priority = -1 }

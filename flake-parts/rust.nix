@@ -19,8 +19,6 @@
         treefmt = {
           programs.rustfmt.enable = true;
           settings.global.excludes = [
-            "**/Cargo.toml"
-            "Cargo.toml"
             "bin/tests/snapshots/*.snap"
           ];
         };
