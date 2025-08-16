@@ -10,12 +10,15 @@ pub struct LintResult {
     pub reports: Vec<Report>,
 }
 
-pub fn lint_with(vfs_entry: VfsEntry, lints: &LintMap, sess: &SessionInfo) -> LintResult {
+pub fn lint_with(vfs_entry: &VfsEntry, lints: &LintMap, sess: &SessionInfo) -> LintResult {
     let file_id = vfs_entry.file_id;
     let source = vfs_entry.contents;
     let parsed = rnix::parse(source);
 
-    let error_reports = parsed.errors().into_iter().map(Report::from_parse_err);
+    let error_reports = parsed
+        .errors()
+        .into_iter()
+        .map(|err: rnix::parser::ParseError| Report::from_parse_err(&err));
     let reports = parsed
         .node()
         .preorder_with_tokens()
@@ -35,7 +38,7 @@ pub fn lint_with(vfs_entry: VfsEntry, lints: &LintMap, sess: &SessionInfo) -> Li
     LintResult { file_id, reports }
 }
 
-pub fn lint(vfs_entry: VfsEntry, sess: &SessionInfo) -> LintResult {
+pub fn lint(vfs_entry: &VfsEntry, sess: &SessionInfo) -> LintResult {
     lint_with(vfs_entry, &utils::lint_map(), sess)
 }
 
@@ -52,7 +55,7 @@ pub mod main {
     use lib::session::SessionInfo;
     use rayon::prelude::*;
 
-    pub fn main(check_config: CheckConfig) -> Result<(), StatixErr> {
+    pub fn main(check_config: &CheckConfig) -> Result<(), StatixErr> {
         let conf_file = ConfFile::discover(&check_config.conf_path)?;
         let lints = conf_file.lints();
         let version = conf_file.version()?;
@@ -61,7 +64,7 @@ pub mod main {
         let vfs = check_config.vfs(conf_file.ignore.as_slice())?;
 
         let mut stdout = io::stdout();
-        let lint = |vfs_entry| lint_with(vfs_entry, &lints, &session);
+        let lint = |vfs_entry| lint_with(&vfs_entry, &lints, &session);
         let results = vfs
             .par_iter()
             .map(lint)

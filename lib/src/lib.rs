@@ -102,14 +102,14 @@ impl Report {
         }
     }
     /// Create a report out of a parse error
-    pub fn from_parse_err(err: ParseError) -> Self {
+    pub fn from_parse_err(err: &ParseError) -> Self {
         let at = match err {
             ParseError::Unexpected(at) => at,
             ParseError::UnexpectedExtra(at) => at,
             ParseError::UnexpectedWanted(_, at, _) => at,
             ParseError::UnexpectedDoubleBind(at) => at,
             ParseError::UnexpectedEOF | ParseError::UnexpectedEOFWanted(_) => {
-                TextRange::empty(0u32.into())
+                &TextRange::empty(0u32.into())
             }
             ParseError::DuplicatedArgs(at, _) => at,
             _ => panic!("report a bug, pepper forgot to handle a parse error"),
@@ -121,7 +121,7 @@ impl Report {
             .unwrap()
             .make_ascii_uppercase();
         Self::new("Syntax error", 0)
-            .diagnostic(at, message)
+            .diagnostic(*at, message)
             .severity(Severity::Error)
     }
 }

@@ -79,7 +79,7 @@ impl Check {
             let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
             let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
             let files = dirs::walk_nix_files(ignore, &self.target)?;
-            Ok(vfs(files.collect::<Vec<_>>()))
+            Ok(vfs(&files.collect::<Vec<_>>()))
         }
     }
 }
@@ -132,7 +132,7 @@ impl Fix {
             let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
             let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
             let files = dirs::walk_nix_files(ignore, &self.target)?;
-            Ok(vfs(files.collect::<Vec<_>>()))
+            Ok(vfs(&files.collect::<Vec<_>>()))
         }
     }
 
@@ -363,7 +363,7 @@ fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
     }
 }
 
-fn vfs(files: Vec<PathBuf>) -> vfs::ReadOnlyVfs {
+fn vfs(files: &[PathBuf]) -> vfs::ReadOnlyVfs {
     let mut vfs = ReadOnlyVfs::default();
     for file in files.iter() {
         if let Ok(data) = fs::read_to_string(file) {

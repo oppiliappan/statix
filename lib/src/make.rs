@@ -42,7 +42,7 @@ pub fn inherit_stmt<'a>(nodes: impl IntoIterator<Item = &'a types::Ident>) -> ty
 }
 
 pub fn inherit_from_stmt<'a>(
-    from: SyntaxNode,
+    from: &SyntaxNode,
     nodes: impl IntoIterator<Item = &'a types::Ident>,
 ) -> types::Inherit {
     let inherited_idents = nodes
