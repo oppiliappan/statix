@@ -10,6 +10,7 @@ pub struct LintResult {
     pub reports: Vec<Report>,
 }
 
+#[must_use]
 pub fn lint_with(vfs_entry: &VfsEntry, lints: &LintMap, sess: &SessionInfo) -> LintResult {
     let file_id = vfs_entry.file_id;
     let source = vfs_entry.contents;
@@ -38,6 +39,7 @@ pub fn lint_with(vfs_entry: &VfsEntry, lints: &LintMap, sess: &SessionInfo) -> L
     LintResult { file_id, reports }
 }
 
+#[must_use]
 pub fn lint(vfs_entry: &VfsEntry, sess: &SessionInfo) -> LintResult {
     lint_with(vfs_entry, &utils::lint_map(), sess)
 }

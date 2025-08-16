@@ -46,6 +46,7 @@ pub struct Report {
 
 impl Report {
     /// Construct a report. Do not invoke `Report::new` manually, see `lint` macro
+    #[must_use]
     pub fn new(note: &'static str, code: u32) -> Self {
         Self {
             note,
@@ -72,7 +73,7 @@ impl Report {
         self
     }
     /// Set severity level
-    #[allow(clippy::return_self_not_must_use)]
+    #[allow(clippy::return_self_not_must_use, clippy::must_use_candidate)]
     pub fn severity(mut self, severity: Severity) -> Self {
         self.severity = severity;
         self
@@ -92,6 +93,7 @@ impl Report {
             .reduce(rnix::TextRange::cover)
     }
     /// Unsafe but handy replacement for above
+    #[must_use]
     pub fn range(&self) -> TextRange {
         self.total_suggestion_range().unwrap()
     }
@@ -102,6 +104,7 @@ impl Report {
         }
     }
     /// Create a report out of a parse error
+    #[must_use]
     pub fn from_parse_err(err: &ParseError) -> Self {
         let at = match err {
             ParseError::Unexpected(at) => at,

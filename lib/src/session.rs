@@ -53,10 +53,12 @@ pub struct SessionInfo {
 }
 
 impl SessionInfo {
+    #[must_use]
     pub fn from_version(nix_version: Version) -> Self {
         Self { nix_version }
     }
 
+    #[must_use]
     pub fn version(&self) -> &Version {
         &self.nix_version
     }

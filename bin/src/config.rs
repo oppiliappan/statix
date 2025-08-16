@@ -138,6 +138,7 @@ impl Fix {
 
     // i need this ugly helper because clap's data model
     // does not reflect what i have in mind
+    #[must_use]
     pub fn out(&self) -> FixOut {
         if self.diff_only {
             FixOut::Diff
@@ -189,6 +190,7 @@ impl Single {
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         }
     }
+    #[must_use]
     pub fn out(&self) -> FixOut {
         if self.diff_only {
             FixOut::Diff
@@ -297,6 +299,7 @@ impl ConfFile {
         }
         Ok(Self::default())
     }
+    #[must_use]
     pub fn dump(&self) -> String {
         let ideal_config = {
             let disabled = vec![];
@@ -310,6 +313,7 @@ impl ConfFile {
         };
         toml::ser::to_string_pretty(&ideal_config).unwrap()
     }
+    #[must_use]
     pub fn lints(&self) -> LintMap {
         utils::lint_map_of(
             (*LINTS)

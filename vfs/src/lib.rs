@@ -45,18 +45,23 @@ impl ReadOnlyVfs {
     pub fn alloc_file_id<P: AsRef<Path>>(&mut self, path: P) -> FileId {
         self.interner.intern(path.as_ref().to_owned())
     }
+    #[must_use]
     pub fn len(&self) -> usize {
         self.data.len()
     }
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
+    #[must_use]
     pub fn file_path(&self, file_id: FileId) -> &Path {
         self.interner.lookup(file_id).unwrap()
     }
+    #[must_use]
     pub fn get(&self, file_id: FileId) -> &Vec<u8> {
         self.data.get(&file_id).unwrap()
     }
+    #[must_use]
     pub fn get_str(&self, file_id: FileId) -> &str {
         std::str::from_utf8(self.get(file_id)).unwrap()
     }
@@ -74,6 +79,7 @@ impl ReadOnlyVfs {
             contents: self.get_str(*file_id),
         })
     }
+    #[must_use]
     pub fn par_iter(&self) -> impl ParallelIterator<Item = VfsEntry> {
         self.data.par_iter().map(move |(file_id, _)| VfsEntry {
             file_id: *file_id,
