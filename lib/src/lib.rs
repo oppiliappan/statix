@@ -82,14 +82,14 @@ impl Report {
     pub fn total_suggestion_range(&self) -> Option<TextRange> {
         self.diagnostics
             .iter()
-            .flat_map(|d| Some(d.suggestion.as_ref()?.at))
+            .filter_map(|d| Some(d.suggestion.as_ref()?.at))
             .reduce(rnix::TextRange::cover)
     }
     /// A range that encompasses all the diagnostics provided in this report
     pub fn total_diagnostic_range(&self) -> Option<TextRange> {
         self.diagnostics
             .iter()
-            .flat_map(|d| Some(d.at))
+            .map(|d| d.at)
             .reduce(rnix::TextRange::cover)
     }
     /// Unsafe but handy replacement for above
