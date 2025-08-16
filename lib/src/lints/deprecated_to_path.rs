@@ -1,10 +1,10 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule};
+use crate::{Metadata, Report, Rule, session::SessionInfo};
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Apply, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{Apply, TypedNode},
 };
 
 /// ## What it does
@@ -46,7 +46,7 @@ impl Rule for DeprecatedIsNull {
             if let NodeOrToken::Node(node) = node;
             if let Some(apply) = Apply::cast(node.clone());
             let lambda_path = apply.lambda()?.to_string();
-            if ALLOWED_PATHS.iter().any(|&p| p == lambda_path.as_str());
+            if ALLOWED_PATHS.contains(&lambda_path.as_str());
             then {
                 let at = node.text_range();
                 let message = format!("`{lambda_path}` is deprecated, see `:doc builtins.toPath` within the REPL for more");

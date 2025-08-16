@@ -1,10 +1,10 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{Apply, Ident, Lambda, TokenWrapper, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
+    types::{Apply, Ident, Lambda, TokenWrapper, TypedNode},
 };
 
 /// ## What it does

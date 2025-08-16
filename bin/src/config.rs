@@ -5,10 +5,10 @@ use std::{
     str::FromStr,
 };
 
-use crate::{dirs, err::ConfigErr, utils, LintMap};
+use crate::{LintMap, dirs, err::ConfigErr, utils};
 
 use clap::Parser;
-use lib::{session::Version, LINTS};
+use lib::{LINTS, session::Version};
 use serde::{Deserialize, Serialize};
 use vfs::ReadOnlyVfs;
 
@@ -282,7 +282,7 @@ impl ConfFile {
             };
             if statix_toml_path.exists() {
                 return Self::from_path(statix_toml_path);
-            };
+            }
         }
         Ok(Self::default())
     }
@@ -362,7 +362,7 @@ fn vfs(files: &[PathBuf]) -> vfs::ReadOnlyVfs {
             vfs.set_file_contents(file, data.as_bytes());
         } else {
             println!("`{}` contains non-utf8 content", file.display());
-        };
+        }
     }
     vfs
 }

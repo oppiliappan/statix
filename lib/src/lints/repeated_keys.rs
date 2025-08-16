@@ -1,10 +1,12 @@
-use crate::{session::SessionInfo, Metadata, Report, Rule};
+use std::fmt::Write as _;
+
+use crate::{Metadata, Report, Rule, session::SessionInfo};
 
 use if_chain::if_chain;
 use macros::lint;
 use rnix::{
-    types::{AttrSet, EntryHolder, Ident, KeyValue, TokenWrapper, TypedNode},
     NodeOrToken, SyntaxElement, SyntaxKind,
+    types::{AttrSet, EntryHolder, Ident, KeyValue, TokenWrapper, TypedNode},
 };
 
 /// ## What it does
@@ -96,7 +98,7 @@ impl Rule for RepeatedKeys {
                         1 => "... and here (`1` occurrence omitted).".to_string(),
                         n => format!("... and here (`{n}` occurrences omitted)."),
                     };
-                    message.push_str(&format!(" Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.", first_component_ident.as_str(), first_subkey, second_subkey, third_subkey));
+                write!(message, " Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.", first_component_ident.as_str(), first_subkey, second_subkey, third_subkey).unwrap();
                     message
                 };
 

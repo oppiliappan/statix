@@ -52,7 +52,8 @@ in
               jobs = {
                 ${ids.jobs.getCheckNames} = {
                   runs-on = runner.name;
-                  outputs.${ids.outputs.jobs.getCheckNames} = "\${{ steps.${ids.steps.getCheckNames}.outputs.${ids.outputs.steps.getCheckNames} }}";
+                  outputs.${ids.outputs.jobs.getCheckNames} =
+                    "\${{ steps.${ids.steps.getCheckNames}.outputs.${ids.outputs.steps.getCheckNames} }}";
                   steps = [
                     steps.checkout
                     steps.cachixInstallNix
@@ -69,7 +70,8 @@ in
                 ${ids.jobs.check} = {
                   needs = ids.jobs.getCheckNames;
                   runs-on = runner.name;
-                  strategy.matrix.${matrixParam} = "\${{ fromJson(needs.${ids.jobs.getCheckNames}.outputs.${ids.outputs.jobs.getCheckNames}) }}";
+                  strategy.matrix.${matrixParam} =
+                    "\${{ fromJson(needs.${ids.jobs.getCheckNames}.outputs.${ids.outputs.jobs.getCheckNames}) }}";
                   steps = [
                     steps.checkout
                     steps.cachixInstallNix

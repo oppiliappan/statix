@@ -1,8 +1,8 @@
 use std::{fmt::Write, iter::IntoIterator};
 
 use rnix::{
-    types::{self, TokenWrapper, TypedNode},
     SyntaxNode,
+    types::{self, TokenWrapper, TypedNode},
 };
 
 fn ast_from_text<N: TypedNode>(text: &str) -> N {

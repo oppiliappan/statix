@@ -2,11 +2,11 @@ mod explain;
 mod metadata;
 
 use explain::generate_explain_impl;
-use metadata::{generate_meta_impl, RawLintMeta};
+use metadata::{RawLintMeta, generate_meta_impl};
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse_macro_input, Ident, ItemStruct};
+use syn::{Ident, ItemStruct, parse_macro_input};
 
 fn generate_self_impl(struct_name: &Ident) -> TokenStream2 {
     quote! {

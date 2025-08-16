@@ -1,8 +1,8 @@
-use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 
 use if_chain::if_chain;
 use macros::lint;
-use rnix::{types::TypedNode, NodeOrToken, SyntaxElement, SyntaxKind};
+use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, types::TypedNode};
 
 /// ## What it does
 /// Checks for URI expressions that are not quoted.
