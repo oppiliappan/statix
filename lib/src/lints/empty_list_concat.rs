@@ -58,7 +58,5 @@ impl Rule for EmptyListConcat {
 }
 
 fn is_empty_array(node: &SyntaxNode) -> bool {
-    List::cast(node.clone())
-        .map(|list| list.items().count() == 0)
-        .unwrap_or_default()
+    List::cast(node.clone()).is_some_and(|list| list.items().count() == 0)
 }
