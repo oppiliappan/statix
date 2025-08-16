@@ -8,7 +8,7 @@ use indexmap::IndexSet;
 use rayon::prelude::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct FileId(pub u32);
+pub struct FileId(pub usize);
 
 #[derive(Debug, Default)]
 pub struct Interner {
@@ -17,16 +17,14 @@ pub struct Interner {
 
 impl Interner {
     pub fn get<P: AsRef<Path>>(&self, path: P) -> Option<FileId> {
-        self.map
-            .get_index_of(path.as_ref())
-            .map(|i| FileId(i as u32))
+        self.map.get_index_of(path.as_ref()).map(FileId)
     }
     pub fn intern(&mut self, path: PathBuf) -> FileId {
         let (id, _) = self.map.insert_full(path);
-        FileId(id as u32)
+        FileId(id)
     }
     pub fn lookup(&self, file: FileId) -> Option<&Path> {
-        self.map.get_index(file.0 as usize).map(PathBuf::as_path)
+        self.map.get_index(file.0).map(PathBuf::as_path)
     }
 }
 

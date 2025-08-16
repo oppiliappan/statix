@@ -10,7 +10,6 @@ members = [
 [workspace.lints.clippy]
 pedantic = { level = "deny", priority = -1 }
 
-cast_possible_truncation = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
 module_name_repetitions = "allow"
