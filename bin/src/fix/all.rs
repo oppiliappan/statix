@@ -46,7 +46,7 @@ fn reorder(mut reports: Vec<Report>) -> Vec<Report> {
         .fold(VecDeque::new(), |mut deque: VecDeque<Report>, new_elem| {
             let front = deque.front();
             let new_range = new_elem.range();
-            if let Some(front_range) = front.map(|f| f.range()) {
+            if let Some(front_range) = front.map(lib::Report::range) {
                 if new_range.start() > front_range.end() {
                     deque.push_front(new_elem);
                 }

@@ -22,7 +22,7 @@ impl PartialOrd for Version {
 
 fn parse_number(s: &str) -> Option<u16> {
     s.chars()
-        .take_while(|c| c.is_ascii_digit())
+        .take_while(char::is_ascii_digit)
         .collect::<String>()
         .parse::<u16>()
         .ok()

@@ -26,7 +26,7 @@ impl Interner {
         FileId(id as u32)
     }
     pub fn lookup(&self, file: FileId) -> Option<&Path> {
-        self.map.get_index(file.0 as usize).map(|p| p.as_path())
+        self.map.get_index(file.0 as usize).map(PathBuf::as_path)
     }
 }
 

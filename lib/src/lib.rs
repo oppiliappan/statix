@@ -82,14 +82,14 @@ impl Report {
         self.diagnostics
             .iter()
             .flat_map(|d| Some(d.suggestion.as_ref()?.at))
-            .reduce(|acc, next| acc.cover(next))
+            .reduce(rnix::TextRange::cover)
     }
     /// A range that encompasses all the diagnostics provided in this report
     pub fn total_diagnostic_range(&self) -> Option<TextRange> {
         self.diagnostics
             .iter()
             .flat_map(|d| Some(d.at))
-            .reduce(|acc, next| acc.cover(next))
+            .reduce(rnix::TextRange::cover)
     }
     /// Unsafe but handy replacement for above
     pub fn range(&self) -> TextRange {
