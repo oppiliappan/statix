@@ -54,11 +54,13 @@ impl Report {
         }
     }
     /// Add a diagnostic to this report
+    #[allow(clippy::return_self_not_must_use)]
     pub fn diagnostic<S: AsRef<str>>(mut self, at: TextRange, message: S) -> Self {
         self.diagnostics.push(Diagnostic::new(at, message));
         self
     }
     /// Add a diagnostic with a fix to this report
+    #[allow(clippy::return_self_not_must_use)]
     pub fn suggest<S: AsRef<str>>(
         mut self,
         at: TextRange,
@@ -70,6 +72,7 @@ impl Report {
         self
     }
     /// Set severity level
+    #[allow(clippy::return_self_not_must_use)]
     pub fn severity(mut self, severity: Severity) -> Self {
         self.severity = severity;
         self
