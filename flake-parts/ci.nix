@@ -47,7 +47,7 @@ in
               on = {
                 pull_request = { };
                 push = { };
-                workflow_call = { };
+                workflow_dispatch = { };
               };
               jobs = {
                 ${ids.jobs.getCheckNames} = {
