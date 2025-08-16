@@ -327,7 +327,7 @@ impl ConfFile {
     pub fn version(&self) -> Result<Version, ConfigErr> {
         if let Some(v) = &self.nix_version {
             v.parse::<Version>()
-                .map_err(|_| ConfigErr::ConfFileVersionParse(v.clone()))
+                .map_err(|()| ConfigErr::ConfFileVersionParse(v.clone()))
         } else if let Some(v) = utils::get_version_info().and_then(|o| o.parse::<Version>().ok()) {
             Ok(v)
         } else {
