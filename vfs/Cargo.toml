@@ -5,8 +5,8 @@ name = "vfs"
 version = "0.0.0"
 
 [dependencies]
-indexmap = "1.6.2"
-rayon = "1.5.1"
+indexmap = "2.10.0"
+rayon = "1.11.0"
 
 [lints]
 workspace = true
