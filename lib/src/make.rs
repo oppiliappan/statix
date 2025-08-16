@@ -61,10 +61,10 @@ pub fn attrset(
     let mut buffer = String::new();
 
     writeln!(buffer, "{}{{", if recursive { "rec " } else { "" }).unwrap();
-    for inherit in inherits.into_iter() {
+    for inherit in inherits {
         writeln!(buffer, "  {}", inherit.node().text()).unwrap();
     }
-    for entry in entries.into_iter() {
+    for entry in entries {
         writeln!(buffer, "  {}", entry.node().text()).unwrap();
     }
     write!(buffer, "}}").unwrap();
