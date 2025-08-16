@@ -22,7 +22,7 @@ lib.workspace = true
 rayon.workspace = true
 rnix.workspace = true
 serde.workspace = true
-serde_json = { workspace = true, optional = true }
+serde_json = { optional = true, workspace = true }
 similar.workspace = true
 thiserror.workspace = true
 toml.workspace = true

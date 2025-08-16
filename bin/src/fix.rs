@@ -90,7 +90,7 @@ pub mod main {
                     std::fs::write(path, &*fix_result.src).map_err(FixErr::InvalidPath)?;
                 }
                 _ => (),
-            };
+            }
         }
         Ok(())
     }
@@ -138,7 +138,7 @@ pub mod main {
                 std::fs::write(path, &*single_result.src).map_err(FixErr::InvalidPath)?;
             }
             (_, Err(e)) => return Err(e.into()),
-        };
+        }
         Ok(())
     }
 }

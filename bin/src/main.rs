@@ -7,7 +7,7 @@ use statix::{
     lint, fix, explain, dump, list,
 };
 
-fn _main() -> Result<(), StatixErr> {
+fn main_() -> Result<(), StatixErr> {
     let opts = Opts::parse();
     match opts.cmd {
         SubCommand::Check(config) => lint::main::main(&config),
@@ -20,7 +20,7 @@ fn _main() -> Result<(), StatixErr> {
 }
 
 fn main() {
-    if let Err(e) = _main() {
+    if let Err(e) = main_() {
         eprintln!("{e}");
     }
 }

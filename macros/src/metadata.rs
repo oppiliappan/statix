@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
 use syn::{
+    Expr, ExprArray, Ident, Lit, Path, Token,
     parse::{Parse, ParseStream, Result},
     punctuated::Punctuated,
-    Expr, ExprArray, Ident, Lit, Path, Token,
 };
 
 struct KeyValue {
@@ -52,7 +52,7 @@ enum MatchWith<'π> {
 fn extract<'λ>(id: &str, raw: &'λ RawLintMeta) -> &'λ Expr {
     raw.0
         .get(&format_ident!("{}", id))
-        .unwrap_or_else(|| panic!("`{}` not present", id))
+        .unwrap_or_else(|| panic!("`{id}` not present"))
 }
 
 fn as_lit(e: &Expr) -> &Lit {

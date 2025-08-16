@@ -12,8 +12,8 @@ lazy_static.workspace = true
 macros.workspace = true
 rnix.workspace = true
 rowan.workspace = true
-serde = { workspace = true, optional = true }
-serde_json = { workspace = true, optional = true }
+serde = { optional = true, workspace = true }
+serde_json = { optional = true, workspace = true }
 
 [features]
 default = []
