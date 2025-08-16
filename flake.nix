@@ -37,6 +37,7 @@
           ./flake-parts/ci.nix
           ./flake-parts/dependabot.nix
           ./flake-parts/dev-shell.nix
+          ./flake-parts/dogfood.nix
           ./flake-parts/files.nix
           ./flake-parts/fmt.nix
           ./flake-parts/git-hooks.nix
