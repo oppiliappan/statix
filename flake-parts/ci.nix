@@ -1,5 +1,9 @@
+{ lib, ... }:
 let
-  filePath = ".github/workflows/check.yaml";
+  filePaths = {
+    check = ".github/workflows/check.yaml";
+    updateFlakeLock = ".github/workflows/update-flake-lock.yaml";
+  };
 
   ids = {
     jobs = {
@@ -37,7 +41,7 @@ in
       {
         files.files = [
           {
-            path_ = filePath;
+            path_ = filePaths.check;
             drv = pkgs.writers.writeJSON "gh-actions-workflow-check.yaml" {
               name = "Check";
               on = {
@@ -89,9 +93,33 @@ in
               };
             };
           }
+          {
+            path_ = filePaths.updateFlakeLock;
+            drv = pkgs.writers.writeJSON "update-flake-lock.yaml" {
+              name = "Update flake.lock";
+              on = {
+                workflow_dispatch = { };
+                schedule = [ { cron = "0 0 * * 5"; } ];
+              };
+              jobs.nix-flake-update = {
+                permissions = {
+                  contents = "write";
+                  id-token = "write";
+                  issues = "write";
+                  pull-requests = "write";
+                };
+                runs-on = runner.name;
+                steps = [
+                  steps.checkout
+                  steps.cachixInstallNix
+                  { uses = "DeterminateSystems/update-flake-lock@main"; }
+                ];
+              };
+            };
+          }
         ];
 
-        treefmt.settings.global.excludes = [ filePath ];
+        treefmt.settings.global.excludes = lib.attrValues filePaths;
       };
   };
 }
