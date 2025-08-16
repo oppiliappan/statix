@@ -26,7 +26,7 @@ fn collect_fixes(
                     .filter(|report| report.total_suggestion_range().is_some())
                     .collect::<Vec<_>>()
             }),
-            _ => None,
+            WalkEvent::Leave(_) => None,
         })
         .flatten()
         .collect())

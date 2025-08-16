@@ -42,7 +42,7 @@ fn find(offset: TextSize, src: &str, sess: &SessionInfo) -> Result<Report, Singl
                     .filter_map(|rule| rule.validate(&child, sess))
                     .find(|report| report.total_suggestion_range().is_some())
             }),
-            _ => None,
+            WalkEvent::Leave(_) => None,
         })
         .flatten()
         .find(|report| report.total_diagnostic_range().unwrap().contains(offset))

@@ -30,7 +30,7 @@ pub fn lint_with(vfs_entry: &VfsEntry, lints: &LintMap, sess: &SessionInfo) -> L
                     .filter_map(|rule| rule.validate(&child, sess))
                     .collect::<Vec<_>>()
             }),
-            _ => None,
+            WalkEvent::Leave(_) => None,
         })
         .flatten()
         .chain(error_reports)
