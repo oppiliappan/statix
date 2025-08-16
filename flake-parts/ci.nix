@@ -112,7 +112,13 @@ in
                 steps = [
                   steps.checkout
                   steps.cachixInstallNix
-                  { uses = "DeterminateSystems/update-flake-lock@main"; }
+                  {
+                    uses = "DeterminateSystems/update-flake-lock@main";
+                    "with" = {
+                      commit-msg = "chore(flake): bump inputs";
+                      pr-title = "chore(flake): bump inputs";
+                    };
+                  }
                 ];
               };
             };
