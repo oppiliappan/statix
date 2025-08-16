@@ -255,6 +255,5 @@ fn colorize(message: &str) -> String {
                 part.to_string()
             }
         })
-        .collect::<Vec<_>>()
-        .join("")
+        .collect::<String>()
 }
