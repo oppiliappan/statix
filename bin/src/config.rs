@@ -306,7 +306,7 @@ impl ConfFile {
             (*LINTS)
                 .iter()
                 .filter(|l| !self.disabled.iter().any(|check| check == l.name()))
-                .cloned()
+                .copied()
                 .collect::<Vec<_>>()
                 .as_slice(),
         )
