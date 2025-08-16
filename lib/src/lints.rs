@@ -14,8 +14,6 @@ lints! {
     redundant_pattern_bind,
     unquoted_uri,
     empty_inherit,
-    faster_groupby,
-    faster_zipattrswith,
     deprecated_to_path,
     bool_simplification,
     useless_has_attr,
