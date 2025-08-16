@@ -240,7 +240,7 @@ fn line(at: TextSize, src: &str) -> usize {
 
 fn column(at: TextSize, src: &str) -> usize {
     let at = at.into();
-    src[..at].rfind('\n').map(|c| at - c).unwrap_or(at + 1)
+    src[..at].rfind('\n').map_or_else(|| at + 1, |c| at - c)
 }
 
 // everything within backticks is colorized, backticks are removed
