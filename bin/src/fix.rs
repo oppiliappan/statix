@@ -50,7 +50,7 @@ pub mod main {
     use lib::session::SessionInfo;
     use similar::TextDiff;
 
-    pub fn all(fix_config: FixConfig) -> Result<(), StatixErr> {
+    pub fn all(fix_config: &FixConfig) -> Result<(), StatixErr> {
         let conf_file = ConfFile::discover(&fix_config.conf_path)?;
         let vfs = fix_config.vfs(conf_file.ignore.as_slice())?;
 
@@ -83,7 +83,7 @@ pub mod main {
                     let src = fix_result
                         .map(|r| r.src)
                         .unwrap_or(Cow::Borrowed(entry.contents));
-                    println!("{}", &src)
+                    println!("{}", &src);
                 }
                 (FixOut::Write, Some(fix_result)) => {
                     let path = entry.file_path;
@@ -95,7 +95,7 @@ pub mod main {
         Ok(())
     }
 
-    pub fn single(single_config: SingleConfig) -> Result<(), StatixErr> {
+    pub fn single(single_config: &SingleConfig) -> Result<(), StatixErr> {
         let vfs = single_config.vfs()?;
         let entry = vfs.iter().next().unwrap();
         let path = entry.file_path.display().to_string();
@@ -131,7 +131,7 @@ pub mod main {
                 let src = single_result
                     .map(|r| r.src)
                     .unwrap_or(Cow::Borrowed(original_src));
-                println!("{}", &src)
+                println!("{}", &src);
             }
             (FixOut::Write, Ok(single_result)) => {
                 let path = entry.file_path;

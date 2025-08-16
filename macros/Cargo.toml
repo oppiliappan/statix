@@ -16,3 +16,6 @@ features = [ "full" ]
 
 [lib]
 proc-macro = true
+
+[lints]
+workspace = true

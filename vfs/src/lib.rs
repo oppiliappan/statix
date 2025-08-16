@@ -8,7 +8,7 @@ use indexmap::IndexSet;
 use rayon::prelude::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct FileId(pub u32);
+pub struct FileId(pub usize);
 
 #[derive(Debug, Default)]
 pub struct Interner {
@@ -17,16 +17,14 @@ pub struct Interner {
 
 impl Interner {
     pub fn get<P: AsRef<Path>>(&self, path: P) -> Option<FileId> {
-        self.map
-            .get_index_of(path.as_ref())
-            .map(|i| FileId(i as u32))
+        self.map.get_index_of(path.as_ref()).map(FileId)
     }
     pub fn intern(&mut self, path: PathBuf) -> FileId {
         let (id, _) = self.map.insert_full(path);
-        FileId(id as u32)
+        FileId(id)
     }
     pub fn lookup(&self, file: FileId) -> Option<&Path> {
-        self.map.get_index(file.0 as usize).map(|p| p.as_path())
+        self.map.get_index(file.0).map(PathBuf::as_path)
     }
 }
 
@@ -45,18 +43,23 @@ impl ReadOnlyVfs {
     pub fn alloc_file_id<P: AsRef<Path>>(&mut self, path: P) -> FileId {
         self.interner.intern(path.as_ref().to_owned())
     }
+    #[must_use]
     pub fn len(&self) -> usize {
         self.data.len()
     }
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
+    #[must_use]
     pub fn file_path(&self, file_id: FileId) -> &Path {
         self.interner.lookup(file_id).unwrap()
     }
+    #[must_use]
     pub fn get(&self, file_id: FileId) -> &Vec<u8> {
         self.data.get(&file_id).unwrap()
     }
+    #[must_use]
     pub fn get_str(&self, file_id: FileId) -> &str {
         std::str::from_utf8(self.get(file_id)).unwrap()
     }
@@ -74,6 +77,7 @@ impl ReadOnlyVfs {
             contents: self.get_str(*file_id),
         })
     }
+    #[must_use]
     pub fn par_iter(&self) -> impl ParallelIterator<Item = VfsEntry> {
         self.data.par_iter().map(move |(file_id, _)| VfsEntry {
             file_id: *file_id,

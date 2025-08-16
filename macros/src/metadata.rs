@@ -146,7 +146,7 @@ impl<'μ> LintMeta<'μ> {
         }
     }
 
-    fn generate_report_fn(&self) -> TokenStream2 {
+    fn generate_report_fn() -> TokenStream2 {
         quote! {
             fn report(&self) -> crate::Report {
                 crate::Report::new(self.note(), self.code())
@@ -162,7 +162,7 @@ pub fn generate_meta_impl(struct_name: &Ident, meta: &RawLintMeta) -> TokenStrea
     let code_fn = not_raw.generate_code_fn();
     let match_with_fn = not_raw.generate_match_with_fn();
     let match_kind = not_raw.generate_match_kind_fn();
-    let report_fn = not_raw.generate_report_fn();
+    let report_fn = LintMeta::generate_report_fn();
 
     quote! {
         impl crate::Metadata for #struct_name {

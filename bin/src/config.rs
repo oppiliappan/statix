@@ -79,7 +79,7 @@ impl Check {
             let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
             let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
             let files = dirs::walk_nix_files(ignore, &self.target)?;
-            vfs(files.collect::<Vec<_>>())
+            Ok(vfs(&files.collect::<Vec<_>>()))
         }
     }
 }
@@ -132,12 +132,13 @@ impl Fix {
             let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
             let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
             let files = dirs::walk_nix_files(ignore, &self.target)?;
-            vfs(files.collect::<Vec<_>>())
+            Ok(vfs(&files.collect::<Vec<_>>()))
         }
     }
 
     // i need this ugly helper because clap's data model
     // does not reflect what i have in mind
+    #[must_use]
     pub fn out(&self) -> FixOut {
         if self.diff_only {
             FixOut::Diff
@@ -189,6 +190,7 @@ impl Single {
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         }
     }
+    #[must_use]
     pub fn out(&self) -> FixOut {
         if self.diff_only {
             FixOut::Diff
@@ -253,7 +255,7 @@ impl FromStr for OutFormat {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ConfFile {
     #[serde(default = "Vec::new")]
     disabled: Vec<String>,
@@ -262,19 +264,6 @@ pub struct ConfFile {
 
     #[serde(default = "Vec::new")]
     pub ignore: Vec<String>,
-}
-
-impl Default for ConfFile {
-    fn default() -> Self {
-        let disabled = Default::default();
-        let ignore = Default::default();
-        let nix_version = Default::default();
-        Self {
-            disabled,
-            nix_version,
-            ignore,
-        }
-    }
 }
 
 impl ConfFile {
@@ -297,6 +286,7 @@ impl ConfFile {
         }
         Ok(Self::default())
     }
+    #[must_use]
     pub fn dump(&self) -> String {
         let ideal_config = {
             let disabled = vec![];
@@ -310,12 +300,13 @@ impl ConfFile {
         };
         toml::ser::to_string_pretty(&ideal_config).unwrap()
     }
+    #[must_use]
     pub fn lints(&self) -> LintMap {
         utils::lint_map_of(
             (*LINTS)
                 .iter()
                 .filter(|l| !self.disabled.iter().any(|check| check == l.name()))
-                .cloned()
+                .copied()
                 .collect::<Vec<_>>()
                 .as_slice(),
         )
@@ -323,7 +314,7 @@ impl ConfFile {
     pub fn version(&self) -> Result<Version, ConfigErr> {
         if let Some(v) = &self.nix_version {
             v.parse::<Version>()
-                .map_err(|_| ConfigErr::ConfFileVersionParse(v.clone()))
+                .map_err(|()| ConfigErr::ConfFileVersionParse(v.clone()))
         } else if let Some(v) = utils::get_version_info().and_then(|o| o.parse::<Version>().ok()) {
             Ok(v)
         } else {
@@ -363,9 +354,9 @@ fn parse_warning_code(src: &str) -> Result<u32, ConfigErr> {
     }
 }
 
-fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
+fn vfs(files: &[PathBuf]) -> vfs::ReadOnlyVfs {
     let mut vfs = ReadOnlyVfs::default();
-    for file in files.iter() {
+    for file in files {
         if let Ok(data) = fs::read_to_string(file) {
             let _id = vfs.alloc_file_id(file);
             vfs.set_file_contents(file, data.as_bytes());
@@ -373,5 +364,5 @@ fn vfs(files: Vec<PathBuf>) -> Result<ReadOnlyVfs, ConfigErr> {
             println!("`{}` contains non-utf8 content", file.display());
         };
     }
-    Ok(vfs)
+    vfs
 }

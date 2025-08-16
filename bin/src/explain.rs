@@ -17,9 +17,9 @@ pub mod main {
 
     use crate::{config::Explain as ExplainConfig, err::StatixErr};
 
-    pub fn main(explain_config: ExplainConfig) -> Result<(), StatixErr> {
+    pub fn main(explain_config: &ExplainConfig) -> Result<(), StatixErr> {
         let explanation = super::explain(explain_config.target)?;
-        println!("{}", explanation);
+        println!("{explanation}");
         Ok(())
     }
 }

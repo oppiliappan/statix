@@ -61,7 +61,7 @@ impl Rule for ManualInherit {
                 let at = node.text_range();
                 let replacement = {
                     let set = value.set()?;
-                    make::inherit_from_stmt(set, &[key]).node().clone()
+                    make::inherit_from_stmt(&set, &[key]).node().clone()
                 };
                 let message = "This assignment is better written with `inherit`";
                 Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))

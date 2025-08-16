@@ -36,7 +36,7 @@ mod util {
                     let session = $sess;
 
                     let mut buffer = Vec::new();
-                    vfs.iter().map(|entry| lint::lint(entry, &session)).for_each(|r| {
+                    vfs.iter().map(|entry| lint::lint(&entry, &session)).for_each(|r| {
                         buffer.write(&r, &vfs, OutFormat::StdErr).unwrap();
                     });
 

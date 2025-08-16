@@ -22,7 +22,7 @@ impl PartialOrd for Version {
 
 fn parse_number(s: &str) -> Option<u16> {
     s.chars()
-        .take_while(|c| c.is_ascii_digit())
+        .take_while(char::is_ascii_digit)
         .collect::<String>()
         .parse::<u16>()
         .ok()
@@ -53,10 +53,12 @@ pub struct SessionInfo {
 }
 
 impl SessionInfo {
+    #[must_use]
     pub fn from_version(nix_version: Version) -> Self {
         Self { nix_version }
     }
 
+    #[must_use]
     pub fn version(&self) -> &Version {
         &self.nix_version
     }
@@ -69,13 +71,13 @@ mod tests {
     #[test]
     fn parse_trivial() {
         let v = "1.6.1".parse::<Version>().ok();
-        assert!(v.is_some())
+        assert!(v.is_some());
     }
 
     #[test]
     fn parse() {
         let v = "2.4pre20211006_53e4794".parse::<Version>().ok();
-        assert!(v.is_some())
+        assert!(v.is_some());
     }
 
     #[test]

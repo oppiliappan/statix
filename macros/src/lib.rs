@@ -11,8 +11,8 @@ use syn::{parse_macro_input, Ident, ItemStruct};
 fn generate_self_impl(struct_name: &Ident) -> TokenStream2 {
     quote! {
         impl #struct_name {
-            pub fn new() -> Box<Self> {
-                Box::new(Self)
+            pub fn new() -> Self {
+                Self
             }
         }
     }
@@ -32,7 +32,7 @@ pub fn lint(attr: TokenStream, item: TokenStream) -> TokenStream {
         #struct_item
 
         ::lazy_static::lazy_static! {
-            pub static ref LINT: Box<dyn crate::Lint> = #struct_name::new();
+            pub static ref LINT: Box<dyn crate::Lint> = Box::new(#struct_name::new());
         }
 
         #self_impl

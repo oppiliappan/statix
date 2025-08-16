@@ -51,7 +51,7 @@ fn write_stderr<T: Write>(
     let path = vfs.file_path(file_id);
     let range = |at: TextRange| at.start().into()..at.end().into();
     let src_id = path.to_str().unwrap_or("<unknown>");
-    for report in lint_result.reports.iter() {
+    for report in &lint_result.reports {
         let offset = report
             .diagnostics
             .iter()
@@ -99,8 +99,8 @@ fn write_errfmt<T: Write>(
     let file_id = lint_result.file_id;
     let src = str::from_utf8(vfs.get(file_id)).unwrap();
     let path = vfs.file_path(file_id);
-    for report in lint_result.reports.iter() {
-        for diagnostic in report.diagnostics.iter() {
+    for report in &lint_result.reports {
+        for diagnostic in &report.diagnostics {
             let line = line(diagnostic.at.start(), src);
             let col = column(diagnostic.at.start(), src);
             writeln!(
@@ -240,7 +240,7 @@ fn line(at: TextSize, src: &str) -> usize {
 
 fn column(at: TextSize, src: &str) -> usize {
     let at = at.into();
-    src[..at].rfind('\n').map(|c| at - c).unwrap_or(at + 1)
+    src[..at].rfind('\n').map_or_else(|| at + 1, |c| at - c)
 }
 
 // everything within backticks is colorized, backticks are removed
@@ -255,6 +255,5 @@ fn colorize(message: &str) -> String {
                 part.to_string()
             }
         })
-        .collect::<Vec<_>>()
-        .join("")
+        .collect::<String>()
 }
