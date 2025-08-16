@@ -7,3 +7,31 @@ members = [
     "vfs",
 ]
 
+[workspace.lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+
+cast_possible_truncation = "allow"
+cloned_instead_of_copied = "allow"
+default_trait_access = "allow"
+doc_markdown = "allow"
+explicit_into_iter_loop = "allow"
+explicit_iter_loop = "allow"
+flat_map_option = "allow"
+ignored_unit_patterns = "allow"
+manual_is_variant_and = "allow"
+map_unwrap_or = "allow"
+match_same_arms = "allow"
+match_wildcard_for_single_variants = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+needless_pass_by_value = "allow"
+redundant_closure_for_method_calls = "allow"
+return_self_not_must_use = "allow"
+semicolon_if_nothing_returned = "allow"
+uninlined_format_args = "allow"
+unnecessary_box_returns = "allow"
+unnecessary_join = "allow"
+unnecessary_wraps = "allow"
+unused_self = "allow"

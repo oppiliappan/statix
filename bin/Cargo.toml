@@ -41,3 +41,6 @@ paste = "1.0.15"
 
 [features]
 json = [ "lib/json-out", "serde_json" ]
+
+[lints]
+workspace = true

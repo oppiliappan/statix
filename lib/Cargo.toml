@@ -22,3 +22,6 @@ optional = true
 [features]
 default = []
 json-out = [ "serde", "serde_json" ]
+
+[lints]
+workspace = true

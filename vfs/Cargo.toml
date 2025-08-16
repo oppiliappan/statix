@@ -7,3 +7,6 @@ license = "MIT"
 [dependencies]
 indexmap = "1.6.2"
 rayon = "1.5.1"
+
+[lints]
+workspace = true
