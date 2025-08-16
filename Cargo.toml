@@ -12,7 +12,6 @@ pedantic = { level = "deny", priority = -1 }
 
 cast_possible_truncation = "allow"
 cloned_instead_of_copied = "allow"
-default_trait_access = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
 module_name_repetitions = "allow"

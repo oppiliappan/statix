@@ -255,7 +255,7 @@ impl FromStr for OutFormat {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ConfFile {
     #[serde(default = "Vec::new")]
     disabled: Vec<String>,
@@ -264,19 +264,6 @@ pub struct ConfFile {
 
     #[serde(default = "Vec::new")]
     pub ignore: Vec<String>,
-}
-
-impl Default for ConfFile {
-    fn default() -> Self {
-        let disabled = Default::default();
-        let ignore = Default::default();
-        let nix_version = Default::default();
-        Self {
-            disabled,
-            nix_version,
-            ignore,
-        }
-    }
 }
 
 impl ConfFile {
