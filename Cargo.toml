@@ -13,7 +13,6 @@ pedantic = { level = "deny", priority = -1 }
 cast_possible_truncation = "allow"
 cloned_instead_of_copied = "allow"
 default_trait_access = "allow"
-doc_markdown = "allow"
 explicit_into_iter_loop = "allow"
 explicit_iter_loop = "allow"
 flat_map_option = "allow"

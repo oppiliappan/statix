@@ -263,7 +263,7 @@ pub trait Explain {
 pub trait Lint: Metadata + Explain + Rule + Send + Sync {}
 
 /// Helper utility to take lints from modules and insert them into a map for efficient
-/// access. Mapping is from a SyntaxKind to a list of lints that apply on that Kind.
+/// access. Mapping is from a `SyntaxKind` to a list of lints that apply on that Kind.
 ///
 /// See `lints.rs` for usage.
 #[macro_export]
