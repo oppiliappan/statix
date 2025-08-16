@@ -94,7 +94,7 @@ impl Rule for RepeatedKeys {
                     let mut message = match remaining_occurrences {
                         0 => "... and here.".to_string(),
                         1 => "... and here (`1` occurrence omitted).".to_string(),
-                        n => format!("... and here (`{}` occurrences omitted).", n),
+                        n => format!("... and here (`{n}` occurrences omitted)."),
                     };
                     message.push_str(&format!(" Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.", first_component_ident.as_str(), first_subkey, second_subkey, third_subkey));
                     message

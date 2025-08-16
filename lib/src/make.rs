@@ -21,15 +21,15 @@ fn ast_from_text<N: TypedNode>(text: &str) -> N {
 }
 
 pub fn parenthesize(node: &SyntaxNode) -> types::Paren {
-    ast_from_text(&format!("({})", node))
+    ast_from_text(&format!("({node})"))
 }
 
 pub fn quote(node: &SyntaxNode) -> types::Str {
-    ast_from_text(&format!("\"{}\"", node))
+    ast_from_text(&format!("\"{node}\""))
 }
 
 pub fn unary_not(node: &SyntaxNode) -> types::UnaryOp {
-    ast_from_text(&format!("!{}", node))
+    ast_from_text(&format!("!{node}"))
 }
 
 pub fn inherit_stmt<'a>(nodes: impl IntoIterator<Item = &'a types::Ident>) -> types::Inherit {
@@ -38,7 +38,7 @@ pub fn inherit_stmt<'a>(nodes: impl IntoIterator<Item = &'a types::Ident>) -> ty
         .map(|i| i.as_str().to_owned())
         .collect::<Vec<_>>()
         .join(" ");
-    ast_from_text(&format!("{{ inherit {}; }}", inherited_idents))
+    ast_from_text(&format!("{{ inherit {inherited_idents}; }}"))
 }
 
 pub fn inherit_from_stmt<'a>(
@@ -50,7 +50,7 @@ pub fn inherit_from_stmt<'a>(
         .map(|i| i.as_str().to_owned())
         .collect::<Vec<_>>()
         .join(" ");
-    ast_from_text(&format!("{{ inherit ({}) {}; }}", from, inherited_idents))
+    ast_from_text(&format!("{{ inherit ({from}) {inherited_idents}; }}"))
 }
 
 pub fn attrset(
@@ -73,7 +73,7 @@ pub fn attrset(
 }
 
 pub fn select(set: &SyntaxNode, index: &SyntaxNode) -> types::Select {
-    ast_from_text(&format!("{}.{}", set, index))
+    ast_from_text(&format!("{set}.{index}"))
 }
 
 pub fn ident(text: &str) -> types::Ident {
@@ -86,9 +86,9 @@ pub fn empty() -> types::Root {
 
 // TODO: make `op` strongly typed here
 pub fn binary(lhs: &SyntaxNode, op: &str, rhs: &SyntaxNode) -> types::BinOp {
-    ast_from_text(&format!("{} {} {}", lhs, op, rhs))
+    ast_from_text(&format!("{lhs} {op} {rhs}"))
 }
 
 pub fn or_default(set: &SyntaxNode, index: &SyntaxNode, default: &SyntaxNode) -> types::OrDefault {
-    ast_from_text(&format!("{}.{} or {}", set, index, default))
+    ast_from_text(&format!("{set}.{index} or {default}"))
 }

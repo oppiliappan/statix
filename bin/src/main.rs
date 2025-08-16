@@ -21,6 +21,6 @@ fn _main() -> Result<(), StatixErr> {
 
 fn main() {
     if let Err(e) = _main() {
-        eprintln!("{}", e);
+        eprintln!("{e}");
     }
 }
