@@ -1,6 +1,5 @@
 use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
@@ -36,25 +35,27 @@ struct RedundantPatternBind;
 
 impl Rule for RedundantPatternBind {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(pattern) = Pattern::cast(node.clone());
+        if let NodeOrToken::Node(node) = node
+            && let Some(pattern) = Pattern::cast(node.clone())
             // no patterns within `{ }`
-            if pattern.entries().count() == 0;
-
+            && pattern.entries().count() == 0
             // pattern is just ellipsis
-            if pattern.ellipsis();
-
+            && pattern.ellipsis()
             // pattern is bound
-            if let Some(ident) =  pattern.at();
-            then {
-                let at = node.text_range();
-                let message = format!("This pattern bind is redundant, use `{}` instead", ident.as_str());
-                let replacement = ident.node().clone();
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
+            && let Some(ident) =  pattern.at()
+        {
+            let at = node.text_range();
+            let message = format!(
+                "This pattern bind is redundant, use `{}` instead",
+                ident.as_str()
+            );
+            let replacement = ident.node().clone();
+            Some(
+                self.report()
+                    .suggest(at, message, Suggestion::new(at, replacement)),
+            )
+        } else {
+            None
         }
     }
 }

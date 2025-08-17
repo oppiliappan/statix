@@ -1,6 +1,5 @@
 use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
@@ -35,33 +34,30 @@ struct EmptyLetIn;
 
 impl Rule for EmptyLetIn {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(let_in_expr) = LetIn::cast(node.clone());
-            let entries = let_in_expr.entries();
-            let inherits = let_in_expr.inherits();
-
-            if entries.count() == 0;
-            if inherits.count() == 0;
-
-            if let Some(body) = let_in_expr.body();
-
+        if let NodeOrToken::Node(node) = node
+            && let Some(let_in_expr) = LetIn::cast(node.clone())
+            && let entries = let_in_expr.entries()
+            && let inherits = let_in_expr.inherits()
+            && entries.count() == 0
+            && inherits.count() == 0
+            && let Some(body) = let_in_expr.body()
+        {
             // ensure that the let-in-expr does not have comments
             let has_comments = node
                 .children_with_tokens()
                 .any(|el| el.kind() == SyntaxKind::TOKEN_COMMENT);
-            then {
-                let at = node.text_range();
-                let replacement = body;
-                let message = "This let-in expression has no entries";
-                Some(if has_comments {
-                    self.report().diagnostic(at, message)
-                } else {
-                    self.report().suggest(at, message, Suggestion::new(at, replacement))
-                })
+
+            let at = node.text_range();
+            let replacement = body;
+            let message = "This let-in expression has no entries";
+            Some(if has_comments {
+                self.report().diagnostic(at, message)
             } else {
-                None
-            }
+                self.report()
+                    .suggest(at, message, Suggestion::new(at, replacement))
+            })
+        } else {
+            None
         }
     }
 }
