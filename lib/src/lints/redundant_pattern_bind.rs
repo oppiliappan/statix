@@ -43,9 +43,7 @@ impl Rule for RedundantPatternBind {
             && let Some(ident) =  pattern.pat_bind().and_then(|bind| bind.ident())
         {
             let at = node.text_range();
-            let message = format!(
-                "This pattern bind is redundant, use `{ident}` instead"
-            );
+            let message = format!("This pattern bind is redundant, use `{ident}` instead");
             let replacement = ident.syntax().clone();
             Some(
                 self.report()

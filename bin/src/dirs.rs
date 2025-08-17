@@ -48,25 +48,26 @@ impl Iterator for Walker {
         self.files.pop().or_else(|| {
             while let Some(dir) = self.dirs.pop() {
                 if dir.is_dir()
-                    && let Match::None | Match::Whitelist(_) = self.ignore.matched(&dir, true) {
-                        let mut found = false;
-                        for entry in fs::read_dir(&dir).ok()? {
-                            let entry = entry.ok()?;
-                            let path = entry.path();
-                            if path.is_dir() {
-                                self.dirs.push(path);
-                            } else if path.is_file()
-                                && let Match::None | Match::Whitelist(_) =
-                                    self.ignore.matched(&path, false)
-                                {
-                                    found = true;
-                                    self.files.push(path);
-                                }
-                        }
-                        if found {
-                            break;
+                    && let Match::None | Match::Whitelist(_) = self.ignore.matched(&dir, true)
+                {
+                    let mut found = false;
+                    for entry in fs::read_dir(&dir).ok()? {
+                        let entry = entry.ok()?;
+                        let path = entry.path();
+                        if path.is_dir() {
+                            self.dirs.push(path);
+                        } else if path.is_file()
+                            && let Match::None | Match::Whitelist(_) =
+                                self.ignore.matched(&path, false)
+                        {
+                            found = true;
+                            self.files.push(path);
                         }
                     }
+                    if found {
+                        break;
+                    }
+                }
             }
             self.files.pop()
         })

@@ -205,7 +205,11 @@ impl Suggestion {
         let end = usize::from(self.at.end());
         src.replace_range(
             start..end,
-            &self.fix.as_ref().map(std::string::ToString::to_string).unwrap_or_default(),
+            &self
+                .fix
+                .as_ref()
+                .map(std::string::ToString::to_string)
+                .unwrap_or_default(),
         );
     }
 }
