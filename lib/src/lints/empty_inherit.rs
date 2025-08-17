@@ -1,6 +1,5 @@
 use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo, utils};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
@@ -30,24 +29,21 @@ struct EmptyInherit;
 
 impl Rule for EmptyInherit {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(inherit_stmt) = Inherit::cast(node.clone());
-            if inherit_stmt.from().is_none();
-            if inherit_stmt.idents().count() == 0;
-            then {
-                let at = node.text_range();
-                let replacement = make::empty().node().clone();
-                let replacement_at = utils::with_preceeding_whitespace(node);
-                let message = "Remove this empty `inherit` statement";
-                Some(
-                    self
-                    .report()
-                    .suggest(at, message, Suggestion::new(replacement_at, replacement))
-                )
-            } else {
-                None
-            }
+        if let NodeOrToken::Node(node) = node
+            && let Some(inherit_stmt) = Inherit::cast(node.clone())
+            && inherit_stmt.from().is_none()
+            && inherit_stmt.idents().count() == 0
+        {
+            let at = node.text_range();
+            let replacement = make::empty().node().clone();
+            let replacement_at = utils::with_preceeding_whitespace(node);
+            let message = "Remove this empty `inherit` statement";
+            Some(
+                self.report()
+                    .suggest(at, message, Suggestion::new(replacement_at, replacement)),
+            )
+        } else {
+            None
         }
     }
 }

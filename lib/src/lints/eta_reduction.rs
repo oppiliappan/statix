@@ -1,6 +1,5 @@
 use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
@@ -43,39 +42,30 @@ struct EtaReduction;
 
 impl Rule for EtaReduction {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(lambda_expr) = Lambda::cast(node.clone());
-
-            if let Some(arg_node) = lambda_expr.arg();
-            if let Some(arg) = Ident::cast(arg_node);
-
-            if let Some(body_node) = lambda_expr.body();
-            if let Some(body) = Apply::cast(body_node);
-
-            if let Some(value_node) = body.value();
-            if let Some(value) = Ident::cast(value_node);
-
-            if arg.as_str() == value.as_str();
-
-            if let Some(lambda_node) = body.lambda();
-            if !mentions_ident(&arg, &lambda_node);
-        // lambda body should be no more than a single Ident to
-        // retain code readability
-        if let Some(_) = Ident::cast(lambda_node);
-
-            then {
-                let at = node.text_range();
-                let replacement = body.lambda()?;
-                let message =
-                    format!(
-                        "Found eta-reduction: `{}`",
-                        replacement.text()
-                    );
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
+        if let NodeOrToken::Node(node) = node
+            && let Some(lambda_expr) = Lambda::cast(node.clone())
+            && let Some(arg_node) = lambda_expr.arg()
+            && let Some(arg) = Ident::cast(arg_node)
+            && let Some(body_node) = lambda_expr.body()
+            && let Some(body) = Apply::cast(body_node)
+            && let Some(value_node) = body.value()
+            && let Some(value) = Ident::cast(value_node)
+            && arg.as_str() == value.as_str()
+            && let Some(lambda_node) = body.lambda()
+            && !mentions_ident(&arg, &lambda_node)
+            // lambda body should be no more than a single Ident to
+            // retain code readability
+            && let Some(_) = Ident::cast(lambda_node)
+        {
+            let at = node.text_range();
+            let replacement = body.lambda()?;
+            let message = format!("Found eta-reduction: `{}`", replacement.text());
+            Some(
+                self.report()
+                    .suggest(at, message, Suggestion::new(at, replacement)),
+            )
+        } else {
+            None
         }
     }
 }

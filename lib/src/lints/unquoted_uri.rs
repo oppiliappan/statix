@@ -1,6 +1,5 @@
 use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, types::TypedNode};
 
@@ -47,17 +46,17 @@ struct UnquotedUri;
 
 impl Rule for UnquotedUri {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Token(token) = node;
-            then {
-                let parent_node = token.parent();
-                let at = token.text_range();
-                let replacement = make::quote(&parent_node).node().clone();
-                let message = "Consider quoting this URI expression";
-                Some(self.report().suggest(at, message, Suggestion::new(at, replacement)))
-            } else {
-                None
-            }
+        if let NodeOrToken::Token(token) = node {
+            let parent_node = token.parent();
+            let at = token.text_range();
+            let replacement = make::quote(&parent_node).node().clone();
+            let message = "Consider quoting this URI expression";
+            Some(
+                self.report()
+                    .suggest(at, message, Suggestion::new(at, replacement)),
+            )
+        } else {
+            None
         }
     }
 }

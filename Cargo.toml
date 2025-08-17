@@ -10,7 +10,6 @@ license = "MIT"
 [workspace.dependencies]
 ariadne = "0.1.3"
 clap = "3.0.0-beta.4"
-if_chain = "1.0"
 ignore = "0.4.18"
 indexmap = "1.6.2"
 insta = "1.8.0"

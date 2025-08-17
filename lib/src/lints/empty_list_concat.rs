@@ -1,6 +1,5 @@
 use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
-use if_chain::if_chain;
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
@@ -33,26 +32,24 @@ struct EmptyListConcat;
 
 impl Rule for EmptyListConcat {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if_chain! {
-            if let NodeOrToken::Node(node) = node;
-            if let Some(bin_expr) = BinOp::cast(node.clone());
-            if let Some(lhs) = bin_expr.lhs();
-            if let Some(rhs) = bin_expr.rhs();
-            if let Some(op) = bin_expr.operator();
-            if let BinOpKind::Concat = op;
-            then {
-                let at = node.text_range();
-                let message = "Concatenation with the empty list, `[]`, is a no-op";
-                if is_empty_array(&lhs) {
-                    Some(self.report().suggest(at, message, Suggestion::new(at, rhs)))
-                } else if is_empty_array(&rhs) {
-                    Some(self.report().suggest(at, message, Suggestion::new(at, lhs)))
-                } else {
-                    None
-                }
+        if let NodeOrToken::Node(node) = node
+            && let Some(bin_expr) = BinOp::cast(node.clone())
+            && let Some(lhs) = bin_expr.lhs()
+            && let Some(rhs) = bin_expr.rhs()
+            && let Some(op) = bin_expr.operator()
+            && let BinOpKind::Concat = op
+        {
+            let at = node.text_range();
+            let message = "Concatenation with the empty list, `[]`, is a no-op";
+            if is_empty_array(&lhs) {
+                Some(self.report().suggest(at, message, Suggestion::new(at, rhs)))
+            } else if is_empty_array(&rhs) {
+                Some(self.report().suggest(at, message, Suggestion::new(at, lhs)))
             } else {
                 None
             }
+        } else {
+            None
         }
     }
 }
