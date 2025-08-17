@@ -1,12 +1,11 @@
-use std::fmt::Write as _;
-
-use crate::{Metadata, Report, Rule, session::SessionInfo};
+use crate::{session::SessionInfo, Metadata, Report, Rule};
 
 use macros::lint;
 use rnix::{
+    ast::{AttrSet, AttrpathValue, HasEntry, Ident},
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{AttrSet, EntryHolder, Ident, KeyValue, TokenWrapper, TypedNode},
 };
+use rowan::ast::AstNode;
 
 /// ## What it does
 /// Checks for keys in attribute sets with repetitive keys, and suggests using
@@ -39,49 +38,61 @@ use rnix::{
     name = "repeated_keys",
     note = "Avoid repeated keys in attribute sets",
     code = 20,
-    match_with = SyntaxKind::NODE_KEY_VALUE
+    match_with = SyntaxKind::NODE_ATTRPATH_VALUE
 )]
 struct RepeatedKeys;
 
 impl Rule for RepeatedKeys {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(key_value) = KeyValue::cast(node.clone())
-            && let Some(key) = key_value.key()
-            && let mut components = key.path()
-            && let Some(first_component) = components.next()
-            && let Some(first_component_ident) = Ident::cast(first_component)
+        if let NodeOrToken::Node(node) = node {
+            let key_value = AttrpathValue::cast(node.clone())?;
+            let key = key_value.attrpath()?;
+            let mut components = key.attrs();
+            let first_component = components.next()?;
+            let first_component_ident = Ident::cast(first_component.syntax().clone())?;
             // ensure that there are >1 components
-            && components.next().is_some()
-            && let Some(parent_node) = node.parent()
-            && let Some(parent_attr_set) = AttrSet::cast(parent_node)
-            && !parent_attr_set.recursive()
-            && let occurrences = parent_attr_set.entries().filter_map(|kv_scrutinee| {
-                let scrutinee_key = kv_scrutinee.key()?;
-                let mut kv_scrutinee_components = scrutinee_key.path();
-                let kv_scrutinee_first_component = kv_scrutinee_components.next()?;
-                let kv_scrutinee_ident = Ident::cast(kv_scrutinee_first_component)?;
-                if kv_scrutinee_ident.as_str() == first_component_ident.as_str() {
-                    Some((
-                            kv_scrutinee.key()?.node().text_range(),
-                            kv_scrutinee_components
+            components.next()?;
+
+            let parent_node = node.parent()?;
+            let parent_attr_set = AttrSet::cast(parent_node)?;
+
+            parent_attr_set.rec_token().is_none().then_some(())?;
+            let occurrences = parent_attr_set
+                .entries()
+                .filter_map(|entry| match entry {
+                    rnix::ast::Entry::AttrpathValue(attr) => Some(attr),
+                    _ => None,
+                })
+                .filter_map(|kv_scrutinee| {
+                    let scrutinee_key = kv_scrutinee.attrpath()?;
+                    let mut kv_scrutinee_components = scrutinee_key.attrs();
+                    let kv_scrutinee_first_component = kv_scrutinee_components.next()?;
+                    let kv_scrutinee_ident =
+                        Ident::cast(kv_scrutinee_first_component.syntax().clone())?;
+                    if kv_scrutinee_ident.to_string() == first_component_ident.to_string() {
+                        Some((
+                            scrutinee_key.syntax().text_range(),
+                            std::iter::once(kv_scrutinee_first_component)
+                                .chain(kv_scrutinee_components)
                                 .map(|n| n.to_string())
                                 .collect::<Vec<_>>()
                                 .join("."),
-                    ))
-                } else {
-                    None
-                }
-            }).collect::<Vec<_>>()
-            && occurrences.first()?.0 == key.node().text_range()
-            && occurrences.len() >= 3
-        {
+                        ))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
+
+            (occurrences.first()?.0 == key.syntax().text_range()).then_some(())?;
+            (occurrences.len() >= 3).then_some(())?;
+
             let mut iter = occurrences.into_iter();
 
             let (first_annotation, first_subkey) = iter.next().unwrap();
             let first_message = format!(
                 "The key `{}` is first assigned here ...",
-                first_component_ident.as_str()
+                first_component_ident.to_string()
             );
 
             let (second_annotation, second_subkey) = iter.next().unwrap();
@@ -95,15 +106,13 @@ impl Rule for RepeatedKeys {
                     1 => "... and here (`1` occurrence omitted).".to_string(),
                     n => format!("... and here (`{n}` occurrences omitted)."),
                 };
-                write!(
-                    message,
+                message.push_str(&format!(
                     " Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.",
-                    first_component_ident.as_str(),
-                    first_subkey,
-                    second_subkey,
-                    third_subkey
-                )
-                .unwrap();
+                    first_component_ident.to_string(),
+                    first_subkey.split_once('.')?.1,
+                    second_subkey.split_once('.')?.1,
+                    third_subkey.split_once('.')?.1
+                ));
                 message
             };
 

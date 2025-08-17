@@ -1,11 +1,8 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use macros::lint;
-use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind, TextRange,
-    types::{LetIn, TypedNode},
-};
-use rowan::Direction;
+use rnix::{ast::LetIn, NodeOrToken, SyntaxElement, SyntaxKind, TextRange};
+use rowan::{ast::AstNode, Direction};
 
 /// ## What it does
 /// Checks for `let-in` expressions whose body is another `let-in`
@@ -48,28 +45,30 @@ impl Rule for CollapsibleLetIn {
         if let NodeOrToken::Node(node) = node
             && let Some(let_in_expr) = LetIn::cast(node.clone())
             && let Some(body) = let_in_expr.body()
-            && LetIn::cast(body.clone()).is_some()
+            && LetIn::cast(body.syntax().clone()).is_some()
         {
             let first_annotation = node.text_range();
             let first_message = "This `let in` expression contains a nested `let in` expression";
 
-            let second_annotation = body.text_range();
+            let second_annotation = body.syntax().text_range();
             let second_message = "This `let in` expression is nested";
 
             let replacement_at = {
                 let start = body
+                    .syntax()
                     .siblings_with_tokens(Direction::Prev)
                     .find(|elem| elem.kind() == SyntaxKind::TOKEN_IN)?
                     .text_range()
                     .start();
                 let end = body
+                    .syntax()
                     .descendants_with_tokens()
                     .find(|elem| elem.kind() == SyntaxKind::TOKEN_LET)?
                     .text_range()
                     .end();
                 TextRange::new(start, end)
             };
-            let replacement = make::empty().node().clone();
+            let replacement = make::empty();
 
             Some(
                 self.report()
@@ -77,7 +76,7 @@ impl Rule for CollapsibleLetIn {
                     .suggest(
                         second_annotation,
                         second_message,
-                        Suggestion::new(replacement_at, replacement),
+                        Suggestion::new(replacement_at, replacement.syntax().clone()),
                     ),
             )
         } else {

@@ -1,10 +1,8 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
+use rowan::ast::AstNode;
 
 use macros::lint;
-use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{Dynamic, TypedNode},
-};
+use rnix::{types::Dynamic, NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for antiquote/splice expressions that are not quoted.
@@ -44,12 +42,13 @@ impl Rule for UnquotedSplice {
             && Dynamic::cast(node.clone()).is_some()
         {
             let at = node.text_range();
-            let replacement = make::quote(node).node().clone();
+            let replacement = make::quote(node);
             let message = "Consider quoting this splice expression";
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
+            Some(self.report().suggest(
+                at,
+                message,
+                Suggestion::new(at, replacement.syntax().clone()),
+            ))
         } else {
             None
         }

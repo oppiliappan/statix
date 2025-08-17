@@ -1,10 +1,11 @@
-use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
+use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use macros::lint;
 use rnix::{
+    ast::{Apply, Ident, IdentParam, Lambda, Param},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
-    types::{Apply, Ident, Lambda, TokenWrapper, TypedNode},
 };
+use rowan::ast::AstNode;
 
 /// ## What it does
 /// Checks for eta-reducible functions, i.e.: converts lambda
@@ -44,35 +45,36 @@ impl Rule for EtaReduction {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if let NodeOrToken::Node(node) = node
             && let Some(lambda_expr) = Lambda::cast(node.clone())
-            && let Some(arg_node) = lambda_expr.arg()
-            && let Some(arg) = Ident::cast(arg_node)
+            && let Some(arg_node) = lambda_expr.param()
+            && let Param::IdentParam(arg) = arg_node
             && let Some(body_node) = lambda_expr.body()
-            && let Some(body) = Apply::cast(body_node)
-            && let Some(value_node) = body.value()
-            && let Some(value) = Ident::cast(value_node)
-            && arg.as_str() == value.as_str()
+            && let Some(body) = Apply::cast(body_node.syntax().clone())
+            && let Some(value_node) = body.argument()
+            && let Some(value) = Ident::cast(value_node.syntax().clone())
+            && arg.to_string() == value.to_string()
             && let Some(lambda_node) = body.lambda()
-            && !mentions_ident(&arg, &lambda_node)
+            && !mentions_ident(&arg, lambda_node.syntax())
             // lambda body should be no more than a single Ident to
             // retain code readability
-            && let Some(_) = Ident::cast(lambda_node)
+            && let Some(_) = Ident::cast(lambda_node.syntax().clone())
         {
             let at = node.text_range();
             let replacement = body.lambda()?;
-            let message = format!("Found eta-reduction: `{}`", replacement.text());
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
+            let message = format!("Found eta-reduction: `{}`", replacement.syntax().text());
+            Some(self.report().suggest(
+                at,
+                message,
+                Suggestion::new(at, replacement.syntax().clone()),
+            ))
         } else {
             None
         }
     }
 }
 
-fn mentions_ident(ident: &Ident, node: &SyntaxNode) -> bool {
+fn mentions_ident(ident: &IdentParam, node: &SyntaxNode) -> bool {
     if let Some(node_ident) = Ident::cast(node.clone()) {
-        node_ident.as_str() == ident.as_str()
+        node_ident.to_string() == ident.to_string()
     } else {
         node.children().any(|child| mentions_ident(ident, &child))
     }

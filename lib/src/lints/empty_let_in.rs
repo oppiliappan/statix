@@ -1,10 +1,11 @@
-use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
+use crate::{session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use macros::lint;
 use rnix::{
+    ast::{HasEntry, LetIn},
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{EntryHolder, LetIn, TypedNode},
 };
+use rowan::ast::AstNode;
 
 /// ## What it does
 /// Checks for `let-in` expressions which create no new bindings.
@@ -53,8 +54,11 @@ impl Rule for EmptyLetIn {
             Some(if has_comments {
                 self.report().diagnostic(at, message)
             } else {
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement))
+                self.report().suggest(
+                    at,
+                    message,
+                    Suggestion::new(at, replacement.syntax().clone()),
+                )
             })
         } else {
             None

@@ -1,10 +1,11 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use macros::lint;
 use rnix::{
+    ast::{BinOp, BinOpKind, Paren, UnaryOp, UnaryOpKind},
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{BinOp, BinOpKind, Paren, TypedNode, UnaryOp, UnaryOpKind, Wrapper},
 };
+use rowan::ast::AstNode;
 
 /// ## What it does
 /// Checks for boolean expressions that can be simplified.
@@ -34,11 +35,13 @@ impl Rule for BoolSimplification {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if let NodeOrToken::Node(node) = node
             && let Some(unary_expr) = UnaryOp::cast(node.clone())
-            && unary_expr.operator() == UnaryOpKind::Invert
-            && let Some(value_expr) = unary_expr.value()
-            && let Some(paren_expr) = Paren::cast(value_expr)
-            && let Some(inner_expr) = paren_expr.inner()
-            && let Some(bin_expr) = BinOp::cast(inner_expr)
+            && unary_expr
+                .operator()
+                .is_some_and(|kind| kind == UnaryOpKind::Invert)
+            && let Some(value_expr) = unary_expr.expr()
+            && let Some(paren_expr) = Paren::cast(value_expr.syntax().clone())
+            && let Some(inner_expr) = paren_expr.expr()
+            && let Some(bin_expr) = BinOp::cast(inner_expr.syntax().clone())
             && let Some(BinOpKind::Equal) = bin_expr.operator()
         {
             let at = node.text_range();
@@ -46,11 +49,12 @@ impl Rule for BoolSimplification {
 
             let lhs = bin_expr.lhs()?;
             let rhs = bin_expr.rhs()?;
-            let replacement = make::binary(&lhs, "!=", &rhs).node().clone();
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
+            let replacement = make::binary(lhs.syntax(), "!=", rhs.syntax());
+            Some(self.report().suggest(
+                at,
+                message,
+                Suggestion::new(at, replacement.syntax().clone()),
+            ))
         } else {
             None
         }

@@ -1,10 +1,11 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{make, session::SessionInfo, Metadata, Report, Rule, Suggestion};
 
 use macros::lint;
 use rnix::{
+    ast::{AttrSet, HasEntry, Lambda, Pattern},
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
-    types::{AttrSet, EntryHolder, Lambda, Pattern, TypedNode},
 };
+use rowan::ast::AstNode;
 
 /// ## What it does
 /// Checks for an empty variadic pattern: `{...}`, in a function
@@ -43,19 +44,19 @@ impl Rule for EmptyPattern {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if let NodeOrToken::Node(node) = node
             && let Some(lambda_expr) = Lambda::cast(node.clone())
-            && let Some(arg) = lambda_expr.arg()
+            && let Some(arg) = lambda_expr.param()
             && let Some(body) = lambda_expr.body()
-            && let Some(pattern) = Pattern::cast(arg)
+            && let Some(pattern) = Pattern::cast(arg.syntax().clone())
             // no patterns within `{ }`
-            && pattern.entries().count() == 0
+            && pattern.pat_entries().count() == 0
             // pattern is not bound
-            && pattern.at().is_none()
+            && pattern.pat_bind().is_none()
             // not a nixos module
-            && !is_module(&body)
+            && !is_module(body.syntax())
         {
-            let at = pattern.node().text_range();
+            let at = pattern.syntax().text_range();
             let message = "This pattern is empty, use `_` instead";
-            let replacement = make::ident("_").node().clone();
+            let replacement = make::ident("_").syntax().clone();
             Some(
                 self.report()
                     .suggest(at, message, Suggestion::new(at, replacement)),
@@ -67,14 +68,12 @@ impl Rule for EmptyPattern {
 }
 
 fn is_module(body: &SyntaxNode) -> bool {
-    if let Some(attr_set) = AttrSet::cast(body.clone())
-        && attr_set
-            .entries()
-            .filter_map(|e| e.key())
-            .any(|k| k.node().to_string() == "imports")
-    {
-        true
-    } else {
-        false
-    }
+    AttrSet::cast(body.clone())
+        .into_iter()
+        .flat_map(|attr_set| attr_set.entries())
+        .filter_map(|entry| match entry {
+            rnix::ast::Entry::AttrpathValue(attrpath_value) => attrpath_value.attrpath(),
+            _ => None,
+        })
+        .any(|k| k.to_string() == "imports")
 }
