@@ -1,6 +1,7 @@
 #![recursion_limit = "1024"]
 mod lints;
 mod make;
+pub mod parse;
 pub mod session;
 mod utils;
 
@@ -184,22 +185,32 @@ impl Serialize for Diagnostic {
 #[derive(Debug)]
 pub struct Suggestion {
     pub at: TextRange,
-    pub fix: SyntaxElement,
+    /// fixes are optional, the `None` value means that the fix is to replace the [`TextRange`]
+    /// `at` with an empty `SyntaxElement`, which is effectively the same as just deleting that
+    /// range of the code
+    pub fix: Option<SyntaxElement>,
 }
 
 impl Suggestion {
     /// Construct a suggestion.
-    pub fn new<E: Into<SyntaxElement>>(at: TextRange, fix: E) -> Self {
+    pub fn new<E: Into<SyntaxElement>>(at: TextRange, fix: Option<E>) -> Self {
         Self {
             at,
-            fix: fix.into(),
+            fix: fix.map(std::convert::Into::into),
         }
     }
     /// Apply a suggestion to a source file
     pub fn apply(&self, src: &mut String) {
         let start = usize::from(self.at.start());
         let end = usize::from(self.at.end());
-        src.replace_range(start..end, &self.fix.to_string());
+        src.replace_range(
+            start..end,
+            &self
+                .fix
+                .as_ref()
+                .map(std::string::ToString::to_string)
+                .unwrap_or_default(),
+        );
     }
 }
 
@@ -217,7 +228,7 @@ impl Serialize for Suggestion {
             let end = usize::from(self.at.end());
             (start, end)
         };
-        let fix = self.fix.to_string();
+        let fix = self.fix.as_ref().map(|f| f.to_string()).unwrap_or_default();
         s.serialize_field("at", &at)?;
         s.serialize_field("fix", &fix)?;
         s.end()
