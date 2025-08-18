@@ -135,10 +135,10 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<OneOrMany<Diagnostic>> {
                 .filter_map(maybe_diagnostic)
                 .collect::<Vec<_>>();
 
-            if diagnostics.len() > 0 {
-                Some(OneOrMany::Many(diagnostics))
-            } else {
+            if diagnostics.is_empty() {
                 None
+            } else {
+                Some(OneOrMany::Many(diagnostics))
             }
         }
         ParsedType::Paren(paren_expr) => {
