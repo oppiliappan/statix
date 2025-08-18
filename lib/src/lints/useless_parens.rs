@@ -114,56 +114,47 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<OneOrMany<Diagnostic>> {
                 None
             }
         }
-        ParsedType::BinOp(bin_op) => {
+        ParsedType::BinOp(binop) => {
             let maybe_diagnostic = |(node, is_left): (SyntaxNode, bool)| -> Option<Diagnostic> {
                 let range = node.text_range();
                 let as_parens = Paren::cast(node)?;
                 let inner = as_parens.inner()?;
 
-                // TODO: unify this with binops
-                if Apply::cast(inner.clone()).is_some() {
-                    let at = range;
-                    let message = "Useless parentheses in operand of binary operator";
-                    let replacement = inner;
-                    Some(Diagnostic::suggest(
-                        at,
-                        message,
-                        Suggestion::new(at, replacement),
-                    ))
-                } else if let Some(nested) = BinOp::cast(inner.clone()) {
-                    // https://nix.dev/manual/nix/2.29/language/operators
-                    let prec_of = |op: BinOp| -> Option<(Prec, Assoc)> {
-                        Some(match op.operator()? {
-                            BinOpKind::IsSet => (4, Assoc::NoAssoc),
-                            BinOpKind::Concat => (5, Assoc::Right),
-                            BinOpKind::Mul | BinOpKind::Div => (6, Assoc::Left),
-                            BinOpKind::Add | BinOpKind::Sub => (7, Assoc::Left),
-                            BinOpKind::Update => (9, Assoc::Right),
-                            BinOpKind::Less
-                            | BinOpKind::LessOrEq
-                            | BinOpKind::More
-                            | BinOpKind::MoreOrEq => (10, Assoc::NoAssoc),
-                            BinOpKind::Equal | BinOpKind::NotEqual => (11, Assoc::NoAssoc),
-                            BinOpKind::And => (12, Assoc::Left),
-                            BinOpKind::Or => (13, Assoc::Left),
-                            BinOpKind::Implication => (14, Assoc::Right),
-                        })
-                    };
+                let suggestion = Diagnostic::suggest(
+                    range,
+                    "Useless parentheses in operand of binary operator",
+                    Suggestion::new(range, inner.clone()),
+                );
 
-                    let (outer_prec, outer_assoc) = prec_of(bin_op.clone())?;
-                    let (inner_prec, _inner_assoc) = prec_of(nested.clone())?;
+                // https://nix.dev/manual/nix/2.29/language/operators
+                let prec_of = |op: BinOp| -> Option<(Prec, Assoc)> {
+                    Some(match op.operator()? {
+                        BinOpKind::IsSet => (4, Assoc::NoAssoc),
+                        BinOpKind::Concat => (5, Assoc::Right),
+                        BinOpKind::Mul | BinOpKind::Div => (6, Assoc::Left),
+                        BinOpKind::Add | BinOpKind::Sub => (7, Assoc::Left),
+                        BinOpKind::Update => (9, Assoc::Right),
+                        BinOpKind::Less
+                        | BinOpKind::LessOrEq
+                        | BinOpKind::More
+                        | BinOpKind::MoreOrEq => (10, Assoc::NoAssoc),
+                        BinOpKind::Equal | BinOpKind::NotEqual => (11, Assoc::NoAssoc),
+                        BinOpKind::And => (12, Assoc::Left),
+                        BinOpKind::Or => (13, Assoc::Left),
+                        BinOpKind::Implication => (14, Assoc::Right),
+                    })
+                };
+
+                if Apply::cast(inner.clone()).is_some() {
+                    Some(suggestion)
+                } else if let Some(inner_binop) = BinOp::cast(inner.clone()) {
+                    let (outer_prec, outer_assoc) = prec_of(binop.clone())?;
+                    let (inner_prec, _) = prec_of(inner_binop.clone())?;
                     if inner_prec < outer_prec
                         || (inner_prec == outer_prec && (is_left && outer_assoc == Assoc::Left)
                             || (!is_left && outer_assoc == Assoc::Right))
                     {
-                        let at = range;
-                        let message = "Useless parentheses in operand of binary operator";
-                        let replacement = inner;
-                        Some(Diagnostic::suggest(
-                            at,
-                            message,
-                            Suggestion::new(at, replacement),
-                        ))
+                        Some(suggestion)
                     } else {
                         None
                     }
@@ -174,8 +165,8 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<OneOrMany<Diagnostic>> {
 
             // Fix rhs then lhs otherwise the position will drift
             let diagnostics = vec![
-                bin_op.rhs().map(|node| (node, false)),
-                bin_op.lhs().map(|node| (node, true)),
+                binop.rhs().map(|node| (node, false)),
+                binop.lhs().map(|node| (node, true)),
             ]
             .into_iter()
             .flatten()
