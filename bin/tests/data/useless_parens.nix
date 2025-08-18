@@ -1,47 +1,41 @@
 let
   # parens around primitives
-  a = {
+  primitive = {
     b = ("hello");
     c = (d);
     e = ({ f = 2; });
   };
 
   # parens around let-value
-  g = (1 + 2);
-  h = ({ inherit i; });
+  value1 = (1 + 2);
+  value2 = ({ inherit i; });
 
-  # binary exprs with superflous parens
-  # TODO: we could implement associativity check to remove more redundant parens in the future
-  f =
+  binop =
     let id = x: x; in
     (id [3])
     ++ (id [1] ++ [2])
   ;
-
-  # binary exprs with necessary parens
-  u =
+  binop_no =
     (1 + 1)
     * (2 + 2)
     ;
 
   # precedence
-  prec1 =
+  arith1 =
     4 + (5 * 3)
     ;
-  prec2 =
+  arith2 =
     (4 * 5) / 5
     ;
-  prec3_no =
+  arith3_no =
     4 * (5 / 5)
     ;
 
-  # primitive in binop
   primitive_binop =
     [1] ++ ([2])
     ;
 
-  # string concat
-  s =
+  string_concat =
     (builtins.readFile ./x.txt)
     + (lib.optionalString true ''
       foo
