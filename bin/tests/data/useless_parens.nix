@@ -24,6 +24,17 @@ let
     * (2 + 2)
     ;
 
+  # precedence
+  prec1 =
+    4 + (5 * 3)
+    ;
+  prec2 =
+    (4 * 5) / 5
+    ;
+  prec3_no =
+    4 * (5 / 5)
+    ;
+
   # string concat
   s =
     (builtins.readFile ./x.txt)

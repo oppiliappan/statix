@@ -3,7 +3,7 @@ use crate::{Diagnostic, Metadata, Report, Rule, Suggestion, session::SessionInfo
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
-    types::{Apply, BinOp, KeyValue, LetIn, Paren, ParsedType, TypedNode, Wrapper},
+    types::{Apply, BinOp, BinOpKind, KeyValue, LetIn, Paren, ParsedType, TypedNode, Wrapper},
 };
 
 /// ## What it does
@@ -47,6 +47,15 @@ struct UselessParens;
 enum OneOrMany<A> {
     One(A),
     Many(Vec<A>),
+}
+
+type Prec = i8;
+
+#[derive(Eq, PartialEq)]
+enum Assoc {
+    Left,
+    Right,
+    NoAssoc,
 }
 
 impl Rule for UselessParens {
@@ -106,14 +115,12 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<OneOrMany<Diagnostic>> {
             }
         }
         ParsedType::BinOp(bin_op) => {
-            let maybe_diagnostic = |node: SyntaxNode| -> Option<Diagnostic> {
+            let maybe_diagnostic = |(node, is_left): (SyntaxNode, bool)| -> Option<Diagnostic> {
                 let range = node.text_range();
                 let as_parens = Paren::cast(node)?;
                 let inner = as_parens.inner()?;
 
-                // TODO:
-                // it would be nice to compare operator precedence
-                // currently we only check if inner is function
+                // TODO: unify this with binops
                 if Apply::cast(inner.clone()).is_some() {
                     let at = range;
                     let message = "Useless parentheses in operand of binary operator";
@@ -123,17 +130,57 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<OneOrMany<Diagnostic>> {
                         message,
                         Suggestion::new(at, replacement),
                     ))
+                } else if let Some(nested) = BinOp::cast(inner.clone()) {
+                    // https://nix.dev/manual/nix/2.29/language/operators
+                    let prec_of = |op: BinOp| -> Option<(Prec, Assoc)> {
+                        Some(match op.operator()? {
+                            BinOpKind::IsSet => (4, Assoc::NoAssoc),
+                            BinOpKind::Concat => (5, Assoc::Right),
+                            BinOpKind::Mul | BinOpKind::Div => (6, Assoc::Left),
+                            BinOpKind::Add | BinOpKind::Sub => (7, Assoc::Left),
+                            BinOpKind::Update => (9, Assoc::Right),
+                            BinOpKind::Less
+                            | BinOpKind::LessOrEq
+                            | BinOpKind::More
+                            | BinOpKind::MoreOrEq => (10, Assoc::NoAssoc),
+                            BinOpKind::Equal | BinOpKind::NotEqual => (11, Assoc::NoAssoc),
+                            BinOpKind::And => (12, Assoc::Left),
+                            BinOpKind::Or => (13, Assoc::Left),
+                            BinOpKind::Implication => (14, Assoc::Right),
+                        })
+                    };
+
+                    let (outer_prec, outer_assoc) = prec_of(bin_op.clone())?;
+                    let (inner_prec, _inner_assoc) = prec_of(nested.clone())?;
+                    if inner_prec < outer_prec
+                        || (inner_prec == outer_prec && (is_left && outer_assoc == Assoc::Left)
+                            || (!is_left && outer_assoc == Assoc::Right))
+                    {
+                        let at = range;
+                        let message = "Useless parentheses in operand of binary operator";
+                        let replacement = inner;
+                        Some(Diagnostic::suggest(
+                            at,
+                            message,
+                            Suggestion::new(at, replacement),
+                        ))
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 }
             };
 
             // Fix rhs then lhs otherwise the position will drift
-            let diagnostics = vec![bin_op.rhs(), bin_op.lhs()]
-                .into_iter()
-                .flatten()
-                .filter_map(maybe_diagnostic)
-                .collect::<Vec<_>>();
+            let diagnostics = vec![
+                bin_op.rhs().map(|node| (node, false)),
+                bin_op.lhs().map(|node| (node, true)),
+            ]
+            .into_iter()
+            .flatten()
+            .filter_map(maybe_diagnostic)
+            .collect::<Vec<_>>();
 
             if diagnostics.is_empty() {
                 None

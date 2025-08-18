@@ -5,7 +5,7 @@ expression: "& stdout"
 ---
 --- tests/data/useless_parens.nix
 +++ tests/data/useless_parens.nix [fixed]
-@@ -1,21 +1,21 @@
+@@ -1,22 +1,22 @@
  let
    # parens around primitives
    a = {
@@ -28,12 +28,27 @@ expression: "& stdout"
    f =
      let id = x: x; in
 -    (id [3])
+-    ++ (id [1] ++ [2])
 +    id [3]
-     ++ (id [1] ++ [2])
++    ++ id [1] ++ [2]
    ;
  
    # binary exprs with necessary parens
-@@ -25,17 +25,17 @@
+   u =
+@@ -25,28 +25,28 @@
+     ;
+ 
+   # precedence
+   prec1 =
+-    4 + (5 * 3)
++    4 + 5 * 3
+     ;
+   prec2 =
+-    (4 * 5) / 5
++    4 * 5 / 5
+     ;
+   prec3_no =
+     4 * (5 / 5)
      ;
  
    # string concat
