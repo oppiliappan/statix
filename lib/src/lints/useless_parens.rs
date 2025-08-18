@@ -190,8 +190,7 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<OneOrMany<Diagnostic>> {
             // if this primitive is a let-body, we have already linted it
             && LetIn::cast(father_node.clone()).is_none()
 
-            // ensure that we don't lint inside of neither bin-op branches
-            && BinOp::cast(father_node).is_none()
+            // allow checking primitive expressions in binops
 
             && let Some(inner_node) = paren_expr.inner()
             && let Some(parsed_inner) = ParsedType::cast(inner_node)

@@ -35,7 +35,7 @@ expression: "& stdout"
  
    # binary exprs with necessary parens
    u =
-@@ -25,28 +25,28 @@
+@@ -25,33 +25,33 @@
      ;
  
    # precedence
@@ -49,6 +49,12 @@ expression: "& stdout"
      ;
    prec3_no =
      4 * (5 / 5)
+     ;
+ 
+   # primitive in binop
+   primitive_binop =
+-    [1] ++ ([2])
++    [1] ++ [2]
      ;
  
    # string concat

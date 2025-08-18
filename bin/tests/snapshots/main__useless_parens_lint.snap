@@ -4,9 +4,9 @@ expression: "& out"
 
 ---
 [W08] Warning: These parentheses can be omitted
-    ╭─[data/useless_parens.nix:52:3]
+    ╭─[data/useless_parens.nix:57:3]
     │
- 52 │   (null)
+ 57 │   (null)
     ·   ───┬──  
     ·      ╰──── Useless parentheses around body of let expression
 ────╯
@@ -70,21 +70,28 @@ expression: "& out"
     ·        ╰───── Useless parentheses in operand of binary operator
 ────╯
 [W08] Warning: These parentheses can be omitted
-    ╭─[data/useless_parens.nix:44:7]
+    ╭─[data/useless_parens.nix:40:12]
     │
- 44 │ ╭─▶     + (lib.optionalString true ''
- 46 │ ├─▶     '')
+ 40 │     [1] ++ ([2])
+    ·            ──┬──  
+    ·              ╰──── Useless parentheses around primitive expression
+────╯
+[W08] Warning: These parentheses can be omitted
+    ╭─[data/useless_parens.nix:49:7]
+    │
+ 49 │ ╭─▶     + (lib.optionalString true ''
+ 51 │ ├─▶     '')
     · │             
     · ╰───────────── Useless parentheses in operand of binary operator
 ────╯
 [W08] Warning: These parentheses can be omitted
-    ╭─[data/useless_parens.nix:40:5]
+    ╭─[data/useless_parens.nix:45:5]
     │
- 40 │         (builtins.readFile ./x.txt)
+ 45 │         (builtins.readFile ./x.txt)
     ·         ─────────────┬─────────────  
     ·                      ╰─────────────── Useless parentheses in operand of binary operator
- 41 │ ╭─▶     + (lib.optionalString true ''
- 43 │ ├─▶     '')
+ 46 │ ╭─▶     + (lib.optionalString true ''
+ 48 │ ├─▶     '')
     · │             
     · ╰───────────── Useless parentheses in operand of binary operator
 ────╯

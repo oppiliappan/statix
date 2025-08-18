@@ -35,6 +35,11 @@ let
     4 * (5 / 5)
     ;
 
+  # primitive in binop
+  primitive_binop =
+    [1] ++ ([2])
+    ;
+
   # string concat
   s =
     (builtins.readFile ./x.txt)
