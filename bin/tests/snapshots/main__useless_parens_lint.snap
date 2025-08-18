@@ -1,11 +1,12 @@
 ---
 source: bin/tests/main.rs
 expression: "& out"
+
 ---
 [W08] Warning: These parentheses can be omitted
-    ╭─[data/useless_parens.nix:16:3]
+    ╭─[data/useless_parens.nix:41:3]
     │
- 16 │   (null)
+ 41 │   (null)
     ·   ───┬──  
     ·      ╰──── Useless parentheses around body of let expression
 ────╯
@@ -44,3 +45,4 @@ expression: "& out"
     ·       ────────┬───────  
     ·               ╰───────── Useless parentheses around value in binding
 ────╯
+

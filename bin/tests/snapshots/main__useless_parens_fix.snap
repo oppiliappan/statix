@@ -1,10 +1,11 @@
 ---
 source: bin/tests/main.rs
 expression: "& stdout"
+
 ---
 --- tests/data/useless_parens.nix
 +++ tests/data/useless_parens.nix [fixed]
-@@ -1,16 +1,16 @@
+@@ -1,15 +1,15 @@
  let
    # parens around primitives
    a = {
@@ -22,8 +23,15 @@ expression: "& stdout"
 +  g = 1 + 2;
 +  h = { inherit i; };
  
-   # TODO: binary exprs, function args etc.
+   # binary exprs with superflous parens
+   # TODO: we could implement associativity check to remove more redundant parens in the future
+   f =
+@@ -37,5 +37,5 @@
+ 
+   # TODO: function args etc.
  in
    # parens around let body
 -  (null)
 +  null
+
+
