@@ -1,16 +1,51 @@
 let
   # parens around primitives
-  a = {
+  primitive = {
     b = ("hello");
     c = (d);
     e = ({ f = 2; });
   };
 
   # parens around let-value
-  g = (1 + 2);
-  h = ({ inherit i; });
+  value1 = (1 + 2);
+  value2 = ({ inherit i; });
 
-  # TODO: binary exprs, function args etc.
+  binop =
+    let id = x: x; in
+    (id [3])
+    ++ (id [1] ++ [2])
+  ;
+  binop_no =
+    (1 + 1)
+    * (2 + 2)
+    ;
+
+  # precedence
+  arith1 =
+    4 + (5 * 3)
+    ;
+  arith2 =
+    (4 * 5) / 5
+    ;
+  arith3_no =
+    4 * (5 / 5)
+    ;
+
+  primitive_binop =
+    [1] ++ ([2])
+    ;
+
+  string_concat =
+    (builtins.readFile ./x.txt)
+    + (lib.optionalString true ''
+      foo
+    '')
+    + (lib.optionalString true ''
+      bar
+    '')
+    ;
+
+  # TODO: function args etc.
 in
   # parens around let body
   (null)

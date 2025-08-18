@@ -2,8 +2,8 @@ use crate::{Diagnostic, Metadata, Report, Rule, Suggestion, session::SessionInfo
 
 use macros::lint;
 use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{KeyValue, LetIn, Paren, ParsedType, TypedNode, Wrapper},
+    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
+    types::{Apply, BinOp, BinOpKind, KeyValue, LetIn, Paren, ParsedType, TypedNode, Wrapper},
 };
 
 /// ## What it does
@@ -39,9 +39,24 @@ use rnix::{
         SyntaxKind::NODE_KEY_VALUE,
         SyntaxKind::NODE_PAREN,
         SyntaxKind::NODE_LET_IN,
+        SyntaxKind::NODE_BIN_OP,
     ]
 )]
 struct UselessParens;
+
+enum OneOrMany<A> {
+    One(A),
+    Many(Vec<A>),
+}
+
+type Prec = i8;
+
+#[derive(Eq, PartialEq)]
+enum Assoc {
+    Left,
+    Right,
+    NoAssoc,
+}
 
 impl Rule for UselessParens {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
@@ -50,7 +65,10 @@ impl Rule for UselessParens {
             && let Some(diagnostic) = do_thing(parsed_type_node)
         {
             let mut report = self.report();
-            report.diagnostics.push(diagnostic);
+            match diagnostic {
+                OneOrMany::One(x) => report.diagnostics.push(x),
+                OneOrMany::Many(mut xs) => report.diagnostics.append(&mut xs),
+            }
             Some(report)
         } else {
             None
@@ -58,7 +76,7 @@ impl Rule for UselessParens {
     }
 }
 
-fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
+fn do_thing(parsed_type_node: ParsedType) -> Option<OneOrMany<Diagnostic>> {
     match parsed_type_node {
         ParsedType::KeyValue(kv) => {
             if let Some(value_node) = kv.value()
@@ -69,11 +87,11 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
                 let at = value_range;
                 let message = "Useless parentheses around value in binding";
                 let replacement = inner;
-                Some(Diagnostic::suggest(
+                Some(OneOrMany::One(Diagnostic::suggest(
                     at,
                     message,
                     Suggestion::new(at, replacement),
-                ))
+                )))
             } else {
                 None
             }
@@ -87,13 +105,78 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
                 let at = body_range;
                 let message = "Useless parentheses around body of `let` expression";
                 let replacement = inner;
-                Some(Diagnostic::suggest(
+                Some(OneOrMany::One(Diagnostic::suggest(
                     at,
                     message,
                     Suggestion::new(at, replacement),
-                ))
+                )))
             } else {
                 None
+            }
+        }
+        ParsedType::BinOp(binop) => {
+            let maybe_diagnostic = |(node, is_left): (SyntaxNode, bool)| -> Option<Diagnostic> {
+                let range = node.text_range();
+                let as_parens = Paren::cast(node)?;
+                let inner = as_parens.inner()?;
+
+                let suggestion = Diagnostic::suggest(
+                    range,
+                    "Useless parentheses in operand of binary operator",
+                    Suggestion::new(range, inner.clone()),
+                );
+
+                // https://nix.dev/manual/nix/2.29/language/operators
+                let prec_of = |op: BinOp| -> Option<(Prec, Assoc)> {
+                    Some(match op.operator()? {
+                        BinOpKind::IsSet => (4, Assoc::NoAssoc),
+                        BinOpKind::Concat => (5, Assoc::Right),
+                        BinOpKind::Mul | BinOpKind::Div => (6, Assoc::Left),
+                        BinOpKind::Add | BinOpKind::Sub => (7, Assoc::Left),
+                        BinOpKind::Update => (9, Assoc::Right),
+                        BinOpKind::Less
+                        | BinOpKind::LessOrEq
+                        | BinOpKind::More
+                        | BinOpKind::MoreOrEq => (10, Assoc::NoAssoc),
+                        BinOpKind::Equal | BinOpKind::NotEqual => (11, Assoc::NoAssoc),
+                        BinOpKind::And => (12, Assoc::Left),
+                        BinOpKind::Or => (13, Assoc::Left),
+                        BinOpKind::Implication => (14, Assoc::Right),
+                    })
+                };
+
+                if Apply::cast(inner.clone()).is_some() {
+                    Some(suggestion)
+                } else if let Some(inner_binop) = BinOp::cast(inner.clone()) {
+                    let (outer_prec, outer_assoc) = prec_of(binop.clone())?;
+                    let (inner_prec, _) = prec_of(inner_binop.clone())?;
+                    if inner_prec < outer_prec
+                        || (inner_prec == outer_prec && (is_left && outer_assoc == Assoc::Left)
+                            || (!is_left && outer_assoc == Assoc::Right))
+                    {
+                        Some(suggestion)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            };
+
+            // Fix rhs then lhs otherwise the position will drift
+            let diagnostics = vec![
+                binop.rhs().map(|node| (node, false)),
+                binop.lhs().map(|node| (node, true)),
+            ]
+            .into_iter()
+            .flatten()
+            .filter_map(maybe_diagnostic)
+            .collect::<Vec<_>>();
+
+            if diagnostics.is_empty() {
+                None
+            } else {
+                Some(OneOrMany::Many(diagnostics))
             }
         }
         ParsedType::Paren(paren_expr) => {
@@ -105,7 +188,9 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
 
             // ensure that we don't lint inside let-bodies
             // if this primitive is a let-body, we have already linted it
-            && LetIn::cast(father_node).is_none()
+            && LetIn::cast(father_node.clone()).is_none()
+
+            // allow checking primitive expressions in binops
 
             && let Some(inner_node) = paren_expr.inner()
             && let Some(parsed_inner) = ParsedType::cast(inner_node)
@@ -121,11 +206,11 @@ fn do_thing(parsed_type_node: ParsedType) -> Option<Diagnostic> {
                 let at = paren_expr_range;
                 let message = "Useless parentheses around primitive expression";
                 let replacement = parsed_inner.node().clone();
-                Some(Diagnostic::suggest(
+                Some(OneOrMany::One(Diagnostic::suggest(
                     at,
                     message,
                     Suggestion::new(at, replacement),
-                ))
+                )))
             } else {
                 None
             }
