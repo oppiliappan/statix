@@ -5,7 +5,7 @@ expression: "& stdout"
 ---
 --- tests/data/useless_parens.nix
 +++ tests/data/useless_parens.nix [fixed]
-@@ -1,15 +1,15 @@
+@@ -1,21 +1,21 @@
  let
    # parens around primitives
    a = {
@@ -26,7 +26,31 @@ expression: "& stdout"
    # binary exprs with superflous parens
    # TODO: we could implement associativity check to remove more redundant parens in the future
    f =
-@@ -37,5 +37,5 @@
+     let id = x: x; in
+-    (id [3])
++    id [3]
+     ++ (id [1] ++ [2])
+   ;
+ 
+   # binary exprs with necessary parens
+@@ -25,17 +25,17 @@
+     ;
+ 
+   # string concat
+   s =
+-    (builtins.readFile ./x.txt)
+-    + (lib.optionalString true ''
++    builtins.readFile ./x.txt
++    + lib.optionalString true ''
+       foo
+-    '')
+-    + (lib.optionalString true ''
++    ''
++    + lib.optionalString true ''
+       bar
+-    '')
++    ''
+     ;
  
    # TODO: function args etc.
  in
