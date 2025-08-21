@@ -144,8 +144,3 @@ useless_has_attr
 
 All lints are enabled by default. Generate a minimal config
 with `statix dump > statix.toml`.
-
-## TODO
-
-- Resolve imports and scopes for better lints
-- Add silent flag that exits with status
