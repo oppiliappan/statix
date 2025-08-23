@@ -55,35 +55,31 @@ impl Rule for BoolComparison {
         };
 
         let at = node.text_range();
-        let replacement = {
-            match (boolean_ident(&bool_side).unwrap(), op == BinOpKind::Equal) {
-                (NixBoolean::True, true) | (NixBoolean::False, false) => {
-                    // `a == true`, `a != false` replace with just `a`
-                    non_bool_side.clone()
-                }
-                (NixBoolean::True, false) | (NixBoolean::False, true) => {
-                    // `a != true`, `a == false` replace with `!a`
-                    match non_bool_side.kind() {
-                        SyntaxKind::NODE_APPLY
-                        | SyntaxKind::NODE_PAREN
-                        | SyntaxKind::NODE_IDENT => {
-                            // do not parenthsize the replacement
+        let replacement = match (boolean_ident(&bool_side).unwrap(), op == BinOpKind::Equal) {
+            (NixBoolean::True, true) | (NixBoolean::False, false) => {
+                // `a == true`, `a != false` replace with just `a`
+                non_bool_side.clone()
+            }
+            (NixBoolean::True, false) | (NixBoolean::False, true) => {
+                // `a != true`, `a == false` replace with `!a`
+                match non_bool_side.kind() {
+                    SyntaxKind::NODE_APPLY | SyntaxKind::NODE_PAREN | SyntaxKind::NODE_IDENT => {
+                        // do not parenthsize the replacement
+                        make::unary_not(&non_bool_side).node().clone()
+                    }
+                    SyntaxKind::NODE_BIN_OP => {
+                        let inner = BinOp::cast(non_bool_side.clone()).unwrap();
+                        // `!a ? b`, no paren required
+                        if inner.operator()? == BinOpKind::IsSet {
                             make::unary_not(&non_bool_side).node().clone()
-                        }
-                        SyntaxKind::NODE_BIN_OP => {
-                            let inner = BinOp::cast(non_bool_side.clone()).unwrap();
-                            // `!a ? b`, no paren required
-                            if inner.operator()? == BinOpKind::IsSet {
-                                make::unary_not(&non_bool_side).node().clone()
-                            } else {
-                                let parens = make::parenthesize(&non_bool_side);
-                                make::unary_not(parens.node()).node().clone()
-                            }
-                        }
-                        _ => {
+                        } else {
                             let parens = make::parenthesize(&non_bool_side);
                             make::unary_not(parens.node()).node().clone()
                         }
+                    }
+                    _ => {
+                        let parens = make::parenthesize(&non_bool_side);
+                        make::unary_not(parens.node()).node().clone()
                     }
                 }
             }
