@@ -83,12 +83,12 @@ impl Rule for BoolComparison {
                 }
             }
         };
-        let message = format!("Comparing `{non_bool_side}` with boolean literal `{bool_side}`");
         let at = node.text_range();
-        Some(
-            self.report()
-                .suggest(at, message, Suggestion::new(at, replacement)),
-        )
+        Some(self.report().suggest(
+            at,
+            format!("Comparing `{non_bool_side}` with boolean literal `{bool_side}`"),
+            Suggestion::new(at, replacement),
+        ))
     }
 }
 
