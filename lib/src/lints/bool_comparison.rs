@@ -54,7 +54,6 @@ impl Rule for BoolComparison {
             return None;
         };
 
-        let at = node.text_range();
         let replacement = match (boolean_ident(&bool_side).unwrap(), op == BinOpKind::Equal) {
             (NixBoolean::True, true) | (NixBoolean::False, false) => {
                 // `a == true`, `a != false` replace with just `a`
@@ -85,6 +84,7 @@ impl Rule for BoolComparison {
             }
         };
         let message = format!("Comparing `{non_bool_side}` with boolean literal `{bool_side}`");
+        let at = node.text_range();
         Some(
             self.report()
                 .suggest(at, message, Suggestion::new(at, replacement)),
