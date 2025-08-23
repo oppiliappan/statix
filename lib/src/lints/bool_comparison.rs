@@ -35,62 +35,64 @@ struct BoolComparison;
 
 impl Rule for BoolComparison {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(bin_expr) = BinOp::cast(node.clone())
-            && let Some(lhs) = bin_expr.lhs()
-            && let Some(rhs) = bin_expr.rhs()
-            && let Some(op) = bin_expr.operator()
-            && let BinOpKind::Equal | BinOpKind::NotEqual = op
-        {
-            let (non_bool_side, bool_side) = if boolean_ident(&lhs).is_some() {
-                (rhs, lhs)
-            } else if boolean_ident(&rhs).is_some() {
-                (lhs, rhs)
-            } else {
-                return None;
-            };
-            let at = node.text_range();
-            let replacement = {
-                match (boolean_ident(&bool_side).unwrap(), op == BinOpKind::Equal) {
-                    (NixBoolean::True, true) | (NixBoolean::False, false) => {
-                        // `a == true`, `a != false` replace with just `a`
-                        non_bool_side.clone()
-                    }
-                    (NixBoolean::True, false) | (NixBoolean::False, true) => {
-                        // `a != true`, `a == false` replace with `!a`
-                        match non_bool_side.kind() {
-                            SyntaxKind::NODE_APPLY
-                            | SyntaxKind::NODE_PAREN
-                            | SyntaxKind::NODE_IDENT => {
-                                // do not parenthsize the replacement
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+        let bin_expr = BinOp::cast(node.clone())?;
+        let (lhs, rhs) = (bin_expr.lhs()?, bin_expr.rhs()?);
+        let op = bin_expr.operator()?;
+
+        let (BinOpKind::Equal | BinOpKind::NotEqual) = op else {
+            return None;
+        };
+
+        let (non_bool_side, bool_side) = if boolean_ident(&lhs).is_some() {
+            (rhs, lhs)
+        } else if boolean_ident(&rhs).is_some() {
+            (lhs, rhs)
+        } else {
+            return None;
+        };
+
+        let at = node.text_range();
+        let replacement = {
+            match (boolean_ident(&bool_side).unwrap(), op == BinOpKind::Equal) {
+                (NixBoolean::True, true) | (NixBoolean::False, false) => {
+                    // `a == true`, `a != false` replace with just `a`
+                    non_bool_side.clone()
+                }
+                (NixBoolean::True, false) | (NixBoolean::False, true) => {
+                    // `a != true`, `a == false` replace with `!a`
+                    match non_bool_side.kind() {
+                        SyntaxKind::NODE_APPLY
+                        | SyntaxKind::NODE_PAREN
+                        | SyntaxKind::NODE_IDENT => {
+                            // do not parenthsize the replacement
+                            make::unary_not(&non_bool_side).node().clone()
+                        }
+                        SyntaxKind::NODE_BIN_OP => {
+                            let inner = BinOp::cast(non_bool_side.clone()).unwrap();
+                            // `!a ? b`, no paren required
+                            if inner.operator()? == BinOpKind::IsSet {
                                 make::unary_not(&non_bool_side).node().clone()
-                            }
-                            SyntaxKind::NODE_BIN_OP => {
-                                let inner = BinOp::cast(non_bool_side.clone()).unwrap();
-                                // `!a ? b`, no paren required
-                                if inner.operator()? == BinOpKind::IsSet {
-                                    make::unary_not(&non_bool_side).node().clone()
-                                } else {
-                                    let parens = make::parenthesize(&non_bool_side);
-                                    make::unary_not(parens.node()).node().clone()
-                                }
-                            }
-                            _ => {
+                            } else {
                                 let parens = make::parenthesize(&non_bool_side);
                                 make::unary_not(parens.node()).node().clone()
                             }
                         }
+                        _ => {
+                            let parens = make::parenthesize(&non_bool_side);
+                            make::unary_not(parens.node()).node().clone()
+                        }
                     }
                 }
-            };
-            let message = format!("Comparing `{non_bool_side}` with boolean literal `{bool_side}`");
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
-        } else {
-            None
-        }
+            }
+        };
+        let message = format!("Comparing `{non_bool_side}` with boolean literal `{bool_side}`");
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
 
