@@ -10,4 +10,8 @@
   (f != false)
   (true != g)
   (false != h)
+
+  # non-matches
+  (i == j)
+  (k != l)
 ]
