@@ -46,15 +46,14 @@ impl Rule for BoolComparison {
             return None;
         };
 
-        let (non_bool_side, bool_side) = if boolean_ident(&lhs).is_some() {
-            (rhs, lhs)
-        } else if boolean_ident(&rhs).is_some() {
-            (lhs, rhs)
-        } else {
-            return None;
-        };
+        let (bool_side, non_bool_side): (NixBoolean, &SyntaxNode) =
+            match (boolean_ident(&lhs), boolean_ident(&rhs)) {
+                (None, None) => return None,
+                (None, Some(bool)) => (bool, &lhs),
+                (Some(bool), _) => (bool, &rhs),
+            };
 
-        let replacement = match (boolean_ident(&bool_side).unwrap(), op == BinOpKind::Equal) {
+        let replacement = match (&bool_side, op == BinOpKind::Equal) {
             (NixBoolean::True, true) | (NixBoolean::False, false) => {
                 // `a == true`, `a != false` replace with just `a`
                 non_bool_side.clone()
@@ -64,20 +63,20 @@ impl Rule for BoolComparison {
                 match non_bool_side.kind() {
                     SyntaxKind::NODE_APPLY | SyntaxKind::NODE_PAREN | SyntaxKind::NODE_IDENT => {
                         // do not parenthsize the replacement
-                        make::unary_not(&non_bool_side).node().clone()
+                        make::unary_not(non_bool_side).node().clone()
                     }
                     SyntaxKind::NODE_BIN_OP => {
                         let inner = BinOp::cast(non_bool_side.clone()).unwrap();
                         // `!a ? b`, no paren required
                         if inner.operator()? == BinOpKind::IsSet {
-                            make::unary_not(&non_bool_side).node().clone()
+                            make::unary_not(non_bool_side).node().clone()
                         } else {
-                            let parens = make::parenthesize(&non_bool_side);
+                            let parens = make::parenthesize(non_bool_side);
                             make::unary_not(parens.node()).node().clone()
                         }
                     }
                     _ => {
-                        let parens = make::parenthesize(&non_bool_side);
+                        let parens = make::parenthesize(non_bool_side);
                         make::unary_not(parens.node()).node().clone()
                     }
                 }
@@ -95,6 +94,16 @@ impl Rule for BoolComparison {
 enum NixBoolean {
     True,
     False,
+}
+
+impl std::fmt::Display for NixBoolean {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Self::True => "true",
+            Self::False => "false",
+        };
+        write!(f, "{s}")
+    }
 }
 
 // not entirely accurate, underhanded nix programmers might write `true = false`
