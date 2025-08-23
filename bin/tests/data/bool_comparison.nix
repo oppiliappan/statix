@@ -14,4 +14,10 @@
   # non-matches
   (i == j)
   (k != l)
+
+  # both sides bool
+  (false == false)
+  (false == true)
+  (true == false)
+  (true == true)
 ]

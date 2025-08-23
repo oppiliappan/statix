@@ -4,7 +4,7 @@ expression: "& stdout"
 ---
 --- tests/data/bool_comparison.nix
 +++ tests/data/bool_comparison.nix [fixed]
-@@ -1,16 +1,16 @@
+@@ -1,23 +1,23 @@
  [
    # trivial
 -  (a == true)
@@ -29,3 +29,14 @@ expression: "& stdout"
    # non-matches
    (i == j)
    (k != l)
+ 
+   # both sides bool
+-  (false == false)
+-  (false == true)
+-  (true == false)
+-  (true == true)
++  (!false)
++  (!true)
++  false
++  true
+ ]

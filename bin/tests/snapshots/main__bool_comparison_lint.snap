@@ -58,3 +58,31 @@ expression: "& out"
     ·    ─────┬────  
     ·         ╰────── Comparing h with boolean literal false
 ────╯
+[W01] Warning: Unnecessary comparison with boolean
+    ╭─[data/bool_comparison.nix:19:4]
+    │
+ 19 │   (false == false)
+    ·    ───────┬──────  
+    ·           ╰──────── Comparing false with boolean literal false
+────╯
+[W01] Warning: Unnecessary comparison with boolean
+    ╭─[data/bool_comparison.nix:20:4]
+    │
+ 20 │   (false == true)
+    ·    ──────┬──────  
+    ·          ╰──────── Comparing true with boolean literal false
+────╯
+[W01] Warning: Unnecessary comparison with boolean
+    ╭─[data/bool_comparison.nix:21:4]
+    │
+ 21 │   (true == false)
+    ·    ──────┬──────  
+    ·          ╰──────── Comparing false with boolean literal true
+────╯
+[W01] Warning: Unnecessary comparison with boolean
+    ╭─[data/bool_comparison.nix:22:4]
+    │
+ 22 │   (true == true)
+    ·    ──────┬─────  
+    ·          ╰─────── Comparing true with boolean literal true
+────╯
