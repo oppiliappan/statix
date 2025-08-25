@@ -40,28 +40,32 @@ struct ManualInherit;
 
 impl Rule for ManualInherit {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(key_value_stmt) = KeyValue::cast(node.clone())
-            && let mut key_path = key_value_stmt.key()?.path()
-            && let Some(key_node) = key_path.next()
-            // ensure that path has exactly one component
-            && key_path.next().is_none()
-            && let Some(key) = Ident::cast(key_node)
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
 
-            && let Some(value_node) = key_value_stmt.value()
-            && let Some(value) = Ident::cast(value_node)
+        let key = KeyValue::cast(node.clone())?.key()?;
+        let mut key_path = key.path();
+        let key_node = key_path.next()?;
 
-            && key.as_str() == value.as_str()
-        {
-            let at = node.text_range();
-            let replacement = make::inherit_stmt(&[key]).node().clone();
-            let message = "This assignment is better written with `inherit`";
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
-        } else {
-            None
+        if key_path.next().is_some() {
+            return None;
         }
+
+        let key = Ident::cast(key_node)?;
+        let value_node = KeyValue::cast(node.clone())?.value()?;
+        let value = Ident::cast(value_node)?;
+
+        if key.as_str() != value.as_str() {
+            return None;
+        }
+
+        let replacement = make::inherit_stmt(&[key]).node().clone();
+
+        Some(self.report().suggest(
+            node.text_range(),
+            "This assignment is better written with `inherit`",
+            Suggestion::new(node.text_range(), replacement),
+        ))
     }
 }
