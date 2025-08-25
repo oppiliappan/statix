@@ -40,31 +40,37 @@ struct ManualInherit;
 
 impl Rule for ManualInherit {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(key_value_stmt) = KeyValue::cast(node.clone())
-            && let mut key_path = key_value_stmt.key()?.path()
-            && let Some(key_node) = key_path.next()
-            // ensure that path has exactly one component
-            && key_path.next().is_none()
-            && let Some(key) = Ident::cast(key_node)
-            && let Some(value_node) = key_value_stmt.value()
-            && let Some(value) = Select::cast(value_node)
-            && let Some(index_node) = value.index()
-            && let Some(index) = Ident::cast(index_node)
-            && key.as_str() == index.as_str()
-        {
-            let at = node.text_range();
-            let replacement = {
-                let set = value.set()?;
-                make::inherit_from_stmt(&set, &[key]).node().clone()
-            };
-            let message = "This assignment is better written with `inherit`";
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
-        } else {
-            None
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+
+        let key_value_stmt = KeyValue::cast(node.clone())?;
+        let key = key_value_stmt.key()?;
+        let mut key_path = key.path();
+        let key_node = key_path.next()?;
+
+        if key_path.next().is_some() {
+            return None;
         }
+
+        let key = Ident::cast(key_node)?;
+        let value = Select::cast(key_value_stmt.value()?)?;
+        let index = Ident::cast(value.index()?)?;
+
+        if key.as_str() != index.as_str() {
+            return None;
+        }
+
+        let at = node.text_range();
+        let replacement = {
+            let set = value.set()?;
+            make::inherit_from_stmt(&set, &[key]).node().clone()
+        };
+
+        Some(self.report().suggest(
+            at,
+            "This assignment is better written with `inherit`",
+            Suggestion::new(at, replacement),
+        ))
     }
 }
