@@ -47,20 +47,16 @@ impl Rule for EtaReduction {
         };
 
         let lambda_expr = Lambda::cast(node.clone())?;
-        let arg_node = lambda_expr.arg()?;
-        let arg = Ident::cast(arg_node)?;
-        let body_node = lambda_expr.body()?;
-        let body = Apply::cast(body_node)?;
-        let value_node = body.value()?;
-        let value = Ident::cast(value_node)?;
+        let ident = Ident::cast(lambda_expr.arg()?)?;
+        let body = Apply::cast(lambda_expr.body()?)?;
 
-        if arg.as_str() != value.as_str() {
+        if ident.as_str() != Ident::cast(body.value()?)?.as_str() {
             return None;
         }
 
         let lambda_node = body.lambda()?;
 
-        if mentions_ident(&arg, &lambda_node) {
+        if mentions_ident(&ident, &lambda_node) {
             return None;
         }
 
