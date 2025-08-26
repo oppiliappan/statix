@@ -62,13 +62,11 @@ impl Rule for EmptyPattern {
             return None;
         }
 
-        let at = pattern.node().text_range();
-        let message = "This pattern is empty, use `_` instead";
-        let replacement = make::ident("_").node().clone();
-        Some(
-            self.report()
-                .suggest(at, message, Suggestion::new(at, replacement)),
-        )
+        Some(self.report().suggest(
+            pattern.node().text_range(),
+            "This pattern is empty, use `_` instead",
+            Suggestion::new(pattern.node().text_range(), make::ident("_").node().clone()),
+        ))
     }
 }
 
