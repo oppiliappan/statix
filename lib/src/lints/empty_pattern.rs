@@ -71,14 +71,12 @@ impl Rule for EmptyPattern {
 }
 
 fn is_module(body: &SyntaxNode) -> bool {
-    if let Some(attr_set) = AttrSet::cast(body.clone())
-        && attr_set
-            .entries()
-            .filter_map(|e| e.key())
-            .any(|k| k.node().to_string() == "imports")
-    {
-        true
-    } else {
-        false
-    }
+    let Some(attr_set) = AttrSet::cast(body.clone()) else {
+        return false;
+    };
+
+    attr_set
+        .entries()
+        .filter_map(|e| e.key())
+        .any(|k| k.node().to_string() == "imports")
 }
