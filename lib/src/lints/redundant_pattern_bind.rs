@@ -35,27 +35,34 @@ struct RedundantPatternBind;
 
 impl Rule for RedundantPatternBind {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(pattern) = Pattern::cast(node.clone())
-            // no patterns within `{ }`
-            && pattern.entries().count() == 0
-            // pattern is just ellipsis
-            && pattern.ellipsis()
-            // pattern is bound
-            && let Some(ident) =  pattern.at()
-        {
-            let at = node.text_range();
-            let message = format!(
-                "This pattern bind is redundant, use `{}` instead",
-                ident.as_str()
-            );
-            let replacement = ident.node().clone();
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
-        } else {
-            None
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+
+        let pattern = Pattern::cast(node.clone())?;
+
+        // no patterns within `{ }`
+        if pattern.entries().count() != 0 {
+            return None;
         }
+
+        // pattern is just ellipsis
+        if !pattern.ellipsis() {
+            return None;
+        }
+
+        // pattern is bound
+        let ident = pattern.at()?;
+        let at = node.text_range();
+        let message = format!(
+            "This pattern bind is redundant, use `{}` instead",
+            ident.as_str()
+        );
+        let replacement = ident.node().clone();
+
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
