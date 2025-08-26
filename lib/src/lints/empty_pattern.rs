@@ -41,28 +41,34 @@ struct EmptyPattern;
 
 impl Rule for EmptyPattern {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(lambda_expr) = Lambda::cast(node.clone())
-            && let Some(arg) = lambda_expr.arg()
-            && let Some(body) = lambda_expr.body()
-            && let Some(pattern) = Pattern::cast(arg)
-            // no patterns within `{ }`
-            && pattern.entries().count() == 0
-            // pattern is not bound
-            && pattern.at().is_none()
-            // not a nixos module
-            && !is_module(&body)
-        {
-            let at = pattern.node().text_range();
-            let message = "This pattern is empty, use `_` instead";
-            let replacement = make::ident("_").node().clone();
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
-        } else {
-            None
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+
+        let lambda_expr = Lambda::cast(node.clone())?;
+        let pattern = Pattern::cast(lambda_expr.arg()?)?;
+
+        // no patterns within `{ }`
+        if pattern.entries().count() != 0 {
+            return None;
         }
+
+        // pattern is not bound
+        if pattern.at().is_some() {
+            return None;
+        }
+
+        if is_module(&lambda_expr.body()?) {
+            return None;
+        }
+
+        let at = pattern.node().text_range();
+        let message = "This pattern is empty, use `_` instead";
+        let replacement = make::ident("_").node().clone();
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
 
