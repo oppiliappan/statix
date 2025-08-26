@@ -42,31 +42,39 @@ struct EtaReduction;
 
 impl Rule for EtaReduction {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(lambda_expr) = Lambda::cast(node.clone())
-            && let Some(arg_node) = lambda_expr.arg()
-            && let Some(arg) = Ident::cast(arg_node)
-            && let Some(body_node) = lambda_expr.body()
-            && let Some(body) = Apply::cast(body_node)
-            && let Some(value_node) = body.value()
-            && let Some(value) = Ident::cast(value_node)
-            && arg.as_str() == value.as_str()
-            && let Some(lambda_node) = body.lambda()
-            && !mentions_ident(&arg, &lambda_node)
-            // lambda body should be no more than a single Ident to
-            // retain code readability
-            && let Some(_) = Ident::cast(lambda_node)
-        {
-            let at = node.text_range();
-            let replacement = body.lambda()?;
-            let message = format!("Found eta-reduction: `{}`", replacement.text());
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
-        } else {
-            None
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+
+        let lambda_expr = Lambda::cast(node.clone())?;
+        let arg_node = lambda_expr.arg()?;
+        let arg = Ident::cast(arg_node)?;
+        let body_node = lambda_expr.body()?;
+        let body = Apply::cast(body_node)?;
+        let value_node = body.value()?;
+        let value = Ident::cast(value_node)?;
+
+        if arg.as_str() != value.as_str() {
+            return None;
         }
+
+        let lambda_node = body.lambda()?;
+
+        if mentions_ident(&arg, &lambda_node) {
+            return None;
+        }
+
+        // lambda body should be no more than a single Ident to
+        // retain code readability
+        Ident::cast(lambda_node)?;
+
+        let at = node.text_range();
+        let replacement = body.lambda()?;
+        let message = format!("Found eta-reduction: `{}`", replacement.text());
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
 
