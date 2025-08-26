@@ -29,21 +29,27 @@ struct EmptyInherit;
 
 impl Rule for EmptyInherit {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(inherit_stmt) = Inherit::cast(node.clone())
-            && inherit_stmt.from().is_none()
-            && inherit_stmt.idents().count() == 0
-        {
-            let at = node.text_range();
-            let replacement = make::empty().node().clone();
-            let replacement_at = utils::with_preceeding_whitespace(node);
-            let message = "Remove this empty `inherit` statement";
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(replacement_at, replacement)),
-            )
-        } else {
-            None
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+
+        let inherit_stmt = Inherit::cast(node.clone())?;
+
+        if inherit_stmt.from().is_some() {
+            return None;
         }
+
+        if inherit_stmt.idents().count() != 0 {
+            return None;
+        }
+
+        let at = node.text_range();
+        let replacement = make::empty().node().clone();
+        let replacement_at = utils::with_preceeding_whitespace(node);
+        let message = "Remove this empty `inherit` statement";
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(replacement_at, replacement)),
+        )
     }
 }
