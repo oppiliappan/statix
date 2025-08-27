@@ -32,27 +32,34 @@ struct BoolSimplification;
 
 impl Rule for BoolSimplification {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(unary_expr) = UnaryOp::cast(node.clone())
-            && unary_expr.operator() == UnaryOpKind::Invert
-            && let Some(value_expr) = unary_expr.value()
-            && let Some(paren_expr) = Paren::cast(value_expr)
-            && let Some(inner_expr) = paren_expr.inner()
-            && let Some(bin_expr) = BinOp::cast(inner_expr)
-            && let Some(BinOpKind::Equal) = bin_expr.operator()
-        {
-            let at = node.text_range();
-            let message = "Try `!=` instead of `!(... == ...)`";
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
 
-            let lhs = bin_expr.lhs()?;
-            let rhs = bin_expr.rhs()?;
-            let replacement = make::binary(&lhs, "!=", &rhs).node().clone();
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
-        } else {
-            None
+        let unary_expr = UnaryOp::cast(node.clone())?;
+
+        if unary_expr.operator() != UnaryOpKind::Invert {
+            return None;
         }
+
+        let value_expr = unary_expr.value()?;
+        let paren_expr = Paren::cast(value_expr)?;
+        let inner_expr = paren_expr.inner()?;
+        let bin_expr = BinOp::cast(inner_expr)?;
+
+        let Some(BinOpKind::Equal) = bin_expr.operator() else {
+            return None;
+        };
+
+        let at = node.text_range();
+        let message = "Try `!=` instead of `!(... == ...)`";
+
+        let lhs = bin_expr.lhs()?;
+        let rhs = bin_expr.rhs()?;
+        let replacement = make::binary(&lhs, "!=", &rhs).node().clone();
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
