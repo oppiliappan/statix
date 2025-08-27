@@ -45,76 +45,91 @@ struct RepeatedKeys;
 
 impl Rule for RepeatedKeys {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(key_value) = KeyValue::cast(node.clone())
-            && let Some(key) = key_value.key()
-            && let mut components = key.path()
-            && let Some(first_component) = components.next()
-            && let Some(first_component_ident) = Ident::cast(first_component)
-            // ensure that there are >1 components
-            && components.next().is_some()
-            && let Some(parent_node) = node.parent()
-            && let Some(parent_attr_set) = AttrSet::cast(parent_node)
-            && !parent_attr_set.recursive()
-            && let occurrences = parent_attr_set.entries().filter_map(|kv_scrutinee| {
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+
+        let key_value = KeyValue::cast(node.clone())?;
+        let key = key_value.key()?;
+        let mut components = key.path();
+        let first_component = components.next()?;
+        let first_component_ident = Ident::cast(first_component)?;
+
+        // ensure that there are >1 components
+        components.next()?;
+
+        let parent_node = node.parent()?;
+        let parent_attr_set = AttrSet::cast(parent_node)?;
+
+        if parent_attr_set.recursive() {
+            return None;
+        }
+
+        let occurrences = parent_attr_set
+            .entries()
+            .filter_map(|kv_scrutinee| {
                 let scrutinee_key = kv_scrutinee.key()?;
                 let mut kv_scrutinee_components = scrutinee_key.path();
                 let kv_scrutinee_first_component = kv_scrutinee_components.next()?;
                 let kv_scrutinee_ident = Ident::cast(kv_scrutinee_first_component)?;
                 if kv_scrutinee_ident.as_str() == first_component_ident.as_str() {
                     Some((
-                            kv_scrutinee.key()?.node().text_range(),
-                            kv_scrutinee_components
-                                .map(|n| n.to_string())
-                                .collect::<Vec<_>>()
-                                .join("."),
+                        kv_scrutinee.key()?.node().text_range(),
+                        kv_scrutinee_components
+                            .map(|n| n.to_string())
+                            .collect::<Vec<_>>()
+                            .join("."),
                     ))
                 } else {
                     None
                 }
-            }).collect::<Vec<_>>()
-            && occurrences.first()?.0 == key.node().text_range()
-            && occurrences.len() >= 3
-        {
-            let mut iter = occurrences.into_iter();
+            })
+            .collect::<Vec<_>>();
 
-            let (first_annotation, first_subkey) = iter.next().unwrap();
-            let first_message = format!(
-                "The key `{}` is first assigned here ...",
-                first_component_ident.as_str()
-            );
-
-            let (second_annotation, second_subkey) = iter.next().unwrap();
-            let second_message = "... repeated here ...";
-
-            let (third_annotation, third_subkey) = iter.next().unwrap();
-            let third_message = {
-                let remaining_occurrences = iter.count();
-                let mut message = match remaining_occurrences {
-                    0 => "... and here.".to_string(),
-                    1 => "... and here (`1` occurrence omitted).".to_string(),
-                    n => format!("... and here (`{n}` occurrences omitted)."),
-                };
-                write!(
-                    message,
-                    " Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.",
-                    first_component_ident.as_str(),
-                    first_subkey,
-                    second_subkey,
-                    third_subkey
-                )
-                .unwrap();
-                message
-            };
-
-            Some(
-                self.report()
-                    .diagnostic(first_annotation, first_message)
-                    .diagnostic(second_annotation, second_message)
-                    .diagnostic(third_annotation, third_message),
-            )
-        } else {
-            None
+        if occurrences.first()?.0 != key.node().text_range() {
+            return None;
         }
+
+        if occurrences.len() < 3 {
+            return None;
+        }
+
+        let mut iter = occurrences.into_iter();
+
+        let (first_annotation, first_subkey) = iter.next().unwrap();
+        let first_message = format!(
+            "The key `{}` is first assigned here ...",
+            first_component_ident.as_str()
+        );
+
+        let (second_annotation, second_subkey) = iter.next().unwrap();
+        let second_message = "... repeated here ...";
+
+        let (third_annotation, third_subkey) = iter.next().unwrap();
+        let third_message = {
+            let remaining_occurrences = iter.count();
+            let mut message = match remaining_occurrences {
+                0 => "... and here.".to_string(),
+                1 => "... and here (`1` occurrence omitted).".to_string(),
+                n => format!("... and here (`{n}` occurrences omitted)."),
+            };
+            write!(
+                message,
+                " Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.",
+                first_component_ident.as_str(),
+                first_subkey,
+                second_subkey,
+                third_subkey
+            )
+            .unwrap();
+            message
+        };
+
+        Some(
+            self.report()
+                .diagnostic(first_annotation, first_message)
+                .diagnostic(second_annotation, second_message)
+                .diagnostic(third_annotation, third_message),
+        )
     }
 }
