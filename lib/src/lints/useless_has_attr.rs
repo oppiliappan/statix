@@ -33,48 +33,54 @@ struct UselessHasAttr;
 
 impl Rule for UselessHasAttr {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(if_else_expr) = IfElse::cast(node.clone())
-            && let Some(condition_expr) = if_else_expr.condition()
-            && let Some(default_expr) = if_else_expr.else_body()
-            && let Some(cond_bin_expr) = BinOp::cast(condition_expr)
-            && let Some(BinOpKind::IsSet) = cond_bin_expr.operator()
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
 
-            // set ? attr_path
-            // ^^^--------------- lhs
-            //      ^^^^^^^^^^--- rhs
-            && let Some(set) = cond_bin_expr.lhs()
-            && let Some(attr_path) = cond_bin_expr.rhs()
+        let if_else_expr = IfElse::cast(node.clone())?;
+        let condition_expr = if_else_expr.condition()?;
+        let default_expr = if_else_expr.else_body()?;
+        let cond_bin_expr = BinOp::cast(condition_expr)?;
+        let Some(BinOpKind::IsSet) = cond_bin_expr.operator() else {
+            return None;
+        };
 
-            // check if body of the `if` expression is of the form `set.attr_path`
-            && let Some(body_expr) = if_else_expr.body()
-            && let Some(body_select_expr) = Select::cast(body_expr)
-            &&let expected_body = make::select(&set, &attr_path)
+        // set ? attr_path
+        // ^^^--------------- lhs
+        //      ^^^^^^^^^^--- rhs
+        let set = cond_bin_expr.lhs()?;
+        let attr_path = cond_bin_expr.rhs()?;
 
-            // text comparison will do for now
-            && body_select_expr.node().text() == expected_body.node().text()
-        {
-            let at = node.text_range();
-            // `or` is tightly binding, we need to parenthesize non-literal exprs
-            let default_with_parens = match default_expr.kind() {
-                SyntaxKind::NODE_LIST
-                | SyntaxKind::NODE_PAREN
-                | SyntaxKind::NODE_STRING
-                | SyntaxKind::NODE_ATTR_SET
-                | SyntaxKind::NODE_IDENT
-                | SyntaxKind::NODE_SELECT => default_expr,
-                _ => make::parenthesize(&default_expr).node().clone(),
-            };
-            let replacement = make::or_default(&set, &attr_path, &default_with_parens)
-                .node()
-                .clone();
-            let message = format!("Consider using `{replacement}` instead of this `if` expression");
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement)),
-            )
-        } else {
-            None
+        // check if body of the `if` expression is of the form `set.attr_path`
+        let body_expr = if_else_expr.body()?;
+        let body_select_expr = Select::cast(body_expr)?;
+        let expected_body = make::select(&set, &attr_path);
+
+        // text comparison will do for now
+        if body_select_expr.node().text() != expected_body.node().text() {
+            return None;
         }
+
+        let at = node.text_range();
+
+        // `or` is tightly binding, we need to parenthesize non-literal exprs
+        let default_with_parens = match default_expr.kind() {
+            SyntaxKind::NODE_LIST
+            | SyntaxKind::NODE_PAREN
+            | SyntaxKind::NODE_STRING
+            | SyntaxKind::NODE_ATTR_SET
+            | SyntaxKind::NODE_IDENT
+            | SyntaxKind::NODE_SELECT => default_expr,
+            _ => make::parenthesize(&default_expr).node().clone(),
+        };
+
+        let replacement = make::or_default(&set, &attr_path, &default_with_parens)
+            .node()
+            .clone();
+        let message = format!("Consider using `{replacement}` instead of this `if` expression");
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, replacement)),
+        )
     }
 }
