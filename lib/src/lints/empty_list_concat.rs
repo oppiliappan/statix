@@ -45,13 +45,19 @@ impl Rule for EmptyListConcat {
 
         let at = node.text_range();
         let message = "Concatenation with the empty list, `[]`, is a no-op";
-        if is_empty_array(&lhs) {
-            Some(self.report().suggest(at, message, Suggestion::new(at, rhs)))
+
+        let empty_array = if is_empty_array(&lhs) {
+            rhs
         } else if is_empty_array(&rhs) {
-            Some(self.report().suggest(at, message, Suggestion::new(at, lhs)))
+            lhs
         } else {
-            None
-        }
+            return None;
+        };
+
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::new(at, empty_array)),
+        )
     }
 }
 
