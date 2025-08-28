@@ -189,7 +189,7 @@ pub struct Suggestion {
 
 impl Suggestion {
     /// Construct a suggestion.
-    pub fn new<E: Into<SyntaxElement>>(at: TextRange, fix: E) -> Self {
+    pub fn new(at: TextRange, fix: impl Into<SyntaxElement>) -> Self {
         Self {
             at,
             fix: fix.into(),
