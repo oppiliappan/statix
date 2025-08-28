@@ -1,4 +1,4 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
 use macros::lint;
 use rnix::{
@@ -73,7 +73,6 @@ impl Rule for CollapsibleLetIn {
                 .end();
             TextRange::new(start, end)
         };
-        let replacement = make::empty().node().clone();
 
         Some(
             self.report()
@@ -81,7 +80,7 @@ impl Rule for CollapsibleLetIn {
                 .suggest(
                     second_annotation,
                     second_message,
-                    Suggestion::new(replacement_at, replacement),
+                    Suggestion::with_empty(replacement_at),
                 ),
         )
     }

@@ -59,7 +59,7 @@ impl Rule for UselessParens {
                 Diagnostic::suggest(
                     value_range,
                     "Useless parentheses around value in binding",
-                    Suggestion::new(value_range, Paren::cast(value_node)?.inner()?),
+                    Suggestion::with_replacement(value_range, Paren::cast(value_node)?.inner()?),
                 )
             }
             ParsedType::LetIn(let_in) => {
@@ -68,7 +68,7 @@ impl Rule for UselessParens {
                 Diagnostic::suggest(
                     body_range,
                     "Useless parentheses around body of `let` expression",
-                    Suggestion::new(body_range, Paren::cast(body_node)?.inner()?),
+                    Suggestion::with_replacement(body_range, Paren::cast(body_node)?.inner()?),
                 )
             }
             ParsedType::Paren(paren_expr) => {
@@ -104,7 +104,7 @@ impl Rule for UselessParens {
                 Diagnostic::suggest(
                     paren_expr_range,
                     "Useless parentheses around primitive expression",
-                    Suggestion::new(paren_expr_range, parsed_inner.node().clone()),
+                    Suggestion::with_replacement(paren_expr_range, parsed_inner.node().clone()),
                 )
             }
             _ => return None,

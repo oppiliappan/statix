@@ -54,7 +54,7 @@ impl Rule for EmptyLetIn {
                 self.report().diagnostic(at, message)
             } else {
                 self.report()
-                    .suggest(at, message, Suggestion::new(at, replacement))
+                    .suggest(at, message, Suggestion::with_replacement(at, replacement))
             })
         } else {
             None

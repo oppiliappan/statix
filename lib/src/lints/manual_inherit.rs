@@ -65,7 +65,7 @@ impl Rule for ManualInherit {
         Some(self.report().suggest(
             node.text_range(),
             "This assignment is better written with `inherit`",
-            Suggestion::new(node.text_range(), replacement),
+            Suggestion::with_replacement(node.text_range(), replacement),
         ))
     }
 }

@@ -65,7 +65,10 @@ impl Rule for EmptyPattern {
         Some(self.report().suggest(
             pattern.node().text_range(),
             "This pattern is empty, use `_` instead",
-            Suggestion::new(pattern.node().text_range(), make::ident("_").node().clone()),
+            Suggestion::with_replacement(
+                pattern.node().text_range(),
+                make::ident("_").node().clone(),
+            ),
         ))
     }
 }

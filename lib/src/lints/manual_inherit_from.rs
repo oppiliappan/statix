@@ -70,7 +70,7 @@ impl Rule for ManualInherit {
         Some(self.report().suggest(
             at,
             "This assignment is better written with `inherit`",
-            Suggestion::new(at, replacement),
+            Suggestion::with_replacement(at, replacement),
         ))
     }
 }

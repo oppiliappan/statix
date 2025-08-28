@@ -80,10 +80,6 @@ pub fn ident(text: &str) -> types::Ident {
     ast_from_text(text)
 }
 
-pub fn empty() -> types::Root {
-    ast_from_text("")
-}
-
 // LATER: make `op` strongly typed here
 pub fn binary(lhs: &SyntaxNode, op: &str, rhs: &SyntaxNode) -> types::BinOp {
     ast_from_text(&format!("{lhs} {op} {rhs}"))

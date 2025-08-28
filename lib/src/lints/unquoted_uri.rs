@@ -56,7 +56,7 @@ impl Rule for UnquotedUri {
         let message = "Consider quoting this URI expression";
         Some(
             self.report()
-                .suggest(at, message, Suggestion::new(at, replacement)),
+                .suggest(at, message, Suggestion::with_replacement(at, replacement)),
         )
     }
 }

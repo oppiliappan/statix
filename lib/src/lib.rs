@@ -179,20 +179,42 @@ impl Serialize for Diagnostic {
     }
 }
 
+#[derive(Debug)]
+pub enum Replacement {
+    Empty,
+    SyntaxElement(SyntaxElement),
+}
+
 /// Suggested fix for a diagnostic, the fix is provided as a syntax element.
 /// Look at `make.rs` to construct fixes.
 #[derive(Debug)]
 pub struct Suggestion {
     pub at: TextRange,
-    pub fix: SyntaxElement,
+    pub fix: Replacement,
+}
+
+impl std::fmt::Display for Replacement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Replacement::Empty => Ok(()),
+            Replacement::SyntaxElement(syntax_element) => write!(f, "{syntax_element}"),
+        }
+    }
 }
 
 impl Suggestion {
-    /// Construct a suggestion.
-    pub fn new(at: TextRange, fix: impl Into<SyntaxElement>) -> Self {
+    #[must_use]
+    pub fn with_replacement(at: TextRange, fix: impl Into<SyntaxElement>) -> Self {
         Self {
             at,
-            fix: fix.into(),
+            fix: Replacement::SyntaxElement(fix.into()),
+        }
+    }
+    #[must_use]
+    pub fn with_empty(at: TextRange) -> Self {
+        Self {
+            at,
+            fix: Replacement::Empty,
         }
     }
     /// Apply a suggestion to a source file

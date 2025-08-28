@@ -56,7 +56,7 @@ impl Rule for EmptyListConcat {
 
         Some(
             self.report()
-                .suggest(at, message, Suggestion::new(at, empty_array)),
+                .suggest(at, message, Suggestion::with_replacement(at, empty_array)),
         )
     }
 }

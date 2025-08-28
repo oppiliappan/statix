@@ -59,7 +59,7 @@ impl Rule for BoolSimplification {
         let replacement = make::binary(&lhs, "!=", &rhs).node().clone();
         Some(
             self.report()
-                .suggest(at, message, Suggestion::new(at, replacement)),
+                .suggest(at, message, Suggestion::with_replacement(at, replacement)),
         )
     }
 }

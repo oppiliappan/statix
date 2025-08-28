@@ -86,7 +86,7 @@ impl Rule for BoolComparison {
         Some(self.report().suggest(
             at,
             format!("Comparing `{non_bool_side}` with boolean literal `{bool_side}`"),
-            Suggestion::new(at, replacement),
+            Suggestion::with_replacement(at, replacement),
         ))
     }
 }

@@ -1,4 +1,4 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo, utils};
+use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo, utils};
 
 use macros::lint;
 use rnix::{
@@ -44,12 +44,11 @@ impl Rule for EmptyInherit {
         }
 
         let at = node.text_range();
-        let replacement = make::empty().node().clone();
         let replacement_at = utils::with_preceeding_whitespace(node);
         let message = "Remove this empty `inherit` statement";
         Some(
             self.report()
-                .suggest(at, message, Suggestion::new(replacement_at, replacement)),
+                .suggest(at, message, Suggestion::with_empty(replacement_at)),
         )
     }
 }

@@ -80,7 +80,7 @@ impl Rule for UselessHasAttr {
         let message = format!("Consider using `{replacement}` instead of this `if` expression");
         Some(
             self.report()
-                .suggest(at, message, Suggestion::new(at, replacement)),
+                .suggest(at, message, Suggestion::with_replacement(at, replacement)),
         )
     }
 }
