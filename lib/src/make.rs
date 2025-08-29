@@ -8,16 +8,15 @@ use rnix::{
 fn ast_from_text<N: TypedNode>(text: &str) -> N {
     let parse = rnix::parse(text);
 
-    match parse.node().descendants().find_map(N::cast) {
-        Some(it) => it,
-        None => {
-            panic!(
-                "Failed to make ast node `{}` from text `{}`",
-                std::any::type_name::<N>(),
-                text
-            )
-        }
-    }
+    let Some(node) = parse.node().descendants().find_map(N::cast) else {
+        panic!(
+            "Failed to make ast node `{}` from text `{}`",
+            std::any::type_name::<N>(),
+            text
+        );
+    };
+
+    node
 }
 
 pub fn parenthesize(node: &SyntaxNode) -> types::Paren {
