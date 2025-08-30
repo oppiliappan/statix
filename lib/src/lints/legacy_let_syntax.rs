@@ -44,37 +44,44 @@ struct ManualInherit;
 
 impl Rule for ManualInherit {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
-        if let NodeOrToken::Node(node) = node
-            && let Some(legacy_let) = LegacyLet::cast(node.clone())
-            && legacy_let
-                .entries()
-                .any(|kv| matches!(kv.key(), Some(k) if key_is_ident(&k, "body")))
+        let NodeOrToken::Node(node) = node else {
+            return None;
+        };
+
+        let legacy_let = LegacyLet::cast(node.clone())?;
+
+        if !legacy_let
+            .entries()
+            .any(|kv| matches!(kv.key(), Some(k) if key_is_ident(&k, "body")))
         {
-            let inherits = legacy_let.inherits();
-            let entries = legacy_let.entries();
-            let attrset = make::attrset(inherits, entries, true);
-            let parenthesized = make::parenthesize(attrset.node());
-            let selected = make::select(parenthesized.node(), make::ident("body").node());
-
-            let at = node.text_range();
-            let message = "Prefer `rec` over undocumented `let` syntax";
-            let replacement = selected.node().clone();
-
-            Some(
-                self.report()
-                    .suggest(at, message, Suggestion::with_replacement(at, replacement)),
-            )
-        } else {
-            None
+            return None;
         }
+
+        let inherits = legacy_let.inherits();
+        let entries = legacy_let.entries();
+        let attrset = make::attrset(inherits, entries, true);
+        let parenthesized = make::parenthesize(attrset.node());
+        let selected = make::select(parenthesized.node(), make::ident("body").node());
+
+        let at = node.text_range();
+        let message = "Prefer `rec` over undocumented `let` syntax";
+        let replacement = selected.node().clone();
+
+        Some(
+            self.report()
+                .suggest(at, message, Suggestion::with_replacement(at, replacement)),
+        )
     }
 }
 
 fn key_is_ident(key_path: &Key, ident: &str) -> bool {
-    if let Some(key_node) = key_path.path().next() {
-        if let Some(key) = Ident::cast(key_node) {
-            return key.as_str() == ident;
-        }
-    }
-    false
+    let Some(key_node) = key_path.path().next() else {
+        return false;
+    };
+
+    let Some(key) = Ident::cast(key_node) else {
+        return false;
+    };
+
+    key.as_str() == ident
 }
