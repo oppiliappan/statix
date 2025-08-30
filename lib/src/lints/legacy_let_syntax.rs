@@ -3,7 +3,7 @@ use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{EntryHolder, Ident, Key, LegacyLet, TokenWrapper, TypedNode},
+    types::{EntryHolder, Ident, LegacyLet, TokenWrapper, TypedNode},
 };
 
 /// ## What it does
@@ -52,7 +52,12 @@ impl Rule for ManualInherit {
 
         if !legacy_let
             .entries()
-            .any(|kv| matches!(kv.key(), Some(k) if key_is_ident(&k, "body")))
+            .filter_map(|kv| {
+                let key = kv.key()?;
+                let first_component = key.path().next()?;
+                Ident::cast(first_component)
+            })
+            .any(|ident| ident.as_str() == "body")
         {
             return None;
         }
@@ -72,16 +77,4 @@ impl Rule for ManualInherit {
                 .suggest(at, message, Suggestion::with_replacement(at, replacement)),
         )
     }
-}
-
-fn key_is_ident(key_path: &Key, ident: &str) -> bool {
-    let Some(key_node) = key_path.path().next() else {
-        return false;
-    };
-
-    let Some(key) = Ident::cast(key_node) else {
-        return false;
-    };
-
-    key.as_str() == ident
 }
