@@ -14,3 +14,9 @@ let
 in
   # parens around let body
   (null)
+
+  # select in list (parens not necessary)
+  [
+    (a.b)
+    (a.b or g)
+  ]

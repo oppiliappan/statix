@@ -4,7 +4,7 @@ expression: "& stdout"
 ---
 --- tests/data/useless_parens.nix
 +++ tests/data/useless_parens.nix [fixed]
-@@ -1,16 +1,16 @@
+@@ -1,22 +1,22 @@
  let
    # parens around primitives
    a = {
@@ -27,3 +27,10 @@ expression: "& stdout"
    # parens around let body
 -  (null)
 +  null
+ 
+   # select in list (parens not necessary)
+   [
+-    (a.b)
++    a.b
+     (a.b or g)
+   ]
