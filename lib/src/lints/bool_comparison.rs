@@ -40,11 +40,7 @@ impl Rule for BoolComparison {
         };
         let bin_expr = BinOp::cast(node.clone())?;
         let (lhs, rhs) = (bin_expr.lhs()?, bin_expr.rhs()?);
-        let op = bin_expr.operator()?;
-
-        let (BinOpKind::Equal | BinOpKind::NotEqual) = op else {
-            return None;
-        };
+        let op = EqualityBinOpKind::try_from(bin_expr.operator()?)?;
 
         let (bool_side, non_bool_side): (NixBoolean, &SyntaxNode) =
             match (boolean_ident(&lhs), boolean_ident(&rhs)) {
@@ -53,12 +49,14 @@ impl Rule for BoolComparison {
                 (Some(bool), _) => (bool, &rhs),
             };
 
-        let replacement = match (&bool_side, op == BinOpKind::Equal) {
-            (NixBoolean::True, true) | (NixBoolean::False, false) => {
+        let replacement = match (&bool_side, op) {
+            (NixBoolean::True, EqualityBinOpKind::Equal)
+            | (NixBoolean::False, EqualityBinOpKind::NotEqual) => {
                 // `a == true`, `a != false` replace with just `a`
                 non_bool_side.clone()
             }
-            (NixBoolean::True, false) | (NixBoolean::False, true) => {
+            (NixBoolean::True, EqualityBinOpKind::NotEqual)
+            | (NixBoolean::False, EqualityBinOpKind::Equal) => {
                 // `a != true`, `a == false` replace with `!a`
                 match non_bool_side.kind() {
                     SyntaxKind::NODE_APPLY | SyntaxKind::NODE_PAREN | SyntaxKind::NODE_IDENT => {
@@ -94,6 +92,25 @@ impl Rule for BoolComparison {
 enum NixBoolean {
     True,
     False,
+}
+
+#[derive(Debug)]
+enum EqualityBinOpKind {
+    NotEqual,
+    Equal,
+}
+
+impl EqualityBinOpKind {
+    /// Try to create from a `BinOpKind`
+    ///
+    /// Returns an option, not a Result
+    fn try_from(bin_op_kind: BinOpKind) -> Option<Self> {
+        match bin_op_kind {
+            BinOpKind::Equal => Some(Self::Equal),
+            BinOpKind::NotEqual => Some(Self::NotEqual),
+            _ => None,
+        }
+    }
 }
 
 impl std::fmt::Display for NixBoolean {
