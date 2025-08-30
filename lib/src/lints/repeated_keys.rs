@@ -72,17 +72,18 @@ impl Rule for RepeatedKeys {
                 let mut kv_scrutinee_components = scrutinee_key.path();
                 let kv_scrutinee_first_component = kv_scrutinee_components.next()?;
                 let kv_scrutinee_ident = Ident::cast(kv_scrutinee_first_component)?;
-                if kv_scrutinee_ident.as_str() == first_component_ident.as_str() {
-                    Some((
-                        kv_scrutinee.key()?.node().text_range(),
-                        kv_scrutinee_components
-                            .map(|n| n.to_string())
-                            .collect::<Vec<_>>()
-                            .join("."),
-                    ))
-                } else {
-                    None
+
+                if kv_scrutinee_ident.as_str() != first_component_ident.as_str() {
+                    return None;
                 }
+
+                Some((
+                    kv_scrutinee.key()?.node().text_range(),
+                    kv_scrutinee_components
+                        .map(|n| n.to_string())
+                        .collect::<Vec<_>>()
+                        .join("."),
+                ))
             })
             .collect::<Vec<_>>();
 
