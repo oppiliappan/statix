@@ -86,3 +86,17 @@ expression: "& out"
     ·    ──────┬─────  
     ·          ╰─────── Comparing true with boolean literal true
 ────╯
+[W01] Warning: Unnecessary comparison with boolean
+    ╭─[data/bool_comparison.nix:25:4]
+    │
+ 25 │   (false == m ? n)
+    ·    ───────┬──────  
+    ·           ╰──────── Comparing m ? n with boolean literal false
+────╯
+[W01] Warning: Unnecessary comparison with boolean
+    ╭─[data/bool_comparison.nix:26:4]
+    │
+ 26 │   (true == o ? p)
+    ·    ──────┬──────  
+    ·          ╰──────── Comparing o ? p with boolean literal true
+────╯

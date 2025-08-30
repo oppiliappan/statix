@@ -4,7 +4,7 @@ expression: "& stdout"
 ---
 --- tests/data/bool_comparison.nix
 +++ tests/data/bool_comparison.nix [fixed]
-@@ -1,23 +1,23 @@
+@@ -1,27 +1,27 @@
  [
    # trivial
 -  (a == true)
@@ -39,4 +39,10 @@ expression: "& stdout"
 +  (!true)
 +  false
 +  true
+ 
+   # has attr
+-  (false == m ? n)
+-  (true == o ? p)
++  (!m ? n)
++  (o ? p)
  ]

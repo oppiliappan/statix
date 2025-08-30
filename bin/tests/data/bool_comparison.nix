@@ -20,4 +20,8 @@
   (false == true)
   (true == false)
   (true == true)
+
+  # has attr
+  (false == m ? n)
+  (true == o ? p)
 ]
