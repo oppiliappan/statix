@@ -31,9 +31,9 @@ expression: "& out"
     ·           ╰──────── Concatenation with the empty list, [], is a no-op
 ────╯
 [W23] Warning: Unnecessary concatenation with empty list
-    ╭─[data/empty_list_concat.nix:15:4]
+    ╭─[data/empty_list_concat.nix:15:10]
     │
  15 │   ([] ++ [] ++ [])
-    ·    ────┬───  
-    ·        ╰───── Concatenation with the empty list, [], is a no-op
+    ·          ────┬───  
+    ·              ╰───── Concatenation with the empty list, [], is a no-op
 ────╯

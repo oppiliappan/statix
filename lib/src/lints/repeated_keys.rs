@@ -5,8 +5,9 @@ use crate::{Metadata, Report, Rule, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{AttrSet, EntryHolder, Ident, KeyValue, TokenWrapper, TypedNode},
+    ast::{Attr, AttrSet, AttrpathValue, Entry, HasEntry as _},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for keys in attribute sets with repetitive keys, and suggests using
@@ -39,7 +40,7 @@ use rnix::{
     name = "repeated_keys",
     note = "Avoid repeated keys in attribute sets",
     code = 20,
-    match_with = SyntaxKind::NODE_KEY_VALUE
+    match_with = SyntaxKind::NODE_ATTRPATH_VALUE
 )]
 struct RepeatedKeys;
 
@@ -49,11 +50,14 @@ impl Rule for RepeatedKeys {
             return None;
         };
 
-        let key_value = KeyValue::cast(node.clone())?;
-        let key = key_value.key()?;
-        let mut components = key.path();
+        let attrpath_value = AttrpathValue::cast(node.clone())?;
+        let attrpath = attrpath_value.attrpath()?;
+        let mut components = attrpath.attrs();
         let first_component = components.next()?;
-        let first_component_ident = Ident::cast(first_component)?;
+
+        let Attr::Ident(first_component_ident) = first_component else {
+            return None;
+        };
 
         // ensure that there are >1 components
         components.next()?;
@@ -61,24 +65,31 @@ impl Rule for RepeatedKeys {
         let parent_node = node.parent()?;
         let parent_attr_set = AttrSet::cast(parent_node)?;
 
-        if parent_attr_set.recursive() {
+        if parent_attr_set.rec_token().is_some() {
             return None;
         }
 
         let occurrences = parent_attr_set
             .entries()
             .filter_map(|kv_scrutinee| {
-                let scrutinee_key = kv_scrutinee.key()?;
-                let mut kv_scrutinee_components = scrutinee_key.path();
-                let kv_scrutinee_first_component = kv_scrutinee_components.next()?;
-                let kv_scrutinee_ident = Ident::cast(kv_scrutinee_first_component)?;
+                let Entry::AttrpathValue(kv_scrutinee) = kv_scrutinee else {
+                    return None;
+                };
 
-                if kv_scrutinee_ident.as_str() != first_component_ident.as_str() {
+                let scrutinee_key = kv_scrutinee.attrpath()?;
+                let mut kv_scrutinee_components = scrutinee_key.attrs();
+                let kv_scrutinee_first_component = kv_scrutinee_components.next()?;
+
+                let Attr::Ident(kv_scrutinee_ident) = kv_scrutinee_first_component else {
+                    return None;
+                };
+
+                if kv_scrutinee_ident.to_string() != first_component_ident.to_string() {
                     return None;
                 }
 
                 Some((
-                    kv_scrutinee.key()?.node().text_range(),
+                    scrutinee_key.syntax().text_range(),
                     kv_scrutinee_components
                         .map(|n| n.to_string())
                         .collect::<Vec<_>>()
@@ -87,7 +98,7 @@ impl Rule for RepeatedKeys {
             })
             .collect::<Vec<_>>();
 
-        if occurrences.first()?.0 != key.node().text_range() {
+        if occurrences.first()?.0 != attrpath.syntax().text_range() {
             return None;
         }
 
@@ -98,10 +109,7 @@ impl Rule for RepeatedKeys {
         let mut iter = occurrences.into_iter();
 
         let (first_annotation, first_subkey) = iter.next().unwrap();
-        let first_message = format!(
-            "The key `{}` is first assigned here ...",
-            first_component_ident.as_str()
-        );
+        let first_message = format!("The key `{first_component_ident}` is first assigned here ...");
 
         let (second_annotation, second_subkey) = iter.next().unwrap();
         let second_message = "... repeated here ...";
@@ -116,11 +124,7 @@ impl Rule for RepeatedKeys {
             };
             write!(
                 message,
-                " Try `{} = {{ {}=...; {}=...; {}=...; }}` instead.",
-                first_component_ident.as_str(),
-                first_subkey,
-                second_subkey,
-                third_subkey
+                " Try `{first_component_ident} = {{ {first_subkey}=...; {second_subkey}=...; {third_subkey}=...; }}` instead."
             )
             .unwrap();
             message

@@ -1,7 +1,7 @@
 use std::{borrow::Cow, convert::TryFrom};
 
 use lib::{Report, session::SessionInfo};
-use rnix::{TextSize, WalkEvent};
+use rnix::{Root, TextSize, WalkEvent};
 
 use crate::{err::SingleFixErr, fix::Source, utils};
 
@@ -29,11 +29,11 @@ fn pos_to_byte(line: usize, col: usize, src: &str) -> Result<TextSize, SingleFix
 
 fn find(offset: TextSize, src: &str, sess: &SessionInfo) -> Result<Report, SingleFixErr> {
     // we don't really need the source to form a completely parsed tree
-    let parsed = rnix::parse(src);
+    let parsed = Root::parse(src);
     let lints = utils::lint_map();
 
     parsed
-        .node()
+        .syntax()
         .preorder_with_tokens()
         .filter_map(|event| match event {
             WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {

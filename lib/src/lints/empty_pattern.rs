@@ -3,8 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
-    types::{AttrSet, EntryHolder, Lambda, Pattern, TypedNode},
+    ast::{AttrSet, Entry, HasEntry as _, Lambda, Param},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for an empty variadic pattern: `{...}`, in a function
@@ -46,28 +47,31 @@ impl Rule for EmptyPattern {
         };
 
         let lambda_expr = Lambda::cast(node.clone())?;
-        let pattern = Pattern::cast(lambda_expr.arg()?)?;
+
+        let Some(Param::Pattern(pattern)) = lambda_expr.param() else {
+            return None;
+        };
 
         // no patterns within `{ }`
-        if pattern.entries().count() != 0 {
+        if pattern.pat_entries().count() != 0 {
             return None;
         }
 
         // pattern is not bound
-        if pattern.at().is_some() {
+        if pattern.pat_bind().is_some() {
             return None;
         }
 
-        if is_module(&lambda_expr.body()?) {
+        if is_module(lambda_expr.body()?.syntax()) {
             return None;
         }
 
         Some(self.report().suggest(
-            pattern.node().text_range(),
+            pattern.syntax().text_range(),
             "This pattern is empty, use `_` instead",
             Suggestion::with_replacement(
-                pattern.node().text_range(),
-                make::ident("_").node().clone(),
+                pattern.syntax().text_range(),
+                make::ident("_").syntax().clone(),
             ),
         ))
     }
@@ -80,6 +84,12 @@ fn is_module(body: &SyntaxNode) -> bool {
 
     attr_set
         .entries()
-        .filter_map(|e| e.key())
-        .any(|k| k.node().to_string() == "imports")
+        .filter_map(|e| {
+            let Entry::AttrpathValue(attrpath_value) = e else {
+                return None;
+            };
+
+            attrpath_value.attrpath()
+        })
+        .any(|k| k.to_string() == "imports")
 }

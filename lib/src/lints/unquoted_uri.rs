@@ -1,7 +1,8 @@
 use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use rowan::ast::AstNode as _;
 
 use macros::lint;
-use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, types::TypedNode};
+use rnix::{NodeOrToken, SyntaxElement, SyntaxKind};
 
 /// ## What it does
 /// Checks for URI expressions that are not quoted.
@@ -50,13 +51,14 @@ impl Rule for UnquotedUri {
             return None;
         };
 
-        let parent_node = token.parent();
+        let parent_node = token.parent()?;
         let at = token.text_range();
-        let replacement = make::quote(&parent_node).node().clone();
+        let replacement = make::quote(&parent_node);
         let message = "Consider quoting this URI expression";
-        Some(
-            self.report()
-                .suggest(at, message, Suggestion::with_replacement(at, replacement)),
-        )
+        Some(self.report().suggest(
+            at,
+            message,
+            Suggestion::with_replacement(at, replacement.syntax().clone()),
+        ))
     }
 }

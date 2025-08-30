@@ -1,10 +1,8 @@
 use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
 use macros::lint;
-use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{Pattern, TokenWrapper, TypedNode},
-};
+use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Pattern};
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for binds of the form `inputs @ { ... }` in function
@@ -42,23 +40,19 @@ impl Rule for RedundantPatternBind {
         let pattern = Pattern::cast(node.clone())?;
 
         // no patterns within `{ }`
-        if pattern.entries().count() != 0 {
+        if pattern.pat_entries().count() != 0 {
             return None;
         }
 
         // pattern is just ellipsis
-        if !pattern.ellipsis() {
-            return None;
-        }
+        pattern.ellipsis_token()?;
 
         // pattern is bound
-        let ident = pattern.at()?;
+        let pat_bind = pattern.pat_bind()?;
+        let ident = pat_bind.ident()?;
         let at = node.text_range();
-        let message = format!(
-            "This pattern bind is redundant, use `{}` instead",
-            ident.as_str()
-        );
-        let replacement = ident.node().clone();
+        let message = format!("This pattern bind is redundant, use `{ident}` instead");
+        let replacement = ident.syntax().clone();
 
         Some(
             self.report()

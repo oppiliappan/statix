@@ -3,8 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{EntryHolder, LetIn, TypedNode},
+    ast::{HasEntry as _, LetIn},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for `let-in` expressions which create no new bindings.
@@ -48,13 +49,16 @@ impl Rule for EmptyLetIn {
                 .any(|el| el.kind() == SyntaxKind::TOKEN_COMMENT);
 
             let at = node.text_range();
-            let replacement = body;
+            let replacement = body.syntax();
             let message = "This let-in expression has no entries";
             Some(if has_comments {
                 self.report().diagnostic(at, message)
             } else {
-                self.report()
-                    .suggest(at, message, Suggestion::with_replacement(at, replacement))
+                self.report().suggest(
+                    at,
+                    message,
+                    Suggestion::with_replacement(at, replacement.clone()),
+                )
             })
         } else {
             None

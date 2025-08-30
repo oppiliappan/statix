@@ -3,8 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{Ident, KeyValue, Select, TokenWrapper, TypedNode},
+    ast::{Attr, AttrpathValue, Expr},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for bindings of the form `a = someAttr.a`.
@@ -34,7 +35,7 @@ use rnix::{
     name = "manual_inherit_from",
     note = "Assignment instead of inherit from",
     code = 4,
-    match_with = SyntaxKind::NODE_KEY_VALUE
+    match_with = SyntaxKind::NODE_ATTRPATH_VALUE,
 )]
 struct ManualInherit;
 
@@ -44,27 +45,45 @@ impl Rule for ManualInherit {
             return None;
         };
 
-        let key_value_stmt = KeyValue::cast(node.clone())?;
-        let key = key_value_stmt.key()?;
-        let mut key_path = key.path();
+        let key_value_stmt = AttrpathValue::cast(node.clone())?;
+        let key = key_value_stmt.attrpath()?;
+        let mut key_path = key.attrs();
         let key_node = key_path.next()?;
 
         if key_path.next().is_some() {
             return None;
         }
 
-        let key = Ident::cast(key_node)?;
-        let value = Select::cast(key_value_stmt.value()?)?;
-        let index = Ident::cast(value.index()?)?;
+        let Attr::Ident(key) = key_node else {
+            return None;
+        };
 
-        if key.as_str() != index.as_str() {
+        let Some(Expr::Select(value)) = key_value_stmt.value() else {
+            return None;
+        };
+        let select_attrpath = value.attrpath()?;
+        let mut select_attrpath_attrs = select_attrpath.attrs();
+        let first_attr = select_attrpath_attrs.next()?;
+
+        if select_attrpath_attrs.next().is_some() {
+            return None;
+        }
+
+        let Attr::Ident(index) = first_attr else {
+            return None;
+        };
+
+        if key.to_string() != index.to_string() {
             return None;
         }
 
         let at = node.text_range();
+
         let replacement = {
-            let set = value.set()?;
-            make::inherit_from_stmt(&set, &[key]).node().clone()
+            let set = value.expr()?;
+            make::inherit_from_stmt(set.syntax(), &[key])
+                .syntax()
+                .clone()
         };
 
         Some(self.report().suggest(

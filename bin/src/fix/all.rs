@@ -1,7 +1,8 @@
 use std::borrow::Cow;
 
 use lib::{Report, session::SessionInfo};
-use rnix::{WalkEvent, parser::ParseError as RnixParseErr};
+use rnix::{Root, WalkEvent, parser::ParseError as RnixParseErr};
+use rowan::ast::AstNode as _;
 
 use crate::{
     LintMap,
@@ -13,10 +14,10 @@ fn collect_fixes(
     lints: &LintMap,
     sess: &SessionInfo,
 ) -> Result<Vec<Report>, RnixParseErr> {
-    let parsed = rnix::parse(source).as_result()?;
+    let parsed = Root::parse(source).ok()?;
 
     Ok(parsed
-        .node()
+        .syntax()
         .preorder_with_tokens()
         .filter_map(|event| match event {
             WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
@@ -93,7 +94,7 @@ pub fn all_with<'a>(
     sess: &'a SessionInfo,
 ) -> Option<FixResult<'a>> {
     let src = Cow::from(src);
-    let _ = rnix::parse(&src).as_result().ok()?;
+    let _ = Root::parse(&src).ok().ok()?;
     let initial = FixResult::empty(src, lints, sess);
     initial.into_iter().last()
 }

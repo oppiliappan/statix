@@ -3,8 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
-    types::{BinOp, BinOpKind, Ident, TokenWrapper, TypedNode},
+    ast::{BinOp, BinOpKind, Ident},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for expressions of the form `x == true`, `x != true` and
@@ -40,13 +41,14 @@ impl Rule for BoolComparison {
         };
         let bin_expr = BinOp::cast(node.clone())?;
         let (lhs, rhs) = (bin_expr.lhs()?, bin_expr.rhs()?);
+        let (lhs, rhs) = (lhs.syntax(), rhs.syntax());
         let op = EqualityBinOpKind::try_from(bin_expr.operator()?)?;
 
         let (bool_side, non_bool_side): (NixBoolean, &SyntaxNode) =
-            match (boolean_ident(&lhs), boolean_ident(&rhs)) {
+            match (boolean_ident(lhs), boolean_ident(rhs)) {
                 (None, None) => return None,
-                (None, Some(bool)) => (bool, &lhs),
-                (Some(bool), _) => (bool, &rhs),
+                (None, Some(bool)) => (bool, lhs),
+                (Some(bool), _) => (bool, rhs),
             };
 
         let replacement = match (&bool_side, op) {
@@ -59,23 +61,16 @@ impl Rule for BoolComparison {
             | (NixBoolean::False, EqualityBinOpKind::Equal) => {
                 // `a != true`, `a == false` replace with `!a`
                 match non_bool_side.kind() {
-                    SyntaxKind::NODE_APPLY | SyntaxKind::NODE_PAREN | SyntaxKind::NODE_IDENT => {
+                    SyntaxKind::NODE_APPLY
+                    | SyntaxKind::NODE_PAREN
+                    | SyntaxKind::NODE_IDENT
+                    | SyntaxKind::NODE_HAS_ATTR => {
                         // do not parenthsize the replacement
-                        make::unary_not(non_bool_side).node().clone()
-                    }
-                    SyntaxKind::NODE_BIN_OP => {
-                        let inner = BinOp::cast(non_bool_side.clone()).unwrap();
-                        // `!a ? b`, no paren required
-                        if inner.operator()? == BinOpKind::IsSet {
-                            make::unary_not(non_bool_side).node().clone()
-                        } else {
-                            let parens = make::parenthesize(non_bool_side);
-                            make::unary_not(parens.node()).node().clone()
-                        }
+                        make::unary_not(non_bool_side).syntax().clone()
                     }
                     _ => {
                         let parens = make::parenthesize(non_bool_side);
-                        make::unary_not(parens.node()).node().clone()
+                        make::unary_not(parens.syntax()).syntax().clone()
                     }
                 }
             }
@@ -125,7 +120,7 @@ impl std::fmt::Display for NixBoolean {
 
 // not entirely accurate, underhanded nix programmers might write `true = false`
 fn boolean_ident(node: &SyntaxNode) -> Option<NixBoolean> {
-    Ident::cast(node.clone()).and_then(|ident_expr| match ident_expr.as_str() {
+    Ident::cast(node.clone()).and_then(|ident_expr| match ident_expr.to_string().as_str() {
         "true" => Some(NixBoolean::True),
         "false" => Some(NixBoolean::False),
         _ => None,

@@ -3,8 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{BinOp, BinOpKind, Paren, TypedNode, UnaryOp, UnaryOpKind, Wrapper},
+    ast::{BinOpKind, Expr, UnaryOp, UnaryOpKind},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for boolean expressions that can be simplified.
@@ -38,14 +39,21 @@ impl Rule for BoolSimplification {
 
         let unary_expr = UnaryOp::cast(node.clone())?;
 
-        if unary_expr.operator() != UnaryOpKind::Invert {
+        if unary_expr.operator() != Some(UnaryOpKind::Invert) {
             return None;
         }
 
-        let value_expr = unary_expr.value()?;
-        let paren_expr = Paren::cast(value_expr)?;
-        let inner_expr = paren_expr.inner()?;
-        let bin_expr = BinOp::cast(inner_expr)?;
+        let value_expr = unary_expr.expr()?;
+
+        let Expr::Paren(paren_expr) = value_expr else {
+            return None;
+        };
+
+        let inner_expr = paren_expr.expr()?;
+
+        let Expr::BinOp(bin_expr) = inner_expr else {
+            return None;
+        };
 
         let Some(BinOpKind::Equal) = bin_expr.operator() else {
             return None;
@@ -56,7 +64,9 @@ impl Rule for BoolSimplification {
 
         let lhs = bin_expr.lhs()?;
         let rhs = bin_expr.rhs()?;
-        let replacement = make::binary(&lhs, "!=", &rhs).node().clone();
+        let replacement = make::binary(lhs.syntax(), "!=", rhs.syntax())
+            .syntax()
+            .clone();
         Some(
             self.report()
                 .suggest(at, message, Suggestion::with_replacement(at, replacement)),
