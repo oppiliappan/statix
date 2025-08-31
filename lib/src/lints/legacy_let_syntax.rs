@@ -3,8 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{EntryHolder, Ident, LegacyLet, TokenWrapper, TypedNode},
+    ast::{Attr, Entry, HasEntry, LegacyLet},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for legacy-let syntax that was never formalized.
@@ -52,12 +53,20 @@ impl Rule for ManualInherit {
 
         if !legacy_let
             .entries()
-            .filter_map(|kv| {
-                let key = kv.key()?;
-                let first_component = key.path().next()?;
-                Ident::cast(first_component)
+            .filter_map(|entry| {
+                let Entry::AttrpathValue(attrpath_value) = entry else {
+                    return None;
+                };
+
+                let first_component = attrpath_value.attrpath()?.attrs().next()?;
+
+                let Attr::Ident(ident) = first_component else {
+                    return None;
+                };
+
+                Some(ident)
             })
-            .any(|ident| ident.as_str() == "body")
+            .any(|ident| ident.to_string() == "body")
         {
             return None;
         }
@@ -65,12 +74,12 @@ impl Rule for ManualInherit {
         let inherits = legacy_let.inherits();
         let entries = legacy_let.entries();
         let attrset = make::attrset(inherits, entries, true);
-        let parenthesized = make::parenthesize(attrset.node());
-        let selected = make::select(parenthesized.node(), make::ident("body").node());
+        let parenthesized = make::parenthesize(attrset.syntax());
+        let selected = make::select(parenthesized.syntax(), make::ident("body").syntax());
 
         let at = node.text_range();
         let message = "Prefer `rec` over undocumented `let` syntax";
-        let replacement = selected.node().clone();
+        let replacement = selected.syntax().clone();
 
         Some(
             self.report()

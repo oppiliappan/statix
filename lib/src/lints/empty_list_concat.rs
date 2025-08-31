@@ -2,9 +2,10 @@ use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 
 use macros::lint;
 use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
-    types::{BinOp, BinOpKind, List, TypedNode},
+    NodeOrToken, SyntaxElement, SyntaxKind,
+    ast::{BinOp, BinOpKind, Expr},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for concatenations to empty lists
@@ -54,13 +55,17 @@ impl Rule for EmptyListConcat {
             return None;
         };
 
-        Some(
-            self.report()
-                .suggest(at, message, Suggestion::with_replacement(at, empty_array)),
-        )
+        Some(self.report().suggest(
+            at,
+            message,
+            Suggestion::with_replacement(at, empty_array.syntax().clone()),
+        ))
     }
 }
 
-fn is_empty_array(node: &SyntaxNode) -> bool {
-    List::cast(node.clone()).is_some_and(|list| list.items().count() == 0)
+fn is_empty_array(expr: &Expr) -> bool {
+    let Expr::List(list) = expr else {
+        return false;
+    };
+    list.items().count() == 0
 }

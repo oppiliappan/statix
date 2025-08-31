@@ -1,10 +1,8 @@
 use crate::{Metadata, Report, Rule, session::SessionInfo};
 
 use macros::lint;
-use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{Apply, TypedNode},
-};
+use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Apply};
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for usage of the `toPath` function.

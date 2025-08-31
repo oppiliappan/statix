@@ -1,10 +1,8 @@
 use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo, utils};
 
 use macros::lint;
-use rnix::{
-    NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{Inherit, TypedNode},
-};
+use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Inherit};
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for empty inherit statements.
@@ -39,7 +37,7 @@ impl Rule for EmptyInherit {
             return None;
         }
 
-        if inherit_stmt.idents().count() != 0 {
+        if inherit_stmt.attrs().count() != 0 {
             return None;
         }
 

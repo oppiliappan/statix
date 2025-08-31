@@ -21,6 +21,7 @@ ignore.workspace = true
 lib.workspace = true
 rayon.workspace = true
 rnix.workspace = true
+rowan.workspace = true
 serde.workspace = true
 serde_json = { optional = true, workspace = true }
 similar.workspace = true

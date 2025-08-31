@@ -3,8 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{BinOp, BinOpKind, IfElse, Select, TypedNode},
+    ast::{Expr, IfElse},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for expressions that use the "has attribute" operator: `?`,
@@ -40,43 +41,48 @@ impl Rule for UselessHasAttr {
         let if_else_expr = IfElse::cast(node.clone())?;
         let condition_expr = if_else_expr.condition()?;
         let default_expr = if_else_expr.else_body()?;
-        let cond_bin_expr = BinOp::cast(condition_expr)?;
-        let Some(BinOpKind::IsSet) = cond_bin_expr.operator() else {
+
+        let Expr::HasAttr(has_attr) = condition_expr else {
             return None;
         };
 
         // set ? attr_path
-        // ^^^--------------- lhs
-        //      ^^^^^^^^^^--- rhs
-        let set = cond_bin_expr.lhs()?;
-        let attr_path = cond_bin_expr.rhs()?;
+        let set = has_attr.expr()?;
+        let attr_path = has_attr.attrpath()?;
 
         // check if body of the `if` expression is of the form `set.attr_path`
         let body_expr = if_else_expr.body()?;
-        let body_select_expr = Select::cast(body_expr)?;
-        let expected_body = make::select(&set, &attr_path);
+        let Expr::Select(body_select_expr) = body_expr else {
+            return None;
+        };
+
+        let expected_body = make::select(set.syntax(), attr_path.syntax());
 
         // text comparison will do for now
-        if body_select_expr.node().text() != expected_body.node().text() {
+        if body_select_expr.syntax().text() != expected_body.syntax().text() {
             return None;
         }
 
         let at = node.text_range();
 
         // `or` is tightly binding, we need to parenthesize non-literal exprs
-        let default_with_parens = match default_expr.kind() {
-            SyntaxKind::NODE_LIST
-            | SyntaxKind::NODE_PAREN
-            | SyntaxKind::NODE_STRING
-            | SyntaxKind::NODE_ATTR_SET
-            | SyntaxKind::NODE_IDENT
-            | SyntaxKind::NODE_SELECT => default_expr,
-            _ => make::parenthesize(&default_expr).node().clone(),
+        let default_with_parens = match default_expr {
+            Expr::List(_)
+            | Expr::Paren(_)
+            | Expr::Str(_)
+            | Expr::AttrSet(_)
+            | Expr::Ident(_)
+            | Expr::Select(_) => default_expr,
+            _ => Expr::Paren(make::parenthesize(default_expr.syntax())),
         };
 
-        let replacement = make::or_default(&set, &attr_path, &default_with_parens)
-            .node()
-            .clone();
+        let replacement = make::or_default(
+            set.syntax(),
+            attr_path.syntax(),
+            default_with_parens.syntax(),
+        )
+        .syntax()
+        .clone();
         let message = format!("Consider using `{replacement}` instead of this `if` expression");
         Some(
             self.report()

@@ -3,9 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, TextRange,
-    types::{LetIn, TypedNode},
+    ast::{Expr, LetIn},
 };
-use rowan::Direction;
+use rowan::{Direction, ast::AstNode as _};
 
 /// ## What it does
 /// Checks for `let-in` expressions whose body is another `let-in`
@@ -52,21 +52,25 @@ impl Rule for CollapsibleLetIn {
         let let_in_expr = LetIn::cast(node.clone())?;
         let body = let_in_expr.body()?;
 
-        LetIn::cast(body.clone())?;
+        let Expr::LetIn(_) = body else {
+            return None;
+        };
 
         let first_annotation = node.text_range();
         let first_message = "This `let in` expression contains a nested `let in` expression";
 
-        let second_annotation = body.text_range();
+        let second_annotation = body.syntax().text_range();
         let second_message = "This `let in` expression is nested";
 
         let replacement_at = {
             let start = body
+                .syntax()
                 .siblings_with_tokens(Direction::Prev)
                 .find(|elem| elem.kind() == SyntaxKind::TOKEN_IN)?
                 .text_range()
                 .start();
             let end = body
+                .syntax()
                 .descendants_with_tokens()
                 .find(|elem| elem.kind() == SyntaxKind::TOKEN_LET)?
                 .text_range()

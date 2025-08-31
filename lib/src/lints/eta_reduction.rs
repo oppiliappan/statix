@@ -3,8 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
-    types::{Apply, Ident, Lambda, TokenWrapper, TypedNode},
+    ast::{Expr, Ident, Lambda, Param},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for eta-reducible functions, i.e.: converts lambda
@@ -47,36 +48,51 @@ impl Rule for EtaReduction {
         };
 
         let lambda_expr = Lambda::cast(node.clone())?;
-        let ident = Ident::cast(lambda_expr.arg()?)?;
-        let body = Apply::cast(lambda_expr.body()?)?;
 
-        if ident.as_str() != Ident::cast(body.value()?)?.as_str() {
+        let Some(Param::IdentParam(ident_param)) = lambda_expr.param() else {
+            return None;
+        };
+
+        let ident = ident_param.ident()?;
+
+        let Some(Expr::Apply(body)) = lambda_expr.body() else {
+            return None;
+        };
+
+        let Some(Expr::Ident(body_ident)) = body.argument() else {
+            return None;
+        };
+
+        if ident.to_string() != body_ident.to_string() {
             return None;
         }
 
         let lambda_node = body.lambda()?;
 
-        if mentions_ident(&ident, &lambda_node) {
+        if mentions_ident(&ident, lambda_node.syntax()) {
             return None;
         }
 
         // lambda body should be no more than a single Ident to
         // retain code readability
-        Ident::cast(lambda_node)?;
+        let Expr::Ident(_) = lambda_node else {
+            return None;
+        };
 
         let at = node.text_range();
         let replacement = body.lambda()?;
-        let message = format!("Found eta-reduction: `{}`", replacement.text());
-        Some(
-            self.report()
-                .suggest(at, message, Suggestion::with_replacement(at, replacement)),
-        )
+        let message = format!("Found eta-reduction: `{}`", replacement.syntax().text());
+        Some(self.report().suggest(
+            at,
+            message,
+            Suggestion::with_replacement(at, replacement.syntax().clone()),
+        ))
     }
 }
 
 fn mentions_ident(ident: &Ident, node: &SyntaxNode) -> bool {
     if let Some(node_ident) = Ident::cast(node.clone()) {
-        node_ident.as_str() == ident.as_str()
+        node_ident.to_string() == ident.to_string()
     } else {
         node.children().any(|child| mentions_ident(ident, &child))
     }

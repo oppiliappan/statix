@@ -3,8 +3,9 @@ use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind,
-    types::{Ident, KeyValue, TokenWrapper, TypedNode},
+    ast::{Attr, AttrpathValue, Expr},
 };
+use rowan::ast::AstNode as _;
 
 /// ## What it does
 /// Checks for bindings of the form `a = a`.
@@ -34,7 +35,7 @@ use rnix::{
     name = "manual_inherit",
     note = "Assignment instead of inherit",
     code = 3,
-    match_with = SyntaxKind::NODE_KEY_VALUE
+    match_with = SyntaxKind::NODE_ATTRPATH_VALUE
 )]
 struct ManualInherit;
 
@@ -44,23 +45,28 @@ impl Rule for ManualInherit {
             return None;
         };
 
-        let key = KeyValue::cast(node.clone())?.key()?;
-        let mut key_path = key.path();
-        let key_node = key_path.next()?;
+        let attrpath_value = AttrpathValue::cast(node.clone())?;
+        let attrpath = attrpath_value.attrpath()?;
+        let mut attrs = attrpath.attrs();
+        let first_attr = attrs.next()?;
 
-        if key_path.next().is_some() {
+        if attrs.next().is_some() {
             return None;
         }
 
-        let key = Ident::cast(key_node)?;
-        let value_node = KeyValue::cast(node.clone())?.value()?;
-        let value = Ident::cast(value_node)?;
+        let Attr::Ident(key) = first_attr else {
+            return None;
+        };
 
-        if key.as_str() != value.as_str() {
+        let Some(Expr::Ident(value)) = attrpath_value.value() else {
+            return None;
+        };
+
+        if key.to_string() != value.to_string() {
             return None;
         }
 
-        let replacement = make::inherit_stmt(&[key]).node().clone();
+        let replacement = make::inherit_stmt(&[key]).syntax().clone();
 
         Some(self.report().suggest(
             node.text_range(),
