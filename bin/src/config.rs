@@ -5,7 +5,7 @@ use std::{
     str::FromStr,
 };
 
-use crate::{LintMap, dirs, err::ConfigErr, utils};
+use crate::{dirs, err::ConfigErr, utils, LintMap};
 
 use clap::Parser;
 use lib::LINTS;
@@ -39,7 +39,7 @@ pub enum SubCommand {
 pub struct Check {
     /// File or directory to run check on
     #[clap(default_value = ".", parse(from_os_str))]
-    target: PathBuf,
+    target: Vec<PathBuf>,
 
     /// Globs of file patterns to skip
     #[clap(short, long)]
@@ -77,8 +77,7 @@ impl Check {
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         } else {
             let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
-            let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
-            let files = dirs::walk_nix_files(ignore, &self.target)?;
+            let files = dirs::walk_nix_files(all_ignores, &self.target, self.unrestricted)?;
             Ok(vfs(&files.collect::<Vec<_>>()))
         }
     }
@@ -88,7 +87,7 @@ impl Check {
 pub struct Fix {
     /// File or directory to run fix on
     #[clap(default_value = ".", parse(from_os_str))]
-    target: PathBuf,
+    target: Vec<PathBuf>,
 
     /// Globs of file patterns to skip
     #[clap(short, long)]
@@ -130,8 +129,7 @@ impl Fix {
             Ok(ReadOnlyVfs::singleton("<stdin>", src.as_bytes()))
         } else {
             let all_ignores = [self.ignore.as_slice(), extra_ignores].concat();
-            let ignore = dirs::build_ignore_set(&all_ignores, &self.target, self.unrestricted)?;
-            let files = dirs::walk_nix_files(ignore, &self.target)?;
+            let files = dirs::walk_nix_files(all_ignores, &self.target, self.unrestricted)?;
             Ok(vfs(&files.collect::<Vec<_>>()))
         }
     }
