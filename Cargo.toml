@@ -26,7 +26,7 @@ serde = { features = ["derive"], version = "1.0.68" }
 serde_json = { version = "1.0.68" }
 similar = "2.1.0"
 strip-ansi-escapes = "0.1.1"
-syn = { features = ["full"], version = "1.0" }
+syn = { features = ["full"], version = "2.0" }
 thiserror = "1.0.30"
 toml = "0.5.8"
 vfs.path = "./vfs"
