@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use lib::session::{SessionInfo, Version};
 
 macro_rules! session_info {
@@ -25,46 +27,51 @@ mod util {
             paste::paste! {
                 #[test]
                 fn [<$tname _lint>](){
-                    use statix::{config::OutFormat, traits::WriteDiagnostic, lint};
-                    use vfs::ReadOnlyVfs;
-
                     let file_path = concat!("data/", stringify!($tname), ".nix");
                     let contents = include_str!(concat!("data/", stringify!($tname), ".nix"));
-
-                    let vfs = ReadOnlyVfs::singleton(file_path, contents.as_bytes());
-
-                    let session = $sess;
-
-                    let mut buffer = Vec::new();
-                    vfs.iter().map(|entry| lint::lint(&entry, &session)).for_each(|r| {
-                        buffer.write(&r, &vfs, OutFormat::StdErr).unwrap();
-                    });
-
-                    let stripped = strip_ansi_escapes::strip(&buffer).unwrap();
-                    let out =  std::str::from_utf8(&stripped).unwrap();
-                    insta::assert_snapshot!(&out);
+                    test_lint(&$sess, file_path, contents);
                 }
 
                 #[test]
                 fn [<$tname _fix>](){
                     let file_path = concat!("tests/data/", stringify!($tname), ".nix");
-
-                    let output = std::process::Command::new("cargo")
-                        .arg("run")
-                        .arg("fix")
-                        .arg("-d")
-                        .arg(file_path)
-                        .output()
-                        .expect("command runs successfully");
-
-                    let stdout = String::from_utf8(output.stdout).expect("output is valid utf8");
-
-                    insta::assert_snapshot!(&stdout);
+                    test_fix(file_path);
                 }
             }
 
         };
     }
+}
+
+fn test_lint(session: &SessionInfo, file_path: impl AsRef<Path>, contents: &str) {
+    use statix::{config::OutFormat, lint, traits::WriteDiagnostic};
+    use vfs::ReadOnlyVfs;
+
+    let vfs = ReadOnlyVfs::singleton(file_path, contents.as_bytes());
+
+    let mut buffer = Vec::new();
+    vfs.iter()
+        .map(|entry| lint::lint(&entry, session))
+        .for_each(|r| {
+            buffer.write(&r, &vfs, OutFormat::StdErr).unwrap();
+        });
+
+    let stripped = strip_ansi_escapes::strip(&buffer).unwrap();
+    let out = std::str::from_utf8(&stripped).unwrap();
+    insta::assert_snapshot!(&out);
+}
+fn test_fix(file_path: &str) {
+    let output = std::process::Command::new("cargo")
+        .arg("run")
+        .arg("fix")
+        .arg("-d")
+        .arg(file_path)
+        .output()
+        .expect("command runs successfully");
+
+    let stdout = String::from_utf8(output.stdout).expect("output is valid utf8");
+
+    insta::assert_snapshot!(&stdout);
 }
 
 test_lint! {
