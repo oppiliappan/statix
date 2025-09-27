@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& out"
+expression: "&out"
 ---
 [W08] Warning: These parentheses can be omitted
    ╭─[data/useless_parens.nix:4:9]

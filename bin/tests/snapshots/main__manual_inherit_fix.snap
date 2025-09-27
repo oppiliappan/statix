@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& stdout"
+expression: "&stdout"
 ---
 --- tests/data/manual_inherit.nix
 +++ tests/data/manual_inherit.nix [fixed]

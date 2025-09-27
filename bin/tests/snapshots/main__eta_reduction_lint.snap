@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& out"
+expression: "&out"
 ---
 [W07] Warning: This function expression is eta reducible
     ╭─[data/eta_reduction.nix:11:9]

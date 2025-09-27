@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& stdout"
+expression: "&stdout"
 ---
 --- tests/data/bool_simplification.nix
 +++ tests/data/bool_simplification.nix [fixed]

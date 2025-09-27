@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& out"
+expression: "&out"
 ---
 [W12] Warning: Found unquoted URI expression
    ╭─[data/unquoted_uri.nix:1:1]

@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& stdout"
+expression: "&stdout"
 ---
 --- tests/data/collapsible_let_in.nix
 +++ tests/data/collapsible_let_in.nix [fixed]

@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& out"
+expression: "&out"
 ---
 [W18] Warning: This boolean expression can be simplified
    ╭─[data/bool_simplification.nix:2:7]

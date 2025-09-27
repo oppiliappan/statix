@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& out"
+expression: "&out"
 ---
 [W20] Warning: Avoid repeated keys in attribute sets
     ╭─[data/repeated_keys.nix:16:5]

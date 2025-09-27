@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& out"
+expression: "&out"
 ---
 [W02] Warning: Useless let-in expression
    ╭─[data/empty_let_in.nix:3:5]

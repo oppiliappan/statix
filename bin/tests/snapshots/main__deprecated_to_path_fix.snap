@@ -1,5 +1,5 @@
 ---
 source: bin/tests/main.rs
-expression: "& stdout"
+expression: "&stdout"
 ---
 

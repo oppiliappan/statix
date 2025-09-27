@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& out"
+expression: "&out"
 ---
 [W06] Warning: These let-in expressions are collapsible
    ╭─[data/collapsible_let_in.nix:1:1]

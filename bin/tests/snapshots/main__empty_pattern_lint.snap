@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& out"
+expression: "&out"
 ---
 [W10] Warning: Found empty pattern in function argument
    ╭─[data/empty_pattern.nix:3:4]

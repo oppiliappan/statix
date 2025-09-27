@@ -1,6 +1,6 @@
 ---
 source: bin/tests/main.rs
-expression: "& stdout"
+expression: "&stdout"
 ---
 --- tests/data/empty_inherit.nix
 +++ tests/data/empty_inherit.nix [fixed]
