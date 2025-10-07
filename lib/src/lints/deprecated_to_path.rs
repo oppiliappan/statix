@@ -33,11 +33,11 @@ use rowan::ast::AstNode as _;
     code = 17,
     match_with = SyntaxKind::NODE_APPLY
 )]
-struct DeprecatedIsNull;
+struct DeprecatedToPath;
 
 static ALLOWED_PATHS: &[&str; 2] = &["builtins.toPath", "toPath"];
 
-impl Rule for DeprecatedIsNull {
+impl Rule for DeprecatedToPath {
     fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
         if let NodeOrToken::Node(node) = node
             && let Some(apply) = Apply::cast(node.clone())
