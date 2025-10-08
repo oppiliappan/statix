@@ -1,4 +1,4 @@
-use crate::{LintMap, utils};
+use crate::LintMap;
 
 use lib::Report;
 use rnix::{Root, WalkEvent};
@@ -37,11 +37,6 @@ pub fn lint_with(vfs_entry: &VfsEntry, lints: &LintMap) -> LintResult {
         .collect();
 
     LintResult { file_id, reports }
-}
-
-#[must_use]
-pub fn lint(vfs_entry: &VfsEntry) -> LintResult {
-    lint_with(vfs_entry, &utils::lint_map())
 }
 
 pub mod main {
