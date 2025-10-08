@@ -1,4 +1,4 @@
-use crate::{Metadata, Report, Rule, session::SessionInfo};
+use crate::{Metadata, Report, Rule};
 
 use macros::lint;
 use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Apply};
@@ -38,7 +38,7 @@ struct DeprecatedToPath;
 static ALLOWED_PATHS: &[&str; 2] = &["builtins.toPath", "toPath"];
 
 impl Rule for DeprecatedToPath {
-    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         if let NodeOrToken::Node(node) = node
             && let Some(apply) = Apply::cast(node.clone())
             && let lambda_path = apply.lambda()?.to_string()

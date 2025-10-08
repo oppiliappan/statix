@@ -1,6 +1,6 @@
 use crate::{LintMap, utils};
 
-use lib::{Report, session::SessionInfo};
+use lib::Report;
 use rnix::{Root, WalkEvent};
 use vfs::{FileId, VfsEntry};
 
@@ -11,7 +11,7 @@ pub struct LintResult {
 }
 
 #[must_use]
-pub fn lint_with(vfs_entry: &VfsEntry, lints: &LintMap, sess: &SessionInfo) -> LintResult {
+pub fn lint_with(vfs_entry: &VfsEntry, lints: &LintMap) -> LintResult {
     let file_id = vfs_entry.file_id;
     let source = vfs_entry.contents;
     let parsed = Root::parse(source);
@@ -27,7 +27,7 @@ pub fn lint_with(vfs_entry: &VfsEntry, lints: &LintMap, sess: &SessionInfo) -> L
             WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
                 rules
                     .iter()
-                    .filter_map(|rule| rule.validate(&child, sess))
+                    .filter_map(|rule| rule.validate(&child))
                     .collect::<Vec<_>>()
             }),
             WalkEvent::Leave(_) => None,
@@ -40,8 +40,8 @@ pub fn lint_with(vfs_entry: &VfsEntry, lints: &LintMap, sess: &SessionInfo) -> L
 }
 
 #[must_use]
-pub fn lint(vfs_entry: &VfsEntry, sess: &SessionInfo) -> LintResult {
-    lint_with(vfs_entry, &utils::lint_map(), sess)
+pub fn lint(vfs_entry: &VfsEntry) -> LintResult {
+    lint_with(vfs_entry, &utils::lint_map())
 }
 
 pub mod main {
@@ -54,19 +54,16 @@ pub mod main {
         traits::WriteDiagnostic,
     };
 
-    use lib::session::SessionInfo;
     use rayon::prelude::*;
 
     pub fn main(check_config: &CheckConfig) -> Result<(), StatixErr> {
         let conf_file = ConfFile::discover(&check_config.conf_path)?;
         let lints = conf_file.lints();
-        let version = conf_file.version()?;
-        let session = SessionInfo::from_version(version);
 
         let vfs = check_config.vfs(conf_file.ignore.as_slice())?;
 
         let mut stdout = io::stdout();
-        let lint = |vfs_entry| lint_with(&vfs_entry, &lints, &session);
+        let lint = |vfs_entry| lint_with(&vfs_entry, &lints);
         let results = vfs
             .par_iter()
             .map(lint)

@@ -1,4 +1,4 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{Metadata, Report, Rule, Suggestion, make};
 use rowan::ast::AstNode as _;
 
 use macros::lint;
@@ -46,7 +46,7 @@ use rnix::{NodeOrToken, SyntaxElement, SyntaxKind};
 struct UnquotedUri;
 
 impl Rule for UnquotedUri {
-    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         let NodeOrToken::Token(token) = node else {
             return None;
         };

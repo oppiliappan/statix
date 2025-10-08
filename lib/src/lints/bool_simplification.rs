@@ -1,4 +1,4 @@
-use crate::{Metadata, Report, Rule, Suggestion, make, session::SessionInfo};
+use crate::{Metadata, Report, Rule, Suggestion, make};
 
 use macros::lint;
 use rnix::{
@@ -32,7 +32,7 @@ use rowan::ast::AstNode as _;
 struct BoolSimplification;
 
 impl Rule for BoolSimplification {
-    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         let NodeOrToken::Node(node) = node else {
             return None;
         };

@@ -1,4 +1,4 @@
-use crate::{Diagnostic, Metadata, Report, Rule, Suggestion, session::SessionInfo};
+use crate::{Diagnostic, Metadata, Report, Rule, Suggestion};
 
 use macros::lint;
 use rnix::{
@@ -45,7 +45,7 @@ use rowan::ast::AstNode as _;
 struct UselessParens;
 
 impl Rule for UselessParens {
-    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         let NodeOrToken::Node(node) = node else {
             return None;
         };

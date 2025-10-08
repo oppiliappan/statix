@@ -24,17 +24,3 @@ pub fn lint_map_of(
 pub fn lint_map() -> HashMap<SyntaxKind, Vec<&'static Box<dyn Lint>>> {
     lint_map_of(&LINTS)
 }
-
-pub fn get_version_info() -> Option<String> {
-    use std::process::Command;
-    let program = Command::new("nix").arg("--version").output().ok()?;
-    std::str::from_utf8(&program.stdout)
-        .ok()?
-        .split(' ')
-        .nth(2)
-        .map(ToOwned::to_owned)
-}
-
-pub fn default_nix_version() -> String {
-    String::from("2.4")
-}

@@ -1,4 +1,4 @@
-use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
+use crate::{Metadata, Report, Rule, Suggestion};
 
 use macros::lint;
 use rnix::{
@@ -34,7 +34,7 @@ use rowan::ast::AstNode as _;
 struct EmptyLetIn;
 
 impl Rule for EmptyLetIn {
-    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         if let NodeOrToken::Node(node) = node
             && let Some(let_in_expr) = LetIn::cast(node.clone())
             && let entries = let_in_expr.entries()

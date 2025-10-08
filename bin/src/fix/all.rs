@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use lib::{Report, session::SessionInfo};
+use lib::Report;
 use rnix::{Root, WalkEvent, parser::ParseError as RnixParseErr};
 use rowan::ast::AstNode as _;
 
@@ -9,11 +9,7 @@ use crate::{
     fix::{FixResult, Fixed},
 };
 
-fn collect_fixes(
-    source: &str,
-    lints: &LintMap,
-    sess: &SessionInfo,
-) -> Result<Vec<Report>, RnixParseErr> {
+fn collect_fixes(source: &str, lints: &LintMap) -> Result<Vec<Report>, RnixParseErr> {
     let parsed = Root::parse(source).ok()?;
 
     Ok(parsed
@@ -23,7 +19,7 @@ fn collect_fixes(
             WalkEvent::Enter(child) => lints.get(&child.kind()).map(|rules| {
                 rules
                     .iter()
-                    .filter_map(|rule| rule.validate(&child, sess))
+                    .filter_map(|rule| rule.validate(&child))
                     .filter(|report| report.total_suggestion_range().is_some())
                     .collect::<Vec<_>>()
             }),
@@ -62,7 +58,7 @@ fn reorder(mut reports: Vec<Report>) -> Vec<Report> {
 impl<'a> Iterator for FixResult<'a> {
     type Item = FixResult<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        let all_reports = collect_fixes(&self.src, self.lints, self.sess).ok()?;
+        let all_reports = collect_fixes(&self.src, self.lints).ok()?;
         if all_reports.is_empty() {
             return None;
         }
@@ -83,18 +79,13 @@ impl<'a> Iterator for FixResult<'a> {
             src: self.src.clone(),
             fixed,
             lints: self.lints,
-            sess: self.sess,
         })
     }
 }
 
-pub fn all_with<'a>(
-    src: &'a str,
-    lints: &'a LintMap,
-    sess: &'a SessionInfo,
-) -> Option<FixResult<'a>> {
+pub fn all_with<'a>(src: &'a str, lints: &'a LintMap) -> Option<FixResult<'a>> {
     let src = Cow::from(src);
     let _ = Root::parse(&src).ok().ok()?;
-    let initial = FixResult::empty(src, lints, sess);
+    let initial = FixResult::empty(src, lints);
     initial.into_iter().last()
 }

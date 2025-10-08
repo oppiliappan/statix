@@ -8,7 +8,7 @@ use std::{
 use crate::{LintMap, dirs, err::ConfigErr, utils};
 
 use clap::Parser;
-use lib::{LINTS, session::Version};
+use lib::LINTS;
 use serde::{Deserialize, Serialize};
 use vfs::ReadOnlyVfs;
 
@@ -260,8 +260,6 @@ pub struct ConfFile {
     #[serde(default = "Vec::new")]
     disabled: Vec<String>,
 
-    nix_version: Option<String>,
-
     #[serde(default = "Vec::new")]
     pub ignore: Vec<String>,
 }
@@ -290,13 +288,8 @@ impl ConfFile {
     pub fn dump(&self) -> String {
         let ideal_config = {
             let disabled = vec![];
-            let nix_version = Some(utils::default_nix_version());
             let ignore = vec![".direnv".into()];
-            Self {
-                disabled,
-                nix_version,
-                ignore,
-            }
+            Self { disabled, ignore }
         };
         toml::ser::to_string_pretty(&ideal_config).unwrap()
     }
@@ -310,16 +303,6 @@ impl ConfFile {
                 .collect::<Vec<_>>()
                 .as_slice(),
         )
-    }
-    pub fn version(&self) -> Result<Version, ConfigErr> {
-        if let Some(v) = &self.nix_version {
-            v.parse::<Version>()
-                .map_err(|()| ConfigErr::ConfFileVersionParse(v.clone()))
-        } else if let Some(v) = utils::get_version_info().and_then(|o| o.parse::<Version>().ok()) {
-            Ok(v)
-        } else {
-            Ok(utils::default_nix_version().parse::<Version>().unwrap())
-        }
     }
 }
 

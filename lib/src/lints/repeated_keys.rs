@@ -1,6 +1,6 @@
 use std::fmt::Write as _;
 
-use crate::{Metadata, Report, Rule, session::SessionInfo};
+use crate::{Metadata, Report, Rule};
 
 use macros::lint;
 use rnix::{
@@ -45,7 +45,7 @@ use rowan::ast::AstNode as _;
 struct RepeatedKeys;
 
 impl Rule for RepeatedKeys {
-    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         let NodeOrToken::Node(node) = node else {
             return None;
         };

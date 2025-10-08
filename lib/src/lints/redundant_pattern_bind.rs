@@ -1,4 +1,4 @@
-use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo};
+use crate::{Metadata, Report, Rule, Suggestion};
 
 use macros::lint;
 use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Pattern};
@@ -32,7 +32,7 @@ use rowan::ast::AstNode as _;
 struct RedundantPatternBind;
 
 impl Rule for RedundantPatternBind {
-    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         let NodeOrToken::Node(node) = node else {
             return None;
         };

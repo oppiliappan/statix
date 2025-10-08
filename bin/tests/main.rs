@@ -1,19 +1,10 @@
 use std::path::Path;
 
-use lib::session::{SessionInfo, Version};
-
-macro_rules! session_info {
-    ($version:expr) => {{
-        let v: Version = $version.parse().unwrap();
-        SessionInfo::from_version(v)
-    }};
-}
-
 mod util {
     #[macro_export]
     macro_rules! test_lint {
-        ($tname:ident => $sess:expr, $($tail:tt)*) => {
-            test_lint!($tname => $sess);
+        ($tname:ident, $($tail:tt)*) => {
+            test_lint!($tname);
             test_lint!($($tail)*);
         };
         ($tname:ident, $($tail:tt)*) => {
@@ -21,15 +12,12 @@ mod util {
                 test_lint!($($tail)*);
         };
         ($tname:ident) => {
-            test_lint!($tname => session_info!("2.6"));
-        };
-        ($tname:ident => $sess:expr) => {
             paste::paste! {
                 #[test]
                 fn [<$tname _lint>](){
                     let file_path = concat!("data/", stringify!($tname), ".nix");
                     let contents = include_str!(concat!("data/", stringify!($tname), ".nix"));
-                    test_lint(&$sess, file_path, contents);
+                    test_lint(file_path, contents);
                 }
 
                 #[test]
@@ -43,18 +31,16 @@ mod util {
     }
 }
 
-fn test_lint(session: &SessionInfo, file_path: impl AsRef<Path>, contents: &str) {
+fn test_lint(file_path: impl AsRef<Path>, contents: &str) {
     use statix::{config::OutFormat, lint, traits::WriteDiagnostic};
     use vfs::ReadOnlyVfs;
 
     let vfs = ReadOnlyVfs::singleton(file_path, contents.as_bytes());
 
     let mut buffer = Vec::new();
-    vfs.iter()
-        .map(|entry| lint::lint(&entry, session))
-        .for_each(|r| {
-            buffer.write(&r, &vfs, OutFormat::StdErr).unwrap();
-        });
+    vfs.iter().map(|entry| lint::lint(&entry)).for_each(|r| {
+        buffer.write(&r, &vfs, OutFormat::StdErr).unwrap();
+    });
 
     let stripped = strip_ansi_escapes::strip(&buffer).unwrap();
     let out = std::str::from_utf8(&stripped).unwrap();
@@ -87,7 +73,7 @@ test_lint! {
     redundant_pattern_bind,
     unquoted_uri,
     empty_inherit,
-    deprecated_to_path => session_info!("2.4"),
+    deprecated_to_path,
     bool_simplification,
     useless_has_attr,
     repeated_keys,

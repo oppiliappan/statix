@@ -1,4 +1,4 @@
-use crate::{Metadata, Report, Rule, Suggestion, session::SessionInfo, utils};
+use crate::{Metadata, Report, Rule, Suggestion, utils};
 
 use macros::lint;
 use rnix::{NodeOrToken, SyntaxElement, SyntaxKind, ast::Inherit};
@@ -26,7 +26,7 @@ use rowan::ast::AstNode as _;
 struct EmptyInherit;
 
 impl Rule for EmptyInherit {
-    fn validate(&self, node: &SyntaxElement, _sess: &SessionInfo) -> Option<Report> {
+    fn validate(&self, node: &SyntaxElement) -> Option<Report> {
         let NodeOrToken::Node(node) = node else {
             return None;
         };

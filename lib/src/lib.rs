@@ -1,11 +1,9 @@
 #![recursion_limit = "1024"]
 mod lints;
 mod make;
-pub mod session;
 mod utils;
 
 pub use lints::LINTS;
-use session::SessionInfo;
 
 use rnix::{SyntaxElement, SyntaxKind, TextRange, parser::ParseError};
 use std::{convert::Into, default::Default};
@@ -249,7 +247,7 @@ impl Serialize for Suggestion {
 /// Lint logic is defined via this trait. Do not implement manually,
 /// look at the `lint` attribute macro instead for implementing rules
 pub trait Rule {
-    fn validate(&self, node: &SyntaxElement, sess: &SessionInfo) -> Option<Report>;
+    fn validate(&self, node: &SyntaxElement) -> Option<Report>;
 }
 
 /// Contains information about the lint itself. Do not implement manually,
