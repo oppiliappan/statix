@@ -1,9 +1,9 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
+expression: "&stdout"
 ---
 [W06] Warning: These let-in expressions are collapsible
-   ╭─[data/collapsible_let_in.nix:1:1]
+   ╭─[tests/data/collapsible_let_in.nix:1:1]
    │
  1 │ ╭───▶ let
  5 │ │ ╭─▶   let

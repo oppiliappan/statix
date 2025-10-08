@@ -1,9 +1,9 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
+expression: "&stdout"
 ---
 [W14] Warning: Found empty inherit statement
-   ╭─[data/empty_inherit.nix:2:3]
+   ╭─[tests/data/empty_inherit.nix:2:3]
    │
  2 │   inherit;
    ·   ────┬───  

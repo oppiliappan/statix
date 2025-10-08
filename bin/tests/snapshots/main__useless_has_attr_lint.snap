@@ -1,37 +1,37 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
+expression: "&stdout"
 ---
 [W19] Warning: This `if` expression can be simplified with `or`
-   ╭─[data/useless_has_attr.nix:3:4]
+   ╭─[tests/data/useless_has_attr.nix:3:4]
    │
  3 │   (if x ? a then x.a else default)
    ·    ───────────────┬──────────────  
    ·                   ╰──────────────── Consider using x.a or default instead of this if expression
 ───╯
 [W19] Warning: This `if` expression can be simplified with `or`
-   ╭─[data/useless_has_attr.nix:4:4]
+   ╭─[tests/data/useless_has_attr.nix:4:4]
    │
  4 │   (if x.a ? b then x.a.b else default)
    ·    ─────────────────┬────────────────  
    ·                     ╰────────────────── Consider using x.a.b or default instead of this if expression
 ───╯
 [W19] Warning: This `if` expression can be simplified with `or`
-   ╭─[data/useless_has_attr.nix:5:4]
+   ╭─[tests/data/useless_has_attr.nix:5:4]
    │
  5 │   (if x ? a.b then x.a.b else default)
    ·    ─────────────────┬────────────────  
    ·                     ╰────────────────── Consider using x.a.b or default instead of this if expression
 ───╯
 [W19] Warning: This `if` expression can be simplified with `or`
-   ╭─[data/useless_has_attr.nix:8:4]
+   ╭─[tests/data/useless_has_attr.nix:8:4]
    │
  8 │   (if x ? a then x.a else if b then c else d)
    ·    ────────────────────┬────────────────────  
    ·                        ╰────────────────────── Consider using x.a or (if b then c else d) instead of this if expression
 ───╯
 [W19] Warning: This `if` expression can be simplified with `or`
-   ╭─[data/useless_has_attr.nix:9:4]
+   ╭─[tests/data/useless_has_attr.nix:9:4]
    │
  9 │   (if x ? a then x.a else b.c)
    ·    ─────────────┬────────────  

@@ -1,5 +1,3 @@
-use std::path::Path;
-
 mod util {
     #[macro_export]
     macro_rules! test_lint {
@@ -15,15 +13,14 @@ mod util {
             paste::paste! {
                 #[test]
                 fn [<$tname _lint>](){
-                    let file_path = concat!("data/", stringify!($tname), ".nix");
-                    let contents = include_str!(concat!("data/", stringify!($tname), ".nix"));
-                    test_lint(file_path, contents);
+                    let file_path = concat!("tests/data/", stringify!($tname), ".nix");
+                    test_cli(file_path, &["check"]);
                 }
 
                 #[test]
                 fn [<$tname _fix>](){
                     let file_path = concat!("tests/data/", stringify!($tname), ".nix");
-                    test_fix(file_path);
+                    test_cli(file_path, &["fix", "--dry-run"]);
                 }
             }
 
@@ -31,31 +28,17 @@ mod util {
     }
 }
 
-fn test_lint(file_path: impl AsRef<Path>, contents: &str) {
-    use statix::{config::OutFormat, lint, traits::WriteDiagnostic};
-    use vfs::ReadOnlyVfs;
-
-    let vfs = ReadOnlyVfs::singleton(file_path, contents.as_bytes());
-
-    let mut buffer = Vec::new();
-    vfs.iter().map(|entry| lint::lint(&entry)).for_each(|r| {
-        buffer.write(&r, &vfs, OutFormat::StdErr).unwrap();
-    });
-
-    let stripped = strip_ansi_escapes::strip(&buffer).unwrap();
-    let out = std::str::from_utf8(&stripped).unwrap();
-    insta::assert_snapshot!(&out);
-}
-fn test_fix(file_path: &str) {
+fn test_cli(file_path: &str, args: &[&str]) {
     let output = std::process::Command::new("cargo")
         .arg("run")
-        .arg("fix")
-        .arg("-d")
+        .arg("--")
+        .args(args)
         .arg(file_path)
         .output()
         .expect("command runs successfully");
 
-    let stdout = String::from_utf8(output.stdout).expect("output is valid utf8");
+    let stdout = strip_ansi_escapes::strip(output.stdout).unwrap();
+    let stdout = String::from_utf8(stdout).unwrap();
 
     insta::assert_snapshot!(&stdout);
 }

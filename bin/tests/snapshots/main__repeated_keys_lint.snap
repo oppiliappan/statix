@@ -1,9 +1,9 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
+expression: "&stdout"
 ---
 [W20] Warning: Avoid repeated keys in attribute sets
-    ╭─[data/repeated_keys.nix:16:5]
+    ╭─[tests/data/repeated_keys.nix:16:5]
     │
  16 │     foo.bar = 1;
     ·     ───┬───  
@@ -16,7 +16,7 @@ expression: "&out"
     ·         ╰────── ... and here. Try foo = { bar=...; bar."hello"=...; again=...; } instead.
 ────╯
 [W20] Warning: Avoid repeated keys in attribute sets
-    ╭─[data/repeated_keys.nix:23:5]
+    ╭─[tests/data/repeated_keys.nix:23:5]
     │
  23 │     foo.baz.bar1 = 1;
     ·     ──────┬─────  

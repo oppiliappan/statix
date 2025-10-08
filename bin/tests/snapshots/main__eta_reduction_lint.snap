@@ -1,9 +1,9 @@
 ---
 source: bin/tests/main.rs
-expression: "&out"
+expression: "&stdout"
 ---
 [W07] Warning: This function expression is eta reducible
-    ╭─[data/eta_reduction.nix:11:9]
+    ╭─[tests/data/eta_reduction.nix:11:9]
     │
  11 │   (map (x: double x) xs)
     ·         ─────┬─────  
