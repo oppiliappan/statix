@@ -14,13 +14,13 @@ mod util {
                 #[test]
                 fn [<$tname _lint>](){
                     let file_path = concat!("tests/data/", stringify!($tname), ".nix");
-                    test_cli(file_path, &["check"]);
+                    test_cli(concat!(stringify!($tname), "_lint"), file_path, &["check"]);
                 }
 
                 #[test]
                 fn [<$tname _fix>](){
                     let file_path = concat!("tests/data/", stringify!($tname), ".nix");
-                    test_cli(file_path, &["fix", "--dry-run"]);
+                    test_cli(concat!(stringify!($tname), "_fix"), file_path, &["fix", "--dry-run"]);
                 }
             }
 
@@ -28,7 +28,7 @@ mod util {
     }
 }
 
-fn test_cli(file_path: &str, args: &[&str]) {
+fn test_cli(test_name: &str, file_path: &str, args: &[&str]) {
     let output = std::process::Command::new("cargo")
         .arg("run")
         .arg("--")
@@ -40,7 +40,7 @@ fn test_cli(file_path: &str, args: &[&str]) {
     let stdout = strip_ansi_escapes::strip(output.stdout).unwrap();
     let stdout = String::from_utf8(stdout).unwrap();
 
-    insta::assert_snapshot!(&stdout);
+    insta::assert_snapshot!(test_name, &stdout);
 }
 
 test_lint! {
