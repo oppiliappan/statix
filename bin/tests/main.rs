@@ -56,7 +56,6 @@ test_lint! {
     unquoted_uri,
     empty_inherit,
     deprecated_to_path,
-    bool_simplification,
     useless_has_attr,
     repeated_keys,
     empty_list_concat
