@@ -44,7 +44,6 @@ fn test_cli(test_name: &str, file_path: &str, args: &[&str]) {
 }
 
 test_lint! {
-    bool_comparison,
     empty_let_in,
     manual_inherit,
     manual_inherit_from,

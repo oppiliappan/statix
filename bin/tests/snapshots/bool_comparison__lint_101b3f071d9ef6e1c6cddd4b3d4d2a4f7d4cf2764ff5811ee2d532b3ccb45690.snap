@@ -1,0 +1,11 @@
+---
+source: bin/tests/bool_comparison.rs
+expression: "\"f != false\""
+---
+[W01] Warning: Unnecessary comparison with boolean
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ f != false
+   · ─────┬────  
+   ·      ╰────── Comparing f with boolean literal false
+───╯

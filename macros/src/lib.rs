@@ -1,5 +1,6 @@
 mod explain;
 mod metadata;
+mod test;
 
 use explain::generate_explain_impl;
 use metadata::{RawLintMeta, generate_meta_impl};
@@ -42,4 +43,9 @@ pub fn lint(attr: TokenStream, item: TokenStream) -> TokenStream {
         impl crate::Lint for #struct_name {}
     })
     .into()
+}
+
+#[proc_macro]
+pub fn generate_tests(input: TokenStream) -> TokenStream {
+    crate::test::generate_tests(input)
 }

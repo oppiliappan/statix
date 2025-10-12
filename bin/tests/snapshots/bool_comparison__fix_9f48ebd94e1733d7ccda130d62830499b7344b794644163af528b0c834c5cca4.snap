@@ -1,0 +1,9 @@
+---
+source: bin/tests/bool_comparison.rs
+expression: "\"true == c\""
+---
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1 +1 @@
+-true == c
++c

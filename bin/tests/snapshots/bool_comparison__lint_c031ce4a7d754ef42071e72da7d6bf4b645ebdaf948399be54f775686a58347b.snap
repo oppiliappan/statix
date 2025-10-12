@@ -1,0 +1,11 @@
+---
+source: bin/tests/bool_comparison.rs
+expression: "\"e != true\""
+---
+[W01] Warning: Unnecessary comparison with boolean
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ e != true
+   · ────┬────  
+   ·     ╰────── Comparing e with boolean literal true
+───╯

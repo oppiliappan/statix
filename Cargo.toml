@@ -8,11 +8,13 @@ edition = "2024"
 license = "MIT"
 
 [workspace.dependencies]
+anyhow = "1.0.100"
 ariadne = "0.1.3"
 clap = "3.0.0-beta.4"
+hex = "0.4.3"
 ignore = "0.4.18"
 indexmap = "1.6.2"
-insta = "1.43.2"
+insta = { features = ["filters"], version = "1.43.2" }
 lazy_static = "1.0"
 lib.path = "./lib"
 macros.path = "./macros"
@@ -24,9 +26,11 @@ rnix = "0.12.0"
 rowan = "0.15.17"
 serde = { features = ["derive"], version = "1.0.68" }
 serde_json = { version = "1.0.68" }
+sha2 = "0.10.9"
 similar = "2.1.0"
 strip-ansi-escapes = "0.1.1"
 syn = { features = ["full"], version = "2.0" }
+tempfile = "3.23.0"
 thiserror = "1.0.30"
 toml = "0.5.8"
 vfs.path = "./vfs"

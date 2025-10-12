@@ -1,0 +1,11 @@
+---
+source: bin/tests/bool_comparison.rs
+expression: "\"a == true\""
+---
+[W01] Warning: Unnecessary comparison with boolean
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ a == true
+   · ────┬────  
+   ·     ╰────── Comparing a with boolean literal true
+───╯

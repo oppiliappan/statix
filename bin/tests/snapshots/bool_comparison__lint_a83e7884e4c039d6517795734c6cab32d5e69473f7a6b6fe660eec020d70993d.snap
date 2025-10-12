@@ -1,0 +1,11 @@
+---
+source: bin/tests/bool_comparison.rs
+expression: "\"true == o ? p\""
+---
+[W01] Warning: Unnecessary comparison with boolean
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ true == o ? p
+   · ──────┬──────  
+   ·       ╰──────── Comparing o ? p with boolean literal true
+───╯
