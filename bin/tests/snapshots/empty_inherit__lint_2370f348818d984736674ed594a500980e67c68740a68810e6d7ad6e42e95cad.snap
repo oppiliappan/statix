@@ -1,11 +1,11 @@
 ---
-source: bin/tests/main.rs
-expression: "&stdout"
+source: bin/tests/empty_inherit.rs
+expression: "\"{ inherit; }\""
 ---
 [W14] Warning: Found empty inherit statement
-   ╭─[tests/data/empty_inherit.nix:2:3]
+   ╭─[<temp_file_path>:1:3]
    │
- 2 │   inherit;
+ 1 │ { inherit; }
    ·   ────┬───  
    ·       ╰───── Remove this empty inherit statement
 ───╯
