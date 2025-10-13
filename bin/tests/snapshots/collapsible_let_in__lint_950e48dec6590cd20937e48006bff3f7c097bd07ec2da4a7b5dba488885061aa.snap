@@ -1,9 +1,9 @@
 ---
-source: bin/tests/main.rs
-expression: "&stdout"
+source: bin/tests/collapsible_let_in.rs
+expression: "\"let\\n  a = 2;\\n  b = 3;\\nin\\n  let\\n    c = 5;\\n    d = 6;\\n  in\\n  a + b + c + d\\n\""
 ---
 [W06] Warning: These let-in expressions are collapsible
-   ╭─[tests/data/collapsible_let_in.nix:1:1]
+   ╭─[<temp_file_path>:1:1]
    │
  1 │ ╭───▶ let
  5 │ │ ╭─▶   let

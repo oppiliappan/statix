@@ -44,7 +44,6 @@ fn test_cli(test_name: &str, file_path: &str, args: &[&str]) {
 }
 
 test_lint! {
-    collapsible_let_in,
     eta_reduction,
     useless_parens,
     empty_pattern,
