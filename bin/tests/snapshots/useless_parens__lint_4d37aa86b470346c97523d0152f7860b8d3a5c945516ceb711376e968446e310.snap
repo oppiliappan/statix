@@ -1,0 +1,11 @@
+---
+source: bin/tests/useless_parens.rs
+expression: "\"let a = (1 + 2); in null\""
+---
+[W08] Warning: These parentheses can be omitted
+   ╭─[<temp_file_path>:1:9]
+   │
+ 1 │ let a = (1 + 2); in null
+   ·         ───┬───  
+   ·            ╰───── Useless parentheses around value in binding
+───╯

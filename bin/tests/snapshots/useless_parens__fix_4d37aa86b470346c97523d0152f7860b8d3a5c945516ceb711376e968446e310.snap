@@ -1,0 +1,9 @@
+---
+source: bin/tests/useless_parens.rs
+expression: "\"let a = (1 + 2); in null\""
+---
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1 +1 @@
+-let a = (1 + 2); in null
++let a = 1 + 2; in null

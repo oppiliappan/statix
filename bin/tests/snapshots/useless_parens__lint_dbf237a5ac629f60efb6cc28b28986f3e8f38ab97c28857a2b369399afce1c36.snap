@@ -1,0 +1,11 @@
+---
+source: bin/tests/useless_parens.rs
+expression: "\"[(builtins.map)]\""
+---
+[W08] Warning: These parentheses can be omitted
+   ╭─[<temp_file_path>:1:2]
+   │
+ 1 │ [(builtins.map)]
+   ·  ───────┬──────  
+   ·         ╰──────── Useless parentheses around primitive expression
+───╯

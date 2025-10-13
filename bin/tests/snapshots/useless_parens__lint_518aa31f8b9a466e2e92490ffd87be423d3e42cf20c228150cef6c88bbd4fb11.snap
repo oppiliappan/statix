@@ -1,0 +1,11 @@
+---
+source: bin/tests/useless_parens.rs
+expression: "\"let h = ({ inherit (builtins) map; }); in null\""
+---
+[W08] Warning: These parentheses can be omitted
+   ╭─[<temp_file_path>:1:9]
+   │
+ 1 │ let h = ({ inherit (builtins) map; }); in null
+   ·         ──────────────┬──────────────  
+   ·                       ╰──────────────── Useless parentheses around value in binding
+───╯

@@ -1,0 +1,11 @@
+---
+source: bin/tests/useless_parens.rs
+expression: "\"({ f = 2; })\""
+---
+[W08] Warning: These parentheses can be omitted
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ ({ f = 2; })
+   · ──────┬─────  
+   ·       ╰─────── Useless parentheses around primitive expression
+───╯

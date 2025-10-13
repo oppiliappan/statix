@@ -1,0 +1,11 @@
+---
+source: bin/tests/useless_parens.rs
+expression: "\"let b = 0; in (b)\""
+---
+[W08] Warning: These parentheses can be omitted
+   ╭─[<temp_file_path>:1:15]
+   │
+ 1 │ let b = 0; in (b)
+   ·               ─┬─  
+   ·                ╰─── Useless parentheses around body of let expression
+───╯

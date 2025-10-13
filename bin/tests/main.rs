@@ -44,7 +44,6 @@ fn test_cli(test_name: &str, file_path: &str, args: &[&str]) {
 }
 
 test_lint! {
-    useless_parens,
     empty_pattern,
     redundant_pattern_bind,
     unquoted_uri,
