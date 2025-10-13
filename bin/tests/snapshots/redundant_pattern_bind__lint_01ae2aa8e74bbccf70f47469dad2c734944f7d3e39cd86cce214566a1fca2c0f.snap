@@ -1,0 +1,11 @@
+---
+source: bin/tests/redundant_pattern_bind.rs
+expression: "\"{ ... } @ inputs: null\""
+---
+[W11] Warning: Found redundant pattern bind in function argument
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ { ... } @ inputs: null
+   · ────────┬───────  
+   ·         ╰───────── This pattern bind is redundant, use inputs instead
+───╯
