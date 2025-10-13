@@ -1,0 +1,9 @@
+---
+source: bin/tests/manual_inherit_from.rs
+expression: "\"let a.b = 2; in { b = a.b; }\""
+---
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1 +1 @@
+-let a.b = 2; in { b = a.b; }
++let a.b = 2; in { inherit (a) b; }
