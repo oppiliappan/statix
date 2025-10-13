@@ -2,15 +2,17 @@ use proc_macro::TokenStream;
 use quote::{ToTokens, quote};
 use sha2::{Digest, Sha256};
 use syn::{
-    Error, ExprArray, ExprLit, Ident, Lit, LitStr, Token,
+    Error, Expr, ExprArray, Ident, Token,
     parse::{Parse, ParseStream},
     parse_macro_input,
+    punctuated::Punctuated,
     spanned::Spanned,
+    token::Comma,
 };
 
 struct MacroInvocation {
     rule: Ident,
-    expressions: Vec<LitStr>,
+    expressions: Punctuated<Expr, Comma>,
 }
 
 impl Parse for MacroInvocation {
@@ -39,18 +41,9 @@ impl Parse for MacroInvocation {
         }
 
         input.parse::<Token![:]>()?;
-        let ExprArray { elems, .. } = input.parse::<ExprArray>()?;
-
-        let expressions = elems
-            .into_iter()
-            .map(|expr| match expr {
-                syn::Expr::Lit(ExprLit {
-                    lit: Lit::Str(nix_expression),
-                    ..
-                }) => Ok(nix_expression),
-                _ => Err(Error::new(expr.span(), "expected a literal string")),
-            })
-            .collect::<Result<Vec<_>, _>>()?;
+        let ExprArray {
+            elems: expressions, ..
+        } = input.parse::<ExprArray>()?;
 
         input.parse::<Token![,]>()?;
         Ok(MacroInvocation { rule, expressions })
@@ -81,7 +74,7 @@ enum TestKind {
     Fix,
 }
 
-fn make_test(rule: &Ident, kind: TestKind, nix_expression: &LitStr) -> proc_macro2::TokenStream {
+fn make_test(rule: &Ident, kind: TestKind, nix_expression: &Expr) -> proc_macro2::TokenStream {
     let expression_hash = Sha256::digest(nix_expression.to_token_stream().to_string());
     let expression_hash = hex::encode(expression_hash);
 
