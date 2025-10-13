@@ -1,0 +1,9 @@
+---
+source: bin/tests/unquoted_uri.rs
+expression: "\"github:nerdypepper/statix\""
+---
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1 +1 @@
+-github:nerdypepper/statix
++"github:nerdypepper/statix"

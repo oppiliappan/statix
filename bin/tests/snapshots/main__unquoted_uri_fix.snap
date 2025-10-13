@@ -1,9 +1,0 @@
----
-source: bin/tests/main.rs
-expression: "&stdout"
----
---- tests/data/unquoted_uri.nix
-+++ tests/data/unquoted_uri.nix [fixed]
-@@ -1 +1 @@
--github:nerdypepper/statix
-+"github:nerdypepper/statix"
