@@ -1,0 +1,11 @@
+---
+source: bin/tests/empty_pattern.rs
+expression: "\"({ ... }: 42)\""
+---
+[W10] Warning: Found empty pattern in function argument
+   ╭─[<temp_file_path>:1:2]
+   │
+ 1 │ ({ ... }: 42)
+   ·  ───┬───  
+   ·     ╰───── This pattern is empty, use _ instead
+───╯

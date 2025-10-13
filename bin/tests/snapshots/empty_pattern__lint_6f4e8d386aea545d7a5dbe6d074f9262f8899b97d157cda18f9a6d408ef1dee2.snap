@@ -1,0 +1,5 @@
+---
+source: bin/tests/empty_pattern.rs
+expression: "\"({ a, ... }: a)\""
+---
+
