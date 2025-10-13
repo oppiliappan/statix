@@ -1,0 +1,11 @@
+---
+source: bin/tests/deprecated_to_path.rs
+expression: "\"toPath x\""
+---
+[W17] Warning: Found usage of deprecated builtin toPath
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ toPath x
+   · ────┬───  
+   ·     ╰───── toPath is deprecated, see :doc builtins.toPath within the REPL for more
+───╯

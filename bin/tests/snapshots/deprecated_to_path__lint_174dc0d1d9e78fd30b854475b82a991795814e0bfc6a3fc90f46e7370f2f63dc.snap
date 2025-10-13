@@ -1,0 +1,11 @@
+---
+source: bin/tests/deprecated_to_path.rs
+expression: "\"builtins.toPath \\\"/some/path\\\"\""
+---
+[W17] Warning: Found usage of deprecated builtin toPath
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ builtins.toPath "/some/path"
+   · ──────────────┬─────────────  
+   ·               ╰─────────────── builtins.toPath is deprecated, see :doc builtins.toPath within the REPL for more
+───╯

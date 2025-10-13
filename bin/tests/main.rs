@@ -44,7 +44,6 @@ fn test_cli(test_name: &str, file_path: &str, args: &[&str]) {
 }
 
 test_lint! {
-    deprecated_to_path,
     useless_has_attr,
     repeated_keys,
     empty_list_concat
