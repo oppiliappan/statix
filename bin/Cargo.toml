@@ -33,6 +33,7 @@ toml.workspace = true
 vfs.workspace = true
 
 [dev-dependencies]
+indoc.workspace = true
 insta.workspace = true
 paste.workspace = true
 strip-ansi-escapes.workspace = true

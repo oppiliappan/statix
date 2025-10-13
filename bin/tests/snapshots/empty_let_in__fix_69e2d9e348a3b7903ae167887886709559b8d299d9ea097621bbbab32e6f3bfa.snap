@@ -1,0 +1,5 @@
+---
+source: bin/tests/empty_let_in.rs
+expression: "\"let\\n  # don't fix this, we have a comment\\n  # raise the lint though\\nin\\nnull\\n\""
+---
+

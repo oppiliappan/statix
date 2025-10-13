@@ -1,0 +1,9 @@
+---
+source: bin/tests/empty_let_in.rs
+expression: "\"let in null\""
+---
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1 +1 @@
+-let in null
++null
