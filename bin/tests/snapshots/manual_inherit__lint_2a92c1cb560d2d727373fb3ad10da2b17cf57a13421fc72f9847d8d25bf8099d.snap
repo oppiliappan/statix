@@ -1,0 +1,11 @@
+---
+source: bin/tests/manual_inherit.rs
+expression: "\"let a = 2; in { a = a; }\""
+---
+[W03] Warning: Assignment instead of inherit
+   ╭─[<temp_file_path>:1:17]
+   │
+ 1 │ let a = 2; in { a = a; }
+   ·                 ───┬──  
+   ·                    ╰──── This assignment is better written with inherit
+───╯

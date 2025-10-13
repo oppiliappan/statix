@@ -44,7 +44,6 @@ fn test_cli(test_name: &str, file_path: &str, args: &[&str]) {
 }
 
 test_lint! {
-    manual_inherit,
     manual_inherit_from,
     legacy_let_syntax,
     collapsible_let_in,
