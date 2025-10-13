@@ -1,9 +1,9 @@
 ---
-source: bin/tests/main.rs
-expression: "&stdout"
+source: bin/tests/legacy_let_syntax.rs
+expression: "\"let {\\n  body = x + y;\\n  x = \\\"hello,\\\";\\n  y = \\\" world!\\\";\\n}\\n\""
 ---
 [W05] Warning: Using undocumented `let` syntax
-   ╭─[tests/data/legacy_let_syntax.nix:1:1]
+   ╭─[<temp_file_path>:1:1]
    │
  1 │ ╭─▶ let {
  5 │ ├─▶ }

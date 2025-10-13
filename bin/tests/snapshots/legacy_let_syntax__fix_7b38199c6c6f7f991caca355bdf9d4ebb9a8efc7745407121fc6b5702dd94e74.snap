@@ -1,0 +1,14 @@
+---
+source: bin/tests/legacy_let_syntax.rs
+expression: "\"let {\\n  body = x + y;\\n  x = \\\"hello,\\\";\\n  y = \\\" world!\\\";\\n}\\n\""
+---
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1,6 +1,6 @@
+-let {
++rec {
+   body = x + y;
+   x = "hello,";
+   y = " world!";
+-}
++}.body
