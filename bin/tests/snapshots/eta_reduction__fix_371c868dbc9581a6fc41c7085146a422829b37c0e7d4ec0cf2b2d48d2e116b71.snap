@@ -1,0 +1,9 @@
+---
+source: bin/tests/eta_reduction.rs
+expression: "\"let double = x: x * 2; in map (x: double x) [1 2 3]\""
+---
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1 +1 @@
+-let double = x: x * 2; in map (x: double x) [1 2 3]
++let double = x: x * 2; in map double [1 2 3]
