@@ -1,0 +1,18 @@
+---
+source: bin/tests/empty_list_concat.rs
+expression: "\"[] ++ [] ++ []\""
+---
+[W23] Warning: Unnecessary concatenation with empty list
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ [] ++ [] ++ []
+   · ───────┬──────  
+   ·        ╰──────── Concatenation with the empty list, [], is a no-op
+───╯
+[W23] Warning: Unnecessary concatenation with empty list
+   ╭─[<temp_file_path>:1:7]
+   │
+ 1 │ [] ++ [] ++ []
+   ·       ────┬───  
+   ·           ╰───── Concatenation with the empty list, [], is a no-op
+───╯

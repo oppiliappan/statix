@@ -24,7 +24,6 @@
                 ]
               ) root)
               (root + "/Cargo.lock")
-              (root + "/bin/tests/data")
             ];
           };
           cargoLock.lockFile = root + "/Cargo.lock";
