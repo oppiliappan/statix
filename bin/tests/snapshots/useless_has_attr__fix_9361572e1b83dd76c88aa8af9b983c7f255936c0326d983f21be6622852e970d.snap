@@ -1,0 +1,9 @@
+---
+source: bin/tests/useless_has_attr.rs
+expression: "\"if x ? a then x.a else if b then c else d\""
+---
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1 +1 @@
+-if x ? a then x.a else if b then c else d
++x.a or (if b then c else d)

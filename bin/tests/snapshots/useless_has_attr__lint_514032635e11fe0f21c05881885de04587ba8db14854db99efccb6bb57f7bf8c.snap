@@ -1,0 +1,11 @@
+---
+source: bin/tests/useless_has_attr.rs
+expression: "\"if x ? a then x.a else default\""
+---
+[W19] Warning: This `if` expression can be simplified with `or`
+   ╭─[<temp_file_path>:1:1]
+   │
+ 1 │ if x ? a then x.a else default
+   · ───────────────┬──────────────  
+   ·                ╰──────────────── Consider using x.a or default instead of this if expression
+───╯
