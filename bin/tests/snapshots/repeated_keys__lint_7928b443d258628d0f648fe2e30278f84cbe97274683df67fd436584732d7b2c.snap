@@ -1,0 +1,5 @@
+---
+source: bin/tests/repeated_keys.rs
+expression: "\"rec {\\n  foo.x = foo.y;\\n  foo.y = 2;\\n  foo.z = 3;\\n}\\n\""
+---
+

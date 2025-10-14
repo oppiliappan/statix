@@ -1,0 +1,5 @@
+---
+source: bin/tests/repeated_keys.rs
+expression: "\"{\\n  foo.baz.bar1 = 1;\\n  foo.baz.bar2 = 2;\\n  foo.baz.bar3 = 3;\\n  foo.baz.bar4 = 4;\\n  foo.baz.bar5 = 5;\\n}\\n\""
+---
+

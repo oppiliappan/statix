@@ -1,0 +1,5 @@
+---
+source: bin/tests/repeated_keys.rs
+expression: "\"{\\n  foo.bar = 1;\\n  foo.bar.\\\"hello\\\" = 1;\\n  foo.again = 1;\\n}\\n\""
+---
+

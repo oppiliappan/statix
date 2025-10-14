@@ -44,6 +44,5 @@ fn test_cli(test_name: &str, file_path: &str, args: &[&str]) {
 }
 
 test_lint! {
-    repeated_keys,
     empty_list_concat
 }

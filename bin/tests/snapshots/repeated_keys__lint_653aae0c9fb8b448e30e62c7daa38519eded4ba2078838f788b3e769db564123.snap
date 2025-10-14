@@ -1,0 +1,17 @@
+---
+source: bin/tests/repeated_keys.rs
+expression: "\"{\\n  foo.baz.bar1 = 1;\\n  foo.baz.bar2 = 2;\\n  foo.baz.bar3 = 3;\\n  foo.baz.bar4 = 4;\\n  foo.baz.bar5 = 5;\\n}\\n\""
+---
+[W20] Warning: Avoid repeated keys in attribute sets
+   ╭─[<temp_file_path>:2:3]
+   │
+ 2 │   foo.baz.bar1 = 1;
+   ·   ──────┬─────  
+   ·         ╰─────── The key foo is first assigned here ...
+ 3 │   foo.baz.bar2 = 2;
+   ·   ──────┬─────  
+   ·         ╰─────── ... repeated here ...
+ 4 │   foo.baz.bar3 = 3;
+   ·   ──────┬─────  
+   ·         ╰─────── ... and here (2 occurrences omitted). Try foo = { baz.bar1=...; baz.bar2=...; baz.bar3=...; } instead.
+───╯

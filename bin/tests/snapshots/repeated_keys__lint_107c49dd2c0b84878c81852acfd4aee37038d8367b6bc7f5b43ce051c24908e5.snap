@@ -1,0 +1,17 @@
+---
+source: bin/tests/repeated_keys.rs
+expression: "\"{\\n  foo.bar = 1;\\n  foo.bar.\\\"hello\\\" = 1;\\n  foo.again = 1;\\n}\\n\""
+---
+[W20] Warning: Avoid repeated keys in attribute sets
+   ╭─[<temp_file_path>:2:3]
+   │
+ 2 │   foo.bar = 1;
+   ·   ───┬───  
+   ·      ╰───── The key foo is first assigned here ...
+ 3 │   foo.bar."hello" = 1;
+   ·   ───────┬───────  
+   ·          ╰───────── ... repeated here ...
+ 4 │   foo.again = 1;
+   ·   ────┬────  
+   ·       ╰────── ... and here. Try foo = { bar=...; bar."hello"=...; again=...; } instead.
+───╯
