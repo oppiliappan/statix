@@ -5,7 +5,7 @@ use indoc::indoc;
 use macros::generate_tests;
 
 generate_tests! {
-    rule: manual_inherit,
+    rule: collapsible_let_in,
     expressions: [
         indoc! {r"
             let

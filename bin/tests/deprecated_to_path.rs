@@ -3,7 +3,7 @@ mod _utils;
 use macros::generate_tests;
 
 generate_tests! {
-    rule: manual_inherit,
+    rule: deprecated_to_path,
     expressions: [
         "builtins.toPath x",
         "toPath x",

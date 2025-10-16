@@ -5,7 +5,7 @@ use indoc::indoc;
 use macros::generate_tests;
 
 generate_tests! {
-    rule: useless_has_attr,
+    rule: repeated_keys,
     expressions: [
         // fine
         "{ foo.bar = 1; }",

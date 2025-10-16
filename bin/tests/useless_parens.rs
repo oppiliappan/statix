@@ -3,7 +3,7 @@ mod _utils;
 use macros::generate_tests;
 
 generate_tests! {
-    rule: manual_inherit,
+    rule: useless_parens,
     expressions: [
         // parens around primitives
         r#"("hello")"#,

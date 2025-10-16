@@ -3,7 +3,7 @@ mod _utils;
 use macros::generate_tests;
 
 generate_tests! {
-    rule: manual_inherit,
+    rule: manual_inherit_from,
     expressions: [
         "let a.b = 2; in { b = a.b; }",
         "let a.b = 2; in { c = a.c; }",

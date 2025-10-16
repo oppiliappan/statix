@@ -3,7 +3,7 @@ mod _utils;
 use macros::generate_tests;
 
 generate_tests! {
-    rule: manual_inherit,
+    rule: eta_reduction,
     expressions: [
         "let double = x: x * 2; in map (x: double x) [1 2 3]",
 
