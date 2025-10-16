@@ -1,112 +1,69 @@
 use std::{
-    fs,
-    io::{self, Error, ErrorKind},
+    io,
     path::{Path, PathBuf},
 };
 
-use crate::dirs;
+use ignore::{overrides::OverrideBuilder, WalkBuilder};
 
-use ignore::{
-    Error as IgnoreError, Match,
-    gitignore::{Gitignore, GitignoreBuilder},
-};
-
-#[derive(Debug)]
-pub struct Walker {
-    dirs: Vec<PathBuf>,
-    files: Vec<PathBuf>,
-    ignore: Gitignore,
-}
-
-impl Walker {
-    pub fn new<P: AsRef<Path>>(target: P, ignore: Gitignore) -> io::Result<Self> {
-        let target = target.as_ref().to_path_buf();
-        if !target.exists() {
-            Err(Error::new(
-                ErrorKind::NotFound,
-                format!("file not found: {}", target.display()),
-            ))
-        } else if target.is_dir() {
-            Ok(Self {
-                dirs: vec![target],
-                files: vec![],
-                ignore,
-            })
-        } else {
-            Ok(Self {
-                dirs: vec![],
-                files: vec![target],
-                ignore,
-            })
-        }
-    }
-}
-
-impl Iterator for Walker {
-    type Item = PathBuf;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.files.pop().or_else(|| {
-            while let Some(dir) = self.dirs.pop() {
-                if dir.is_dir()
-                    && let Match::None | Match::Whitelist(_) = self.ignore.matched(&dir, true)
-                {
-                    let mut found = false;
-                    for entry in fs::read_dir(&dir).ok()? {
-                        let entry = entry.ok()?;
-                        let path = entry.path();
-                        if path.is_dir() {
-                            self.dirs.push(path);
-                        } else if path.is_file()
-                            && let Match::None | Match::Whitelist(_) =
-                                self.ignore.matched(&path, false)
-                        {
-                            found = true;
-                            self.files.push(path);
-                        }
-                    }
-                    if found {
-                        break;
-                    }
-                }
-            }
-            self.files.pop()
-        })
-    }
-}
-
-pub fn build_ignore_set<P: AsRef<Path>>(
-    ignore: &[String],
-    target: P,
-    unrestricted: bool,
-) -> Result<Gitignore, IgnoreError> {
-    let gitignore_path = target.as_ref().join(".gitignore");
-
-    // Looks like GitignoreBuilder::new does not source globs
-    // within gitignore_path by default, we have to enforce that
-    // using GitignoreBuilder::add. Probably a bug in the ignore
-    // crate?
-    let mut gitignore = GitignoreBuilder::new(&gitignore_path);
-
-    // if we are to "restrict" aka "respect" .gitignore, then
-    // add globs from gitignore path as well
-    if !unrestricted {
-        gitignore.add(&gitignore_path);
-
-        // ignore .git by default, nobody cares about .git, i'm sure
-        gitignore.add_line(None, ".git")?;
-    }
-
-    for i in ignore {
-        gitignore.add_line(None, i.as_str())?;
-    }
-
-    gitignore.build()
-}
-
+/// Walks through target paths and returns an iterator of .nix files, respecting gitignore rules.
+///
+/// # Arguments
+/// * `ignore_patterns` - Globs of file patterns to skip (e.g., "*.tmp", "build/*")
+/// * `targets` - File or directory paths to walk through
+/// * `unrestricted` - If true, don't respect .gitignore files; if false, respect them
 pub fn walk_nix_files<P: AsRef<Path>>(
-    ignore: Gitignore,
-    target: P,
+    ignore_patterns: Vec<String>,
+    targets: &[P],
+    unrestricted: bool,
 ) -> Result<impl Iterator<Item = PathBuf>, io::Error> {
-    let walker = dirs::Walker::new(target, ignore)?;
-    Ok(walker.filter(|path: &PathBuf| matches!(path.extension(), Some(e) if e == "nix")))
+    let mut targets_iter = targets.iter();
+
+    let first_target = targets_iter
+        .next()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "No targets provided"))?;
+
+    let mut builder = WalkBuilder::new(first_target.as_ref());
+
+    for target in targets_iter {
+        builder.add(target.as_ref());
+    }
+
+    builder.git_ignore(!unrestricted);
+
+    // Add files/directories to ignore set passed in --ignore
+    if !ignore_patterns.is_empty() {
+        let mut override_builder = OverrideBuilder::new("");
+
+        for pattern in &ignore_patterns {
+            // Note: The `!` prefix has inverted semantics in OverrideBuilder compared to gitignore.
+            // In OverrideBuilder: `!pattern` means "ignore files matching pattern"
+            // In gitignore: `!pattern` means "don't ignore files matching pattern" (whitelist)
+            // So we add `!` to make ignore_patterns actually ignore files.
+            override_builder
+                .add(&format!("!{}", pattern))
+                .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+        }
+
+        let overrides = override_builder
+            .build()
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+
+        builder.overrides(overrides);
+    }
+
+    let walker = builder.build();
+
+    Ok(walker
+        .filter_map(|result| match result {
+            Ok(entry) => Some(entry),
+            Err(err) => {
+                eprintln!("Warning: Error reading directory entry: {}", err);
+                None
+            }
+        })
+        .filter_map(|entry| {
+            let path = entry.path();
+            (path.is_file() && matches!(path.extension(), Some(ext) if ext == "nix"))
+                .then(|| path.to_path_buf())
+        }))
 }
