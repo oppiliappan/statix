@@ -86,7 +86,10 @@ fn write_stderr<T: Write>(
                 },
             )
             .finish()
-            .write((src_id, Source::from(src)), &mut *writer)?;
+            .write(
+                (src_id, Source::from(if src.is_empty() { " " } else { src })),
+                &mut *writer,
+            )?;
     }
     Ok(())
 }
