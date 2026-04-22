@@ -1,5 +1,18 @@
 ---
 source: bin/tests/repeated_keys.rs
+assertion_line: 7
 expression: "\"{\\n  foo.bar = 1;\\n  foo.bar.\\\"hello\\\" = 1;\\n  foo.again = 1;\\n}\\n\""
 ---
-
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1,6 +1,8 @@
+ {
+-  foo.bar = 1;
+-  foo.bar."hello" = 1;
+-  foo.again = 1;
++  foo = {
++    bar = 1;
++    bar."hello" = 1;
++    again = 1;
++  };
+ }

@@ -1,0 +1,26 @@
+---
+source: bin/tests/repeated_keys.rs
+assertion_line: 7
+expression: "\"{\\n  hardware.bluetooth = {\\n    enable = true;\\n  };\\n  networking.hostName = \\\"nixbox\\\";\\n  hardware.nvidia-container-toolkit.enable = true;\\n  hardware.nvidia = {\\n    modesetting.enable = true;\\n  };\\n}\\n\""
+---
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1,11 +1,13 @@
+ {
+-  hardware.bluetooth = {
+-    enable = true;
++  hardware = {
++    bluetooth = {
++      enable = true;
++    };
++    nvidia-container-toolkit.enable = true;
++    nvidia = {
++      modesetting.enable = true;
++    };
+   };
+   networking.hostName = "nixbox";
+-  hardware.nvidia-container-toolkit.enable = true;
+-  hardware.nvidia = {
+-    modesetting.enable = true;
+-  };
+ }
