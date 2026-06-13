@@ -2,7 +2,6 @@
 let
   filePaths = {
     check = ".github/workflows/check.yaml";
-    updateFlakeLock = ".github/workflows/update-flake-lock.yaml";
   };
 
   ids = {
@@ -92,36 +91,6 @@ in
                     { run = "nix-env --install --file default.nix"; }
                   ];
                 };
-              };
-            };
-          }
-          {
-            path_ = filePaths.updateFlakeLock;
-            drv = pkgs.writers.writeJSON "update-flake-lock.yaml" {
-              name = "Update flake.lock";
-              on = {
-                workflow_dispatch = { };
-                schedule = [ { cron = "0 0 * * 5"; } ];
-              };
-              jobs.nix-flake-update = {
-                permissions = {
-                  contents = "write";
-                  id-token = "write";
-                  issues = "write";
-                  pull-requests = "write";
-                };
-                runs-on = runner.name;
-                steps = [
-                  steps.checkout
-                  steps.cachixInstallNix
-                  {
-                    uses = "DeterminateSystems/update-flake-lock@main";
-                    "with" = {
-                      commit-msg = "chore(flake): bump inputs";
-                      pr-title = "chore(flake): bump inputs";
-                    };
-                  }
-                ];
               };
             };
           }
