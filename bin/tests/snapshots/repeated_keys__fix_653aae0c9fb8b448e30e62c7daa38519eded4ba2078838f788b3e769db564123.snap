@@ -1,5 +1,24 @@
 ---
 source: bin/tests/repeated_keys.rs
+assertion_line: 7
 expression: "\"{\\n  foo.baz.bar1 = 1;\\n  foo.baz.bar2 = 2;\\n  foo.baz.bar3 = 3;\\n  foo.baz.bar4 = 4;\\n  foo.baz.bar5 = 5;\\n}\\n\""
 ---
-
+--- <temp_file_path>
++++ <temp_file_path> [fixed]
+@@ -1,8 +1,12 @@
+ {
+-  foo.baz.bar1 = 1;
+-  foo.baz.bar2 = 2;
+-  foo.baz.bar3 = 3;
+-  foo.baz.bar4 = 4;
+-  foo.baz.bar5 = 5;
++  foo = {
++    baz = {
++      bar1 = 1;
++      bar2 = 2;
++      bar3 = 3;
++      bar4 = 4;
++      bar5 = 5;
++    };
++  };
+ }

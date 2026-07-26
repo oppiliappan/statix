@@ -1,0 +1,18 @@
+---
+source: bin/tests/repeated_keys.rs
+assertion_line: 7
+expression: "\"{\\n  hardware.bluetooth = {\\n    enable = true;\\n  };\\n  networking.hostName = \\\"nixbox\\\";\\n  hardware.nvidia-container-toolkit.enable = true;\\n  hardware.nvidia = {\\n    modesetting.enable = true;\\n  };\\n}\\n\""
+---
+[W20] Warning: Avoid repeated keys in attribute sets
+   ╭─[<temp_file_path>:2:3]
+   │
+ 2 │   hardware.bluetooth = {
+   ·   ─────────┬────────  
+   ·            ╰────────── The key hardware is first assigned here ...
+ 6 │   hardware.nvidia-container-toolkit.enable = true;
+   ·   ────────────────────┬───────────────────  
+   ·                       ╰───────────────────── ... repeated here ...
+ 7 │   hardware.nvidia = {
+   ·   ───────┬───────  
+   ·          ╰───────── ... and here. Try hardware = { bluetooth=...; nvidia-container-toolkit.enable=...; nvidia=...; } instead.
+───╯

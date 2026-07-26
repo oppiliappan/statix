@@ -76,6 +76,10 @@ pub fn attrset(
     ast_from_text(&buffer)
 }
 
+pub fn attrset_from_text(text: &str) -> ast::AttrSet {
+    ast_from_text(text)
+}
+
 pub fn select(set: &SyntaxNode, index: &SyntaxNode) -> ast::Select {
     ast_from_text(&format!("{set}.{index}"))
 }
