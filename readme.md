@@ -1,3 +1,10 @@
+> [!CAUTION]
+>
+> 1. This project is [now hosted at tangled](https://tangled.org/oppi.li/statix).
+> 2. A significant [fork by Molybdenum Software](https://github.com/molybdenumsoftware/statix) exists.
+> 3. The source for the Nixpkgs `statix` package [is the Molybdenum Software fork](https://github.com/NixOS/nixpkgs/pull/516044)
+> 4. The maintainer of the Molybdenum Software fork [is eager to merge back](https://tangled.org/oppi.li/statix/issues/1).
+
 # statix
 
 > Lints and suggestions for the Nix programming language.
