@@ -6,6 +6,7 @@ members = ["bin", "lib", "macros", "vfs"]
 [workspace.package]
 edition = "2024"
 license = "MIT"
+rust-version = "1.88.0"
 
 [workspace.dependencies]
 anyhow = "1.0.100"

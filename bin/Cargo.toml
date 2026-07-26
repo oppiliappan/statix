@@ -3,8 +3,9 @@ authors = ["Akshay <nerdy@peppe.rs>"]
 description = "Lints and suggestions for the Nix programming language"
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
 name = "statix"
-version = "0.5.8"
+version = "0.5.9-pre"
 
 [lib]
 name = "statix"
