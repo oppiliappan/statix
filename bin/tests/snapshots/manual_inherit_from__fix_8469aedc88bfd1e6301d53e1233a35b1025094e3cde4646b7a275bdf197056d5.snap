@@ -1,0 +1,5 @@
+---
+source: bin/tests/manual_inherit_from.rs
+expression: "\"let foo = { }; in { x = foo.x or \\\"\\\"; }\""
+---
+

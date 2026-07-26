@@ -8,5 +8,7 @@ generate_tests! {
         "let a.b = 2; in { b = a.b; }",
         "let a.b = 2; in { c = a.c; }",
         "let a.b = 2; in { b = a.c; }",
+        // don't lint if the rhs expr is more than just an access
+        "let foo = { }; in { x = foo.x or \"\"; }",
     ],
 }

@@ -58,10 +58,20 @@ impl Rule for ManualInherit {
             return None;
         };
 
-        let Some(Expr::Select(value)) = key_value_stmt.value() else {
-            return None;
-        };
-        let select_attrpath = value.attrpath()?;
+        let select = key_value_stmt
+            .value()
+            .and_then(|value| match value {
+                // unfortunately we can only match on select although attr path would be enough
+                Expr::Select(select) => Some(select),
+                _ => None,
+            })
+            .filter(|select| {
+                // hence we have to filter out select statements that have an `or` token in the
+                // next step
+                select.or_token().is_none()
+            })?;
+
+        let select_attrpath = select.attrpath()?;
         let mut select_attrpath_attrs = select_attrpath.attrs();
         let first_attr = select_attrpath_attrs.next()?;
 
@@ -80,7 +90,7 @@ impl Rule for ManualInherit {
         let at = node.text_range();
 
         let replacement = {
-            let set = value.expr()?;
+            let set = select.expr()?;
             make::inherit_from_stmt(set.syntax(), &[key])
                 .syntax()
                 .clone()
