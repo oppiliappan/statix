@@ -7,5 +7,5 @@ expression: "\"e != true\""
    │
  1 │ e != true
    · ────┬────  
-   ·     ╰────── Comparing e with boolean literal true
+   ·     ╰────── Comparing 'e' with boolean literal 'true'. We can't check the type of 'e'. Please verify that holds a boolean expression.
 ───╯

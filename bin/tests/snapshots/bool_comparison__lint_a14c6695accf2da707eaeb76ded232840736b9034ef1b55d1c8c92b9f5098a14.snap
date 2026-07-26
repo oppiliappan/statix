@@ -7,5 +7,5 @@ expression: "\"false == m ? n\""
    │
  1 │ false == m ? n
    · ───────┬──────  
-   ·        ╰──────── Comparing m ? n with boolean literal false
+   ·        ╰──────── Comparing 'm ? n' with boolean literal 'false'. We can't check the type of 'm ? n'. Please verify that holds a boolean expression.
 ───╯

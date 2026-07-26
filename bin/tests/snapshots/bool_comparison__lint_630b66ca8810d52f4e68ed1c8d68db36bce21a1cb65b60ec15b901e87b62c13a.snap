@@ -7,5 +7,5 @@ expression: "\"false != h\""
    │
  1 │ false != h
    · ─────┬────  
-   ·      ╰────── Comparing h with boolean literal false
+   ·      ╰────── Comparing 'h' with boolean literal 'false'. We can't check the type of 'h'. Please verify that holds a boolean expression.
 ───╯

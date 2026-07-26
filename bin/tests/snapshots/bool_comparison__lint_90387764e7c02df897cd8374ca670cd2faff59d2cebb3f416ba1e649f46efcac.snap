@@ -1,0 +1,5 @@
+---
+source: bin/tests/bool_comparison.rs
+expression: "\"let foo = {}; in (foo.bar or false) == true\""
+---
+

@@ -7,5 +7,5 @@ expression: "\"true == o ? p\""
    │
  1 │ true == o ? p
    · ──────┬──────  
-   ·       ╰──────── Comparing o ? p with boolean literal true
+   ·       ╰──────── Comparing 'o ? p' with boolean literal 'true'. We can't check the type of 'o ? p'. Please verify that holds a boolean expression.
 ───╯

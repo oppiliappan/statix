@@ -26,5 +26,7 @@ generate_tests! {
         // has attr
         "false == m ? n",
         "true == o ? p",
+        // don't lint if we're not 100% sure it's legit
+        "let foo = {}; in (foo.bar or false) == true",
     ],
 }

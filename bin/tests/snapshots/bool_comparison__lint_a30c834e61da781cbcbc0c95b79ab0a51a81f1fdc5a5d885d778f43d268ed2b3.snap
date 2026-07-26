@@ -7,5 +7,5 @@ expression: "\"a == true\""
    │
  1 │ a == true
    · ────┬────  
-   ·     ╰────── Comparing a with boolean literal true
+   ·     ╰────── Comparing 'a' with boolean literal 'true'. We can't check the type of 'a'. Please verify that holds a boolean expression.
 ───╯

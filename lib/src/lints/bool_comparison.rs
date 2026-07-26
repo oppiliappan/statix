@@ -3,7 +3,7 @@ use crate::{Metadata, Report, Rule, Suggestion, make};
 use macros::lint;
 use rnix::{
     NodeOrToken, SyntaxElement, SyntaxKind, SyntaxNode,
-    ast::{BinOp, BinOpKind, Ident},
+    ast::{BinOp, BinOpKind, Expr, Ident},
 };
 use rowan::ast::AstNode as _;
 
@@ -41,6 +41,12 @@ impl Rule for BoolComparison {
         };
         let bin_expr = BinOp::cast(node.clone())?;
         let (lhs, rhs) = (bin_expr.lhs()?, bin_expr.rhs()?);
+        if [&lhs, &rhs]
+            .iter()
+            .any(|expr| !matches!(expr, Expr::Literal(_) | Expr::Ident(_) | Expr::HasAttr(_)))
+        {
+            return None;
+        }
         let (lhs, rhs) = (lhs.syntax(), rhs.syntax());
         let op = EqualityBinOpKind::try_from(bin_expr.operator()?)?;
 
@@ -78,7 +84,7 @@ impl Rule for BoolComparison {
         let at = node.text_range();
         Some(self.report().suggest(
             at,
-            format!("Comparing `{non_bool_side}` with boolean literal `{bool_side}`"),
+            format!("Comparing '{non_bool_side}' with boolean literal '{bool_side}'. We can't check the type of '{non_bool_side}'. Please verify that holds a boolean expression."),
             Suggestion::with_replacement(at, replacement),
         ))
     }
